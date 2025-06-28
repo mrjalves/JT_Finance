@@ -1,0 +1,59 @@
+@* Este componente é um wrapper em torno do Modal genérico para diálogos de confirmação. *@
+
+<Modal @ref="modalInstance" Title="@DialogTitle" OnClose="HandleCancel" Size="@ModalSize" ShowCloseButton="false" CloseOnBackdropClick="false">
+    <BodyContent>
+        <p>@Message</p>
+    </BodyContent>
+    <FooterContent>
+        <button type="button" class="btn btn-secondary" @onclick="HandleCancel">@CancelButtonText</button>
+        <button type="button" class="btn @ConfirmButtonClass" @onclick="HandleConfirm">@ConfirmButtonText</button>
+    </FooterContent>
+</Modal>
+
+@code {
+    [Parameter] public string DialogTitle { get; set; } = "Confirmação";
+    [Parameter] public string Message { get; set; }
+    [Parameter] public string ConfirmButtonText { get; set; } = "Confirmar";
+    [Parameter] public string CancelButtonText { get; set; } = "Cancelar";
+    [Parameter] public string ConfirmButtonClass { get; set; } = "btn-primary"; // e.g., btn-danger for destructive actions
+    [Parameter] public ModalSize ModalSize { get; set; } = ModalSize.Small; // Confirmações geralmente são pequenas
+
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private Modal modalInstance;
+
+    public Task Show(string title = null, string message = null, string confirmText = null, string cancelText = null, string confirmClass = null)
+    {
+        DialogTitle = title ?? DialogTitle;
+        Message = message ?? Message;
+        ConfirmButtonText = confirmText ?? ConfirmButtonText;
+        CancelButtonText = cancelText ?? CancelButtonText;
+        ConfirmButtonClass = confirmClass ?? ConfirmButtonClass;
+
+        return modalInstance.Open();
+    }
+
+    public Task Hide()
+    {
+        return modalInstance.Close();
+    }
+
+    private async Task HandleConfirm()
+    {
+        await modalInstance.Close(); // Fecha o modal primeiro
+        if (OnConfirm.HasDelegate)
+        {
+            await OnConfirm.InvokeAsync();
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        await modalInstance.Close(); // Fecha o modal
+        if (OnCancel.HasDelegate)
+        {
+            await OnCancel.InvokeAsync();
+        }
+    }
+}

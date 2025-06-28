@@ -1,70 +1,95 @@
 @page "/despesas"
 @using JT_Finance.Shared.Components
 @using System.ComponentModel.DataAnnotations
+@using JT_Finance.Shared.Services // Adicionar para ToastService
+
+@using System.Linq.Expressions
+@using JT_Finance.Shared.Components // Já estava, mas bom confirmar
+
+@inject ToastService ToastService // Injetar o serviço
 
 <h3>Despesas</h3>
 
-@if (exibirFormulario)
-{
-    <h4>@(despesaAtual.Id == Guid.Empty ? "Nova Despesa" : "Editar Despesa")</h4>
-    <CrudForm TItem="DespesaModel" Item="despesaAtual" OnSubmit="SalvarDespesa" OnCancel="CancelarFormulario">
-        <ChildContent Context="despesa">
-            <CustomInput Label="Descrição" @bind-Value="despesa.Descricao"  />
-            <CustomInput Label="Valor" Type="number" @bind-Value="despesa.ValorAsString"  />
-            <div class="form-group">
-                <label for="data">Data</label>
-                <InputDate id="data" class="form-control" @bind-Value="despesa.Data" />
-                <ValidationMessage For="@(() => despesa.Data)" />
-            </div>
-            <CustomInput Label="Categoria" @bind-Value="despesa.Categoria"  />
-        </ChildContent>
-    </CrudForm>
-}
-else
-{
-    <button class="btn btn-primary mb-3" @onclick="() => AdicionarNovaDespesa()">Nova Despesa</button>
+<button class="btn btn-primary mb-3" @onclick="AbrirModalParaNovaDespesa">Nova Despesa</button>
 
-    <DataGrid TItem="DespesaModel" Items="listaDespesas">
-        <HeaderTemplate>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Data</th>
-            <th>Categoria</th>
-            <th>Ações</th>
-        </HeaderTemplate>
-        <RowTemplate Context="despesa">
-            <td>@despesa.Descricao</td>
-            <td>@despesa.Valor.ToString("C")</td>
-            <td>@despesa.Data.ToShortDateString()</td>
-            <td>@despesa.Categoria</td>
-            <td>
-                <button class="btn btn-sm btn-info" @onclick="() => EditarDespesa(despesa)">Editar</button>
-                <button class="btn btn-sm btn-danger" @onclick="() => RemoverDespesa(despesa.Id)">Remover</button>
-            </td>
-        </RowTemplate>
-    </DataGrid>
-}
+<DataGrid TItem="DespesaModel" Items="listaDespesas">
+    <HeaderTemplate>
+        <th>Descrição</th>
+        <th>Valor</th>
+        <th>Data</th>
+        <th>Categoria</th>
+        <th>Ações</th>
+    </HeaderTemplate>
+    <RowTemplate Context="despesa">
+        <td>@despesa.Descricao</td>
+        <td>@despesa.Valor.ToString("C")</td>
+        <td>@despesa.Data.ToShortDateString()</td>
+        <td>@despesa.Categoria</td>
+        <td>
+            <button class="btn btn-sm btn-info" @onclick="() => AbrirModalParaEditarDespesa(despesa)">Editar</button>
+            <button class="btn btn-sm btn-danger" @onclick="() => ConfirmarRemocaoDespesa(despesa.Id)">Remover</button>
+        </td>
+    </RowTemplate>
+</DataGrid>
+
+<Modal @ref="crudModal" Title="@modalTitle" OnClose="ResetarEstadoAposModal" Size="ModalSize.Large">
+    <BodyContent>
+        @if (despesaAtual != null) // Renderiza o formulário apenas se despesaAtual estiver definida
+        {
+            <CrudForm TItem="DespesaModel" Item="despesaAtual" OnSubmit="HandleSalvarDespesa" OnCancel="HandleCancelarFormularioModal">
+                <ChildContent Context="despesaContext">
+                    <CustomInput Label="Descrição" @bind-Value="despesaContext.Descricao" />
+                    <CustomInput Label="Valor" Type="number" @bind-Value="despesaContext.ValorAsString" />
+                    <div class="form-group mb-3">
+                        <label for="data_despesa">Data</label>
+                        <InputDate id="data_despesa" class="form-control" @bind-Value="despesaContext.Data" />
+                        <ValidationMessage For="@(() => despesaContext.Data)" />
+                    </div>
+                    <CustomInput Label="Categoria" @bind-Value="despesaContext.Categoria" />
+                </ChildContent>
+            </CrudForm>
+        }
+        else
+        {
+            <p>Carregando formulário...</p>
+        }
+    </BodyContent>
+    @* O FooterContent não é necessário, pois CrudForm já tem botões Salvar/Cancelar *@
+</Modal>
+
+<ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoDespesa" />
 
 
 @code {
     private List<DespesaModel> listaDespesas = new List<DespesaModel>();
-    private DespesaModel despesaAtual = new DespesaModel();
-    private bool exibirFormulario = false;
+    private DespesaModel despesaAtual = null; // Inicializa como null
+
+    private Modal crudModal; // Referência para o componente Modal para Adicionar/Editar
+    private string modalTitle = "";
+
+    private ConfirmDialog confirmDeleteDialog; // Referência para o modal de confirmação de remoção
+    private Guid? idDespesaParaRemover; // Nullable Guid para armazenar o ID da despesa a ser removida
+
 
     protected override void OnInitialized()
     {
         // Dados de exemplo
         listaDespesas.Add(new DespesaModel { Id = Guid.NewGuid(), Descricao = "Aluguel", Valor = 1200.50M, Data = DateTime.Now.AddDays(-10), Categoria = "Moradia" });
         listaDespesas.Add(new DespesaModel { Id = Guid.NewGuid(), Descricao = "Supermercado", Valor = 350.75M, Data = DateTime.Now.AddDays(-5), Categoria = "Alimentação" });
+        // TODO: Carregar dados reais de um serviço
     }
 
-    private void AdicionarNovaDespesa()
+    private void AbrirModalParaNovaDespesa()
     {
         despesaAtual = new DespesaModel { Data = DateTime.Now }; // Preenche a data atual por padrão
-        exibirFormulario = true;
+        modalTitle = "Nova Despesa";
+        // O StateHasChanged é chamado implicitamente por Open() se ele chamar StateHasChanged internamente,
+        // mas para garantir que despesaAtual seja refletido no CrudForm ANTES do modal abrir, chamamos aqui.
+        StateHasChanged();
+        crudModal.Open();
     }
 
-    private void EditarDespesa(DespesaModel despesaParaEditar)
+    private void AbrirModalParaEditarDespesa(DespesaModel despesaParaEditar)
     {
         // Cria uma cópia para edição, para não alterar a lista diretamente antes de salvar
         despesaAtual = new DespesaModel
@@ -72,45 +97,94 @@ else
             Id = despesaParaEditar.Id,
             Descricao = despesaParaEditar.Descricao,
             Valor = despesaParaEditar.Valor,
+            ValorAsString = despesaParaEditar.ValorAsString, // Importante copiar a string também
             Data = despesaParaEditar.Data,
             Categoria = despesaParaEditar.Categoria
         };
-        exibirFormulario = true;
+        modalTitle = "Editar Despesa";
+        StateHasChanged();
+        crudModal.Open();
     }
 
-    private void SalvarDespesa(DespesaModel despesa)
+    private async Task HandleSalvarDespesa(DespesaModel despesa)
     {
-        if (despesa.Id == Guid.Empty)
+        bool isNew = despesa.Id == Guid.Empty;
+        if (isNew)
         {
             despesa.Id = Guid.NewGuid();
-            listaDespesas.Add(despesa);
+            listaDespesas.Add(despesa); // TODO: Salvar via serviço
+            ToastService.ShowSuccess("Sucesso!", "Nova despesa adicionada.");
         }
         else
         {
             var index = listaDespesas.FindIndex(d => d.Id == despesa.Id);
             if (index != -1)
             {
-                listaDespesas[index] = despesa;
+                listaDespesas[index] = despesa; // TODO: Atualizar via serviço
+                ToastService.ShowSuccess("Sucesso!", "Despesa atualizada.");
+            }
+            else
+            {
+                ToastService.ShowError("Erro!", "Despesa não encontrada para atualização.");
             }
         }
-        CancelarFormulario();
+        await crudModal.Close(); // Fecha o modal após salvar. OnClose do Modal vai chamar ResetarEstadoAposModal.
     }
 
-    private void RemoverDespesa(Guid id)
+    private async Task HandleCancelarFormularioModal()
     {
-        var despesaParaRemover = listaDespesas.FirstOrDefault(d => d.Id == id);
-        if (despesaParaRemover != null)
+        await crudModal.Close(); // OnClose do Modal vai chamar ResetarEstadoAposModal.
+    }
+
+    private void ResetarEstadoAposModal()
+    {
+        despesaAtual = null; // Limpa o item atual para que o formulário não retenha dados antigos
+        modalTitle = "";
+        StateHasChanged(); // Garante que a UI reflita que despesaAtual é null se necessário
+    }
+
+    // Método chamado pelo botão de remover na grid
+    private async Task ConfirmarRemocaoDespesa(Guid id)
+    {
+        idDespesaParaRemover = id;
+        // Define os textos e a classe do botão de confirmação para o diálogo de remoção
+        await confirmDeleteDialog.Show(
+            title: "Confirmar Remoção",
+            message: "Tem certeza que deseja remover esta despesa? Esta ação não pode ser desfeita.",
+            confirmText: "Sim, Remover",
+            cancelText: "Cancelar",
+            confirmClass: "btn-danger"
+        );
+    }
+
+    private void EfetuarRemocaoDespesa()
+    {
+        if (idDespesaParaRemover.HasValue)
         {
-            listaDespesas.Remove(despesaParaRemover);
+            var despesaParaRemover = listaDespesas.FirstOrDefault(d => d.Id == idDespesaParaRemover.Value);
+            if (despesaParaRemover != null)
+            {
+                listaDespesas.Remove(despesaParaRemover); // TODO: Remover via serviço
+                ToastService.ShowSuccess("Removida!", $"Despesa \"{despesaParaRemover.Descricao}\" foi removida.");
+                StateHasChanged(); // Atualiza a UI após remover da lista
+            }
+            else
+            {
+                ToastService.ShowError("Erro!", "Despesa não encontrada para remoção.");
+            }
+            idDespesaParaRemover = null; // Limpa o ID após a operação
         }
-        // Em uma aplicação real, você pode querer pedir confirmação antes de remover.
     }
 
-    private void CancelarFormulario()
-    {
-        exibirFormulario = false;
-        despesaAtual = new DespesaModel();
-    }
+    // private void RemoverDespesa(Guid id) // Método antigo de remoção direta, agora substituído por EfetuarRemocaoDespesa
+    // {
+    //     var despesaParaRemover = listaDespesas.FirstOrDefault(d => d.Id == id);
+    //     if (despesaParaRemover != null)
+    //     {
+    //         listaDespesas.Remove(despesaParaRemover);
+    //     }
+    // }
+
 
     public class DespesaModel
     {

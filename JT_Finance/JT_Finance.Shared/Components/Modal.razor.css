@@ -1,0 +1,115 @@
+.custom-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1060; /* Acima do NavMenu (1050) */
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none; /* Escondido por padrão */
+    opacity: 0;
+    transition: opacity 0.15s linear;
+}
+
+.custom-modal-backdrop.show {
+    display: block; /* Mostra quando ativo */
+    opacity: 1;
+}
+
+.custom-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    z-index: 1070; /* Acima do backdrop */
+    display: none; /* Escondido por padrão */
+    width: 500px; /* Largura padrão */
+    max-width: 90vw;
+    max-height: 90vh; /* Altura máxima */
+    background-color: #fff;
+    border-radius: 0.3rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+    flex-direction: column; /* Para que o body possa ter scroll */
+}
+
+.custom-modal.show {
+    display: flex; /* Mostra como flex quando ativo */
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: calc(0.3rem - 1px);
+    border-top-right-radius: calc(0.3rem - 1px);
+}
+
+.custom-modal-title {
+    margin-bottom: 0;
+    line-height: 1.5;
+    font-size: 1.25rem;
+}
+
+.custom-modal-body {
+    position: relative;
+    flex: 1 1 auto; /* Permite que o corpo cresça e encolha */
+    padding: 1rem;
+    overflow-y: auto; /* Adiciona scroll se o conteúdo for grande */
+}
+
+.custom-modal-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center; /* Alinha botões verticalmente se quebrar linha */
+    justify-content: flex-end; /* Alinha botões à direita */
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #dee2e6;
+    border-bottom-right-radius: calc(0.3rem - 1px);
+    border-bottom-left-radius: calc(0.3rem - 1px);
+}
+
+.custom-modal-footer > * {
+    margin: 0.25rem; /* Espaçamento entre botões no footer */
+}
+
+/* Tamanhos do Modal */
+.custom-modal-sm {
+    width: 300px;
+}
+
+.custom-modal-lg {
+    width: 800px;
+}
+
+.custom-modal-xl {
+    width: 1140px;
+}
+
+/* Botão de fechar padrão (Bootstrap) */
+.btn-close {
+    box-sizing: content-box;
+    width: 1em;
+    height: 1em;
+    padding: .25em .25em;
+    color: #000;
+    background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+    border: 0;
+    border-radius: .25rem;
+    opacity: .5;
+}
+
+.btn-close:hover {
+    opacity: .75;
+}
+
+.btn-close:focus {
+    outline: 0;
+    box-shadow: 0 0 0 .25rem rgba(13,110,253,.25); /* Bootstrap focus color */
+    opacity: 1;
+}

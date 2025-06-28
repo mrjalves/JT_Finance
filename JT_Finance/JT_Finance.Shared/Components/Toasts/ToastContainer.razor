@@ -1,0 +1,56 @@
+@implements IDisposable
+@inject ToastService ToastService
+
+<div class="toast-container-wrapper">
+    @foreach (var toastSettings in _activeToasts.OrderByDescending(t => t.Timestamp))
+    {
+        <Toast @key="toastSettings.Id" Settings="toastSettings" />
+    }
+</div>
+
+@code {
+    private List<ToastSettings> _activeToasts = new List<ToastSettings>();
+
+    protected override void OnInitialized()
+    {
+        _activeToasts.AddRange(ToastService.ActiveToasts); // Pega toasts que já possam existir (improvável no init, mas seguro)
+        ToastService.OnShowToast += AddToastToContainer;
+        ToastService.OnHideToast += RemoveToastFromContainer;
+        ToastService.OnClearToasts += ClearAllToastsInContainer;
+    }
+
+    private void AddToastToContainer(ToastSettings settings)
+    {
+        // Adiciona no início da lista para que os mais recentes apareçam no topo
+        // (ou no final se a ordem do CSS for column-reverse)
+        // A ordenação no foreach já cuida disso, então apenas adicionamos.
+        if (!_activeToasts.Any(t => t.Id == settings.Id))
+        {
+            _activeToasts.Add(settings);
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void RemoveToastFromContainer(Guid toastId)
+    {
+        var toastInstance = _activeToasts.FirstOrDefault(t => t.Id == toastId);
+        if (toastInstance != null)
+        {
+            _activeToasts.Remove(toastInstance);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ClearAllToastsInContainer()
+    {
+        _activeToasts.Clear();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ToastService.OnShowToast -= AddToastToContainer;
+        ToastService.OnHideToast -= RemoveToastFromContainer;
+        ToastService.OnClearToasts -= ClearAllToastsInContainer;
+    }
+}
