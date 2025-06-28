@@ -1,71 +1,19 @@
-﻿@inject NavigationManager NavigationManager
-
 <header class="app-header">
-    <div class="container-fluid d-flex align-items-center">
-        <!-- Título ou Brand (opcional, NavMenu já tem) -->
-        <!-- <div class="header-brand me-3">
-            <a href="">App</a>
-        </div> -->
-
-        <!-- Input de Pesquisa -->
-        <div class="search-bar-wrapper flex-grow-1 me-auto">
-            <input type="search" class="form-control form-control-sm search-input" placeholder="Pesquisar..."
-                   @bind="searchTerm" @oninput="HandleSearchInput" @onkeydown="HandleSearchKeyDown" />
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        
+        <div class="header-title">
+            <!-- Poderia ser usado para exibir o título da página atual no futuro -->
+            <!-- @CurrentPageTitle -->
         </div>
-
-        <!-- Botões de Ação à Direita -->
-        <div class="header-actions d-flex align-items-center">
-            <button title="Mudar Tema" class="btn btn-link header-action-button" @onclick="OnToggleTheme">
-                <span class="bi bi-circle-half"></span>
-            </button>
-
-            <div class="dropdown user-menu-dropdown">
-                <button title="Menu do Usuário" class="btn btn-link header-action-button dropdown-toggle" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false" @onclick="OnToggleUserMenu">
-                    <span class="bi bi-person-circle"></span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
-                    <li><a class="dropdown-item" href="profile">Perfil</a></li>
-                    <li><a class="dropdown-item" href="settings">Configurações</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><button class="dropdown-item" type="button" @onclick="OnLogout">Sair</button></li>
-                </ul>
-            </div>
+        <div class="header-user-menu">
+            <!-- Placeholder para menu de usuário / login -->
+            <span class="bi bi-person-circle" style="font-size: 1.5rem; color: #fff;"></span>
+            <!-- Exemplo: <LoginDisplay /> se você tiver um -->
         </div>
     </div>
 </header>
 
 @code {
-    [Parameter] public EventCallback OnToggleTheme { get; set; }
-    [Parameter] public EventCallback OnToggleUserMenu { get; set; } // Pode ser usado para controlar o dropdown externamente se necessário
-    [Parameter] public EventCallback OnLogout { get; set; }
-
-    private string? searchTerm;
-
-    private void HandleSearchInput(ChangeEventArgs e)
-    {
-        searchTerm = e.Value?.ToString();
-        // Lógica de pesquisa incremental/sugestões pode ser chamada aqui
-        Console.WriteLine($"Search term changed: {searchTerm}");
-    }
-
-    private void HandleSearchKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            PerformSearch();
-        }
-    }
-
-    private void PerformSearch()
-    {
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-        {
-            Console.WriteLine($"Performing search for: {searchTerm}");
-            // NavigationManager.NavigateTo($"/search?query={searchTerm}");
-            // Ou atualizar uma lista de resultados em algum lugar
-        }
-    }
-
-    // Para que o dropdown do Bootstrap funcione, é necessário que o JS do Bootstrap esteja carregado.
-    // Isso geralmente é feito no index.html ou _Layout.cshtml/_Host.cshtml.
+    // Lógica futura, como obter o título da página atual, pode ir aqui.
+    // [Parameter] public string CurrentPageTitle { get; set; }
 }

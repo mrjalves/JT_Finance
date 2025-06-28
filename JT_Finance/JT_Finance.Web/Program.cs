@@ -1,5 +1,5 @@
 using JT_Finance.Shared.Services;
-using JT_Finance.Shared.Services; // Adicionado para ThemeService
+using JT_Finance.Web.Components;
 using JT_Finance.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +10,6 @@ builder.Services.AddRazorComponents()
 
 // Add device-specific services used by the JT_Finance.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
-builder.Services.AddSingleton<ThemeService>(); // Registra o ThemeService
 
 var app = builder.Build();
 
