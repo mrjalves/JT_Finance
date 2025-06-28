@@ -4,25 +4,13 @@
 
 <h3>Lista de Compras</h3>
 
-@if (exibirFormulario)
+@if (modoVisualizacaoItens && listaDeCompraSelecionada != null)
 {
-    <h4>@(itemAtual.Id == Guid.Empty ? "Novo Item" : "Editar Item")</h4>
-    <CrudForm TItem="ItemListaCompraModel" Item="itemAtual" OnSubmit="SalvarItem" OnCancel="CancelarFormulario">
-        <ChildContent Context="item">
-            <CustomInput Label="Nome do Item" @bind-Value="item.Nome"  />
-            <CustomInput Label="Quantidade" Type="number" @bind-Value="item.QuantidadeAsString" />
-            <div class="form-group form-check">
-                <InputCheckbox id="comprado" class="form-check-input" @bind-Value="item.Comprado" />
-                <label class="form-check-label" for="comprado">Comprado</label>
-            </div>
-        </ChildContent>
-    </CrudForm>
-}
-else
-{
-    <button class="btn btn-primary mb-3" @onclick="() => AdicionarNovoItem()">Novo Item</button>
+    <h4>Itens da Lista: @listaDeCompraSelecionada.Nome</h4>
+    <button class="btn btn-secondary mb-3" @onclick="VoltarParaListagemDeListas">Voltar para Listas</button>
+    <button class="btn btn-primary mb-3 ms-2" @onclick="AbrirModalAdicionarNovoItem">Novo Item</button>
 
-    <DataGrid TItem="ItemListaCompraModel" Items="listaItensCompra">
+    <DataGrid TItem="ItemListaCompraModel" Items="listaDeCompraSelecionada.Itens">
         <HeaderTemplate>
             <th>Nome</th>
             <th>Quantidade</th>
@@ -36,85 +24,271 @@ else
                 <InputCheckbox @bind-Value="item.Comprado" @oninput="(e) => ToggleComprado(item, (bool)e.Value)" />
             </td>
             <td>
-                <button class="btn btn-sm btn-info" @onclick="() => EditarItem(item)" disabled="@item.Comprado">Editar</button>
-                <button class="btn btn-sm btn-danger" @onclick="() => RemoverItem(item.Id)">Remover</button>
+                <button class="btn btn-sm btn-info" @onclick="() => AbrirModalEditarItem(item)" disabled="@item.Comprado">Editar</button>
+                <button class="btn btn-sm btn-danger" @onclick="() => RemoverItemDaLista(item.Id)">Remover</button>
             </td>
         </RowTemplate>
     </DataGrid>
 }
+else
+{
+    <h4>Minhas Listas de Compras</h4>
+    <button class="btn btn-success mb-3" @onclick="AbrirModalNovaLista">Nova Lista de Compras</button>
+
+    @if (!todasAsListasDeCompra.Any())
+    {
+        <p>Nenhuma lista de compras criada ainda.</p>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var lista in todasAsListasDeCompra)
+            {
+                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">@lista.Nome</h5>
+                        <small>@lista.ResumoItens</small>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-primary me-2" @onclick="() => SelecionarLista(lista)">Ver Itens</button>
+                        <button class="btn btn-sm btn-warning me-2" @onclick="() => AbrirModalEditarNomeLista(lista)">Editar Nome</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => RemoverListaDeCompra(lista.Id)">Remover Lista</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+<!-- Modal para Nome da Lista -->
+<Modal @ref="modalNomeLista" Title="@(string.IsNullOrEmpty(listaDeCompraEmEdicao.Nome) || todasAsListasDeCompra.All(l => l.Id != listaDeCompraEmEdicao.Id) ? "Nova Lista de Compras" : "Editar Nome da Lista")" OnClose="() => listaDeCompraEmEdicao = new ListaDeCompraModel()">
+    <BodyContent>
+        <EditForm Model="listaDeCompraEmEdicao" OnValidSubmit="SalvarListaDeCompra">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label for="listName" class="form-label">Nome da Lista</label>
+                <InputText id="listName" class="form-control" @bind-Value="listaDeCompraEmEdicao.Nome" />
+                <ValidationMessage For="@(() => listaDeCompraEmEdicao.Nome)" />
+            </div>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button type="button" class="btn btn-secondary" @onclick="async () => await modalNomeLista.Close()">Cancelar</button>
+        </EditForm>
+    </BodyContent>
+</Modal>
+
+<!-- Modal para Adicionar/Editar Item -->
+<Modal @ref="modalAdicionarItem" Title="@(itemAtual.Id == Guid.Empty || (listaDeCompraSelecionada != null && listaDeCompraSelecionada.Itens.All(i => i.Id != itemAtual.Id)) ? "Novo Item" : "Editar Item")" OnClose="CancelarModalAdicionarItem">
+    <BodyContent>
+        @if (listaDeCompraSelecionada != null) // Garante que o modal de item só renderize com contexto
+        {
+            <CrudForm TItem="ItemListaCompraModel" Item="itemAtual" OnSubmit="SalvarItemNaLista" OnCancel="CancelarModalAdicionarItem">
+                <ChildContent Context="formItem">
+                    <CustomInput Label="Nome do Item" @bind-Value="formItem.Nome" />
+                    <ValidationMessage For="@(() => formItem.Nome)" />
+                    <CustomInput Label="Quantidade" Type="number" @bind-Value="formItem.QuantidadeAsString" />
+                     <ValidationMessage For="@(() => formItem.Quantidade)" />
+                    <div class="form-group form-check mt-2 mb-2">
+                        <InputCheckbox id="comprado" class="form-check-input" @bind-Value="formItem.Comprado" />
+                        <label class="form-check-label" for="comprado">Comprado</label>
+                    </div>
+                </ChildContent>
+            </CrudForm>
+        }
+    </BodyContent>
+</Modal>
 
 @code {
-    private List<ItemListaCompraModel> listaItensCompra = new List<ItemListaCompraModel>();
-    private ItemListaCompraModel itemAtual = new ItemListaCompraModel();
-    private bool exibirFormulario = false;
+    // Estrutura de dados principal
+    private List<ListaDeCompraModel> todasAsListasDeCompra = new List<ListaDeCompraModel>();
+    private ListaDeCompraModel? listaDeCompraSelecionada; // Rastreia a lista ativa para visualização/edição de itens
+    private ListaDeCompraModel listaDeCompraEmEdicao = new ListaDeCompraModel(); // Para o modal de nome da lista
+    private ItemListaCompraModel itemAtual = new ItemListaCompraModel(); // Para o modal de adicionar/editar item
+
+    // Controle de UI
+    private bool modoVisualizacaoItens = false; // True quando uma lista é selecionada para ver seus itens
+
+    // Referências para os Modais
+    private Modal modalNomeLista;
+    private Modal modalAdicionarItem;
 
     protected override void OnInitialized()
     {
-        // Dados de exemplo
-        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Leite", Quantidade = 2, Comprado = false });
-        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Pão", Quantidade = 1, Comprado = true });
-        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Ovos", Quantidade = 12, Comprado = false });
+        // Dados de exemplo para demonstração
+        var lista1 = new ListaDeCompraModel { Id = Guid.NewGuid(), Nome = "Supermercado da Semana" };
+        lista1.Itens.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Leite", Quantidade = 2, Comprado = false });
+        lista1.Itens.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Pão", Quantidade = 1, Comprado = true });
+
+        var lista2 = new ListaDeCompraModel { Id = Guid.NewGuid(), Nome = "Feira de Sábado" };
+        lista2.Itens.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Ovos", Quantidade = 12, Comprado = false });
+        lista2.Itens.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Alface", Quantidade = 1, Comprado = false });
+
+        todasAsListasDeCompra.Add(lista1);
+        todasAsListasDeCompra.Add(lista2);
     }
 
-    private void AdicionarNovoItem()
+    // Métodos para gerenciar Listas de Compra (Nome da Lista)
+    private void AbrirModalNovaLista()
     {
-        itemAtual = new ItemListaCompraModel();
-        exibirFormulario = true;
+        listaDeCompraEmEdicao = new ListaDeCompraModel { Id = Guid.NewGuid() }; // Prepara uma nova lista com novo Guid
+        modalNomeLista.Open();
     }
 
-    private void EditarItem(ItemListaCompraModel itemParaEditar)
+    private void AbrirModalEditarNomeLista(ListaDeCompraModel listaParaEditar)
     {
-        itemAtual = new ItemListaCompraModel
+        listaDeCompraEmEdicao = new ListaDeCompraModel // Clona para não alterar diretamente antes de salvar
+        {
+            Id = listaParaEditar.Id,
+            Nome = listaParaEditar.Nome,
+            Itens = listaParaEditar.Itens // Mantém a referência dos itens originais
+        };
+        modalNomeLista.Open();
+    }
+
+    private async Task SalvarListaDeCompra()
+    {
+        if (string.IsNullOrWhiteSpace(listaDeCompraEmEdicao.Nome))
+        {
+            // Adicionar lógica de validação/notificação se necessário
+            return;
+        }
+
+        var existente = todasAsListasDeCompra.FirstOrDefault(l => l.Id == listaDeCompraEmEdicao.Id);
+        if (existente != null)
+        {
+            existente.Nome = listaDeCompraEmEdicao.Nome; // Atualiza o nome
+        }
+        else
+        {
+            // É uma nova lista, adiciona na lista principal
+            // O Id já foi gerado em AbrirModalNovaLista
+            todasAsListasDeCompra.Add(new ListaDeCompraModel{
+                Id = listaDeCompraEmEdicao.Id,
+                Nome = listaDeCompraEmEdicao.Nome
+                // Itens será uma nova lista vazia por padrão
+            });
+        }
+        await modalNomeLista.Close();
+        StateHasChanged(); // Garante que a UI atualize
+    }
+
+    private void RemoverListaDeCompra(Guid listaId)
+    {
+        var listaParaRemover = todasAsListasDeCompra.FirstOrDefault(l => l.Id == listaId);
+        if (listaParaRemover != null)
+        {
+            todasAsListasDeCompra.Remove(listaParaRemover);
+            if (listaDeCompraSelecionada?.Id == listaId)
+            {
+                VoltarParaListagemDeListas(); // Se a lista removida era a selecionada
+            }
+            StateHasChanged();
+        }
+    }
+
+
+    // Métodos para navegar e selecionar listas
+    private void SelecionarLista(ListaDeCompraModel lista)
+    {
+        listaDeCompraSelecionada = lista;
+        modoVisualizacaoItens = true;
+    }
+
+    private void VoltarParaListagemDeListas()
+    {
+        listaDeCompraSelecionada = null;
+        modoVisualizacaoItens = false;
+        itemAtual = new ItemListaCompraModel(); // Limpa o item atual ao voltar
+    }
+
+    // Métodos para gerenciar Itens da Lista de Compra (dentro da listaSelecionada)
+    private void AbrirModalAdicionarNovoItem()
+    {
+        if (listaDeCompraSelecionada == null) return; // Segurança
+        itemAtual = new ItemListaCompraModel { Id = Guid.NewGuid() };
+        modalAdicionarItem.Open();
+    }
+
+    private void AbrirModalEditarItem(ItemListaCompraModel itemParaEditar)
+    {
+        if (listaDeCompraSelecionada == null) return;
+        itemAtual = new ItemListaCompraModel // Clona para edição
         {
             Id = itemParaEditar.Id,
             Nome = itemParaEditar.Nome,
             Quantidade = itemParaEditar.Quantidade,
             Comprado = itemParaEditar.Comprado
         };
-        exibirFormulario = true;
+        modalAdicionarItem.Open();
     }
 
-    private void SalvarItem(ItemListaCompraModel item)
+    private async Task SalvarItemNaLista()
     {
-        if (item.Id == Guid.Empty)
+        if (listaDeCompraSelecionada == null) return;
+
+        var itemExistente = listaDeCompraSelecionada.Itens.FirstOrDefault(i => i.Id == itemAtual.Id);
+        if (itemExistente != null)
         {
-            item.Id = Guid.NewGuid();
-            listaItensCompra.Add(item);
+            // Atualizar item existente
+            itemExistente.Nome = itemAtual.Nome;
+            itemExistente.Quantidade = itemAtual.Quantidade;
+            itemExistente.Comprado = itemAtual.Comprado;
         }
         else
         {
-            var index = listaItensCompra.FindIndex(i => i.Id == item.Id);
-            if (index != -1)
-            {
-                listaItensCompra[index] = item;
-            }
+            // Adicionar novo item
+            // O Id já foi gerado em AbrirModalAdicionarNovoItem
+            listaDeCompraSelecionada.Itens.Add(new ItemListaCompraModel{
+                Id = itemAtual.Id,
+                Nome = itemAtual.Nome,
+                Quantidade = itemAtual.Quantidade,
+                Comprado = itemAtual.Comprado
+            });
         }
-        CancelarFormulario();
+        await modalAdicionarItem.Close();
+        itemAtual = new ItemListaCompraModel(); // Limpa para o próximo
+        StateHasChanged();
     }
 
-    private void RemoverItem(Guid id)
+    private void RemoverItemDaLista(Guid itemId)
     {
-        var itemParaRemover = listaItensCompra.FirstOrDefault(i => i.Id == id);
+        if (listaDeCompraSelecionada == null) return;
+        var itemParaRemover = listaDeCompraSelecionada.Itens.FirstOrDefault(i => i.Id == itemId);
         if (itemParaRemover != null)
         {
-            listaItensCompra.Remove(itemParaRemover);
+            listaDeCompraSelecionada.Itens.Remove(itemParaRemover);
+            StateHasChanged();
         }
     }
 
-    private void CancelarFormulario()
+    private async Task CancelarModalAdicionarItem()
     {
-        exibirFormulario = false;
         itemAtual = new ItemListaCompraModel();
+        await modalAdicionarItem.Close();
     }
 
     private void ToggleComprado(ItemListaCompraModel item, bool comprado)
     {
-        var itemNaLista = listaItensCompra.FirstOrDefault(i => i.Id == item.Id);
+        if (listaDeCompraSelecionada == null) return;
+        var itemNaLista = listaDeCompraSelecionada.Itens.FirstOrDefault(i => i.Id == item.Id);
         if (itemNaLista != null)
         {
             itemNaLista.Comprado = comprado;
-            // StateHasChanged(); // Pode ser necessário se a atualização não for refletida automaticamente na UI
+            StateHasChanged();
         }
+    }
+
+    // Modelos
+    public class ListaDeCompraModel
+    {
+        public Guid Id { get; set; }
+
+        [Required(ErrorMessage = "O nome da lista é obrigatório.")]
+        [StringLength(100, ErrorMessage = "O nome da lista deve ter no máximo 100 caracteres.")]
+        public string Nome { get; set; } = ""; // Inicializar para evitar null refs no form
+
+        public List<ItemListaCompraModel> Itens { get; set; } = new List<ItemListaCompraModel>();
+
+        public string ResumoItens => $"{Itens.Count(i => i.Comprado)}/{Itens.Count} comprados";
     }
 
     public class ItemListaCompraModel
@@ -123,20 +297,26 @@ else
 
         [Required(ErrorMessage = "O nome do item é obrigatório.")]
         [StringLength(100, ErrorMessage = "O nome do item deve ter no máximo 100 caracteres.")]
-        public string Nome { get; set; }
+        public string Nome { get; set; } = ""; // Inicializar para evitar null refs
 
         [Required(ErrorMessage = "A quantidade é obrigatória.")]
         [Range(1, int.MaxValue, ErrorMessage = "A quantidade deve ser pelo menos 1.")]
-        public int Quantidade { get; set; }
+        public int Quantidade { get; set; } = 1; // Inicializar com valor padrão
 
         public string QuantidadeAsString
         {
             get => Quantidade.ToString();
             set
             {
-                if (int.TryParse(value, out var intValue))
+                if (int.TryParse(value, out var intValue) && intValue > 0)
                 {
                     Quantidade = intValue;
+                }
+                else
+                {
+                    // Opcional: Tratar entrada inválida, talvez reverter ou mostrar erro.
+                    // Por ora, não altera se inválido, mantendo o valor anterior ou 1.
+                    // Se o campo no form estiver ligado a isso, pode precisar de feedback.
                 }
             }
         }

@@ -1,36 +1,49 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">JT_Finance</a>
+        <a class="navbar-brand" href="">@(IsMinimized ? "JT" : "JT_Finance")</a>
+        <button title="Toggle Navigation" class="btn btn-link d-none d-md-block nav-toggle-button" @onclick="ToggleSidebar">
+            <span class="bi @(IsMinimized ? "bi-arrow-right-square" : "bi-arrow-left-square")"></span>
+        </button>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" /> <!-- Para mobile -->
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill" aria-hidden="true"></span> Home
+                <span class="bi bi-house-door-fill" aria-hidden="true"></span> <span class="nav-text @(IsMinimized ? "d-none" : "")">Home</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="receitas">
-                <span class="bi bi-cash-stack" aria-hidden="true"></span> Receitas
+                <span class="bi bi-cash-stack" aria-hidden="true"></span> <span class="nav-text @(IsMinimized ? "d-none" : "")">Receitas</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="despesas">
-                <span class="bi bi-credit-card-fill" aria-hidden="true"></span> Despesas
+                <span class="bi bi-credit-card-fill" aria-hidden="true"></span> <span class="nav-text @(IsMinimized ? "d-none" : "")">Despesas</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="listacompras">
-                <span class="bi bi-cart-fill" aria-hidden="true"></span> Lista Compras
+                <span class="bi bi-cart-fill" aria-hidden="true"></span> <span class="nav-text @(IsMinimized ? "d-none" : "")">Lista Compras</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3 mt-auto"> <!-- mt-auto para empurrar para o final se houver espaço -->
+            <NavLink class="nav-link" href="settings">
+                <span class="bi bi-gear-fill" aria-hidden="true"></span> <span class="nav-text @(IsMinimized ? "d-none" : "")">Configurações</span>
             </NavLink>
         </div>
     </nav>
 </div>
 
+@code {
+    [Parameter] public bool IsMinimized { get; set; }
+    [Parameter] public EventCallback ToggleSidebar { get; set; }
+}

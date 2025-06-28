@@ -1,44 +1,119 @@
+/* Header.razor.css */
 .app-header {
-    background-color: #0a2752; /* Um tom de azul escuro, pode ajustar para combinar com o NavMenu */
-    color: #ffffff;
-    padding: 0.75rem 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    height: 3.5rem; /* Mesma altura que o .top-row do NavMenu para consistência */
+    background-color: var(--header-bg);
+    color: var(--header-text-color);
+    padding: 0 1rem;
+    box-shadow: var(--box-shadow-sm); /* Usando variável de sombra */
+    height: 3.5rem;
     display: flex;
     align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
 }
 
 .app-header .container-fluid {
+    padding-left: 0;
+    padding-right: 0;
     width: 100%;
 }
 
-.header-brand a {
-    color: #ffffff;
+/* Input de Pesquisa */
+.search-bar-wrapper {
+    max-width: 400px;
+    margin-left: 1rem;
+}
+
+.search-input {
+    background-color: color-mix(in srgb, var(--header-bg) 70%, var(--header-text-color) 10%); /* Fundo baseado no header */
+    border-color: color-mix(in srgb, var(--header-bg) 50%, var(--header-text-color) 20%);
+    color: var(--header-text-color);
+    font-size: 0.875rem;
+}
+
+.search-input::placeholder {
+    color: color-mix(in srgb, var(--header-text-color) 60%, transparent 40%);
+}
+
+.search-input:focus {
+    background-color: color-mix(in srgb, var(--header-bg) 60%, var(--header-text-color) 15%);
+    border-color: var(--primary-color); /* Usar cor primária para foco */
+    color: var(--header-text-color);
+    box-shadow: none;
+}
+
+/* Botões de Ação no Header */
+.header-actions {
+    margin-left: auto;
+}
+
+.header-action-button {
+    color: color-mix(in srgb, var(--header-text-color) 80%, transparent 20%);
     font-size: 1.25rem;
-    font-weight: bold;
+    padding: 0.5rem 0.65rem;
+    line-height: 1;
     text-decoration: none;
 }
 
-.header-brand a:hover {
-    color: #dddddd;
+.header-action-button:hover,
+.header-action-button:focus {
+    color: var(--header-text-color);
+    text-decoration: none;
+    background-color: color-mix(in srgb, var(--header-bg) 80%, var(--header-text-color) 10%);
+}
+.header-action-button:focus {
+    box-shadow: none;
 }
 
-.header-title {
-    font-size: 1.1rem;
-    /* Centralizado - pode precisar de mais trabalho se o conteúdo for dinâmico */
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
+
+/* Estilização específica para o dropdown do usuário */
+.user-menu-dropdown .dropdown-menu {
+    font-size: 0.9rem;
+    background-color: var(--card-bg); /* Usar cor de card para o dropdown */
+    border-color: var(--card-border-color);
+    box-shadow: var(--box-shadow);
+}
+.user-menu-dropdown .dropdown-menu .dropdown-item {
+    color: var(--text-color);
+}
+.user-menu-dropdown .dropdown-menu .dropdown-item:hover {
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+}
+.user-menu-dropdown .dropdown-divider {
+    border-top-color: var(--card-border-color);
 }
 
-.header-user-menu {
-    /* Alinhado à direita pelo flex justify-content-between no container-fluid */
+
+.user-menu-dropdown .dropdown-toggle::after {
+    display: none;
 }
 
-/* Ajustes para telas menores se necessário */
-@media (max-width: 640px) {
-    .header-title {
-        display: none; /* Ocultar título central em telas pequenas para evitar sobreposição com brand/menu */
+
+/* Responsividade para o Header */
+@media (max-width: 768px) {
+    .search-bar-wrapper {
+        max-width: 250px; /* Reduz a largura da pesquisa em telas médias */
+    }
+}
+
+@media (max-width: 576px) {
+    .app-header {
+        padding: 0 0.75rem; /* Reduz padding horizontal em telas pequenas */
+    }
+    .search-bar-wrapper {
+        /* Oculta a barra de pesquisa ou a transforma em um ícone clicável */
+        /* Exemplo: ocultar completamente */
+        /* display: none; */
+
+        /* Ou reduzir mais e talvez mover para um local diferente se necessário */
+        max-width: 150px;
+        margin-left: 0.5rem;
+    }
+    .header-action-button {
+        font-size: 1.1rem; /* Reduz um pouco o tamanho dos ícones */
+        padding: 0.5rem 0.5rem;
     }
 }
