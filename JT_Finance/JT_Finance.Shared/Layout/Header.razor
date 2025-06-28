@@ -1,72 +1,19 @@
 <header class="app-header">
-    <div class="container-fluid d-flex align-items-center">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
         
-        <!-- Espaço à esquerda, poderia ser para o Brand/Logo se necessário -->
-        <div class="header-left-space">
-            <!-- Futuro: Botão de toggle do NavMenu em telas pequenas, se movido para cá -->
+        <div class="header-title">
+            <!-- Poderia ser usado para exibir o título da página atual no futuro -->
+            <!-- @CurrentPageTitle -->
         </div>
-
-        <!-- Input de Pesquisa Centralizado -->
-        <div class="header-search mx-auto">
-            <input type="search" class="form-control form-control-sm" placeholder="Pesquisar..." @bind="searchTerm" @onkeyup="HandleSearchKeyUp" />
-            <!-- Adicionar um botão de pesquisa opcional -->
-            <!-- <button class="btn btn-sm btn-outline-light ms-1" @onclick="PerformSearch"><span class="bi bi-search"></span></button> -->
-        </div>
-
-        <!-- Menu do Usuário e Ações à Direita -->
-        <div class="header-actions d-flex align-items-center ms-auto">
-            <button title="Mudar Tema" class="btn btn-icon" @onclick="ToggleTheme">
-                <span class="bi @(isDarkMode ? "bi-sun-fill" : "bi-moon-stars-fill")"></span>
-            </button>
-
-            <div class="dropdown ms-2">
-                <button title="Usuário" class="btn btn-icon dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="bi bi-person-circle"></span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
-                    <li><a class="dropdown-item" href="#">Perfil</a></li>
-                    <li><a class="dropdown-item" href="configuracoes">Configurações</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><button class="dropdown-item" @onclick="HandleLogout">Sair <span class="bi bi-box-arrow-right ms-1"></span></button></li>
-                </ul>
-            </div>
+        <div class="header-user-menu">
+            <!-- Placeholder para menu de usuário / login -->
+            <span class="bi bi-person-circle" style="font-size: 1.5rem; color: #fff;"></span>
+            <!-- Exemplo: <LoginDisplay /> se você tiver um -->
         </div>
     </div>
 </header>
 
 @code {
-    private string searchTerm;
-    private bool isDarkMode = false; // Estado inicial do tema
-
-    private void HandleSearchKeyUp(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            PerformSearch();
-        }
-    }
-
-    private void PerformSearch()
-    {
-        // Lógica de pesquisa a ser implementada
-        Console.WriteLine($"Pesquisando por: {searchTerm}");
-        // navManager.NavigateTo($"/search/{searchTerm}"); // Exemplo
-    }
-
-    private void ToggleTheme()
-    {
-        isDarkMode = !isDarkMode;
-        // Lógica para aplicar o tema (ex: chamar JSInterop para mudar classe no body)
-        Console.WriteLine($"Tema alterado para: {(isDarkMode ? "Dark" : "Light")}");
-        // await JSRuntime.InvokeVoidAsync("toggleTheme", isDarkMode); // Exemplo
-    }
-
-    private void HandleLogout()
-    {
-        // Lógica de logout a ser implementada
-        Console.WriteLine("Logout solicitado");
-        // navManager.NavigateTo("/logout"); // Exemplo
-    }
-
+    // Lógica futura, como obter o título da página atual, pode ir aqui.
     // [Parameter] public string CurrentPageTitle { get; set; }
 }
