@@ -1,38 +1,102 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="page">
+    <Header @ref="appHeader" OnToggleTheme="ToggleThemeOnHeaderClick" OnToggleUserMenu="ToggleUserMenu" OnLogout="PerformLogout" />
 
-    <div class="main-content-wrapper"> @* Adicionado um wrapper para sidebar e main *@
-        <div class="sidebar">
-            <NavMenu />
+    <div class="main-layout-wrapper @(sidebarMinimized ? "sidebar-minimized" : "")">
+        <div class="sidebar" style="@($"top: {headerHeight}px;")">
+            <NavMenu IsMinimized="sidebarMinimized" ToggleSidebar="ToggleSidebarState" />
         </div>
 
-        <main>
-            <Header /> @* <-- Adicionado o Header aqui *@
-            @* O .top-row que existia dentro do NavMenu foi removido ou será parte do Header agora?
-               Se o NavMenu ainda tiver seu próprio .top-row para o toggler,
-               e o Header for separado, precisamos garantir que o layout funcione.
-               O Header que criei tem 3.5rem de altura. O .top-row do NavMenu também.
-               Se o .top-row do NavMenu (com o toggler) ainda for necessário DENTRO do sidebar,
-               então o Header é uma barra adicional no topo.
-               Se o toggler do menu lateral deve ir para o Header principal, isso é uma mudança maior.
-               Por enquanto, vou assumir que o Header é uma barra separada NO TOPO de tudo.
-               E o NavMenu continua com sua estrutura interna, incluindo o toggler.
-               Isso pode significar que o .sidebar e .main precisam ser ajustados para ficarem abaixo do Header.
-            *@
+        <main class="content-area" style="@($"padding-top: {headerHeight}px;")">
             <article class="content px-4">
                 @Body
             </article>
+            <Footer />
         </main>
     </div>
-
-    <Footer /> @* <-- Adicionado o Footer aqui *@
 </div>
 
-<ToastContainer /> @* <-- Adicionado o ToastContainer aqui *@
+<ToastContainer />
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@inject ThemeService ThemeService
+@implements IAsyncDisposable
+
+@code {
+    private bool sidebarMinimized = false;
+    private string headerHeight = "3.5rem"; // Default, pode ser dinâmico se necessário
+    private Header? appHeader; // Referência ao componente Header
+
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.OnThemeChanged += HandleThemeChanged;
+        // InitializeAsync no ThemeService lida com o carregamento inicial do tema.
+        // No entanto, precisamos garantir que ele seja chamado.
+        // Se o ThemeService for injetado em App.razor ou similar e inicializado lá,
+        // pode não ser necessário aqui. Mas para garantir, especialmente se MainLayout
+        // é o primeiro a precisar dele visualmente:
+        await ThemeService.InitializeAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (appHeader != null)
+            {
+                // A altura do Header é fixa em CSS (3.5rem), então não precisamos medir via JS.
+            }
+            // A chamada inicial para aplicar o tema já é feita por ThemeService.InitializeAsync -> LoadThemeFromLocalStorage -> ApplyThemeInternal
+            // StateHasChanged(); // Pode ser necessário se o tema inicial precisar forçar re-renderização de algo no MainLayout
+        }
+    }
+
+    private void ToggleSidebarState()
+    {
+        sidebarMinimized = !sidebarMinimized;
+    }
+
+    private async Task ToggleThemeOnHeaderClick()
+    {
+        await ThemeService.ToggleThemeAsync();
+        // O evento OnThemeChanged cuidará do StateHasChanged se necessário.
+    }
+
+    private void HandleThemeChanged()
+    {
+        // Este método é chamado quando o tema muda através do ThemeService.
+        // Se o MainLayout ou seus filhos diretos precisam re-renderizar com base no tema
+        // (além do que o CSS global faz via data-theme-effective), chame StateHasChanged().
+        // Por exemplo, se você tivesse classes CSS condicionais no MainLayout.razor.
+        InvokeAsync(StateHasChanged); // Garante que StateHasChanged seja executado no thread de sincronização.
+        Console.WriteLine($"MainLayout: Theme changed to {ThemeService.CurrentTheme}");
+    }
+
+    private void ToggleUserMenu()
+    {
+        // Lógica para menu do usuário (ex: controlar estado de dropdown se não for puramente Bootstrap JS)
+        Console.WriteLine("ToggleUserMenu clicado no MainLayout");
+    }
+
+    private void PerformLogout()
+    {
+        // Lógica de Logout
+        Console.WriteLine("Logout clicado no MainLayout");
+        // Exemplo: NavigationManager.NavigateTo("logout"); // Precisa injetar NavigationManager
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        ThemeService.OnThemeChanged -= HandleThemeChanged;
+        // ThemeService em si é singleton, então não o dispose aqui.
+        // Se o ThemeService implementasse IAsyncDisposable para limpar JS modules,
+        // isso seria feito quando o app desligasse, não por um componente.
+        await Task.CompletedTask;
+    }
+}
