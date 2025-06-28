@@ -1,7 +1,7 @@
 .app-header {
     background-color: #0a2752; /* Um tom de azul escuro, pode ajustar para combinar com o NavMenu */
     color: #ffffff;
-    padding: 0.75rem 1rem;
+    padding: 0 1rem; /* Ajustado para padding horizontal apenas, altura controlada por height */
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     height: 3.5rem; /* Mesma altura que o .top-row do NavMenu para consistência */
     display: flex;
@@ -10,35 +10,86 @@
 
 .app-header .container-fluid {
     width: 100%;
+    padding: 0; /* Remover padding padrão do container-fluid se houver */
 }
 
-.header-brand a {
+/* Espaço à esquerda - pode ser usado para o toggler do NavMenu em telas pequenas no futuro */
+.header-left-space {
+    min-width: 40px; /* Espaço para um possível ícone/botão */
+}
+
+.header-search {
+    flex-grow: 1; /* Permite que a pesquisa ocupe espaço */
+    max-width: 400px; /* Limita a largura máxima da barra de pesquisa */
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+.header-search .form-control-sm {
+    background-color: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.25);
     color: #ffffff;
-    font-size: 1.25rem;
-    font-weight: bold;
-    text-decoration: none;
 }
 
-.header-brand a:hover {
-    color: #dddddd;
+.header-search .form-control-sm::placeholder {
+    color: rgba(255,255,255,0.7);
 }
 
-.header-title {
-    font-size: 1.1rem;
-    /* Centralizado - pode precisar de mais trabalho se o conteúdo for dinâmico */
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
+.header-search .form-control-sm:focus {
+    background-color: rgba(255,255,255,0.25);
+    border-color: rgba(255,255,255,0.5);
+    color: #ffffff;
+    box-shadow: none;
 }
 
-.header-user-menu {
-    /* Alinhado à direita pelo flex justify-content-between no container-fluid */
+.header-actions {
+    /* Alinhado à direita pelo ms-auto no elemento e d-flex no pai */
 }
 
-/* Ajustes para telas menores se necessário */
-@media (max-width: 640px) {
-    .header-title {
-        display: none; /* Ocultar título central em telas pequenas para evitar sobreposição com brand/menu */
+.header-actions .btn-icon {
+    color: #ffffff;
+    background: none;
+    border: none;
+    font-size: 1.25rem; /* Tamanho dos ícones */
+    padding: 0.25rem 0.5rem;
+}
+
+.header-actions .btn-icon:hover {
+    color: #cccccc;
+    background-color: rgba(255,255,255,0.1);
+}
+
+.header-actions .btn-icon:focus {
+    box-shadow: none;
+}
+
+.header-actions .dropdown-menu {
+    /* Estilos para o dropdown se necessário, mas Bootstrap deve cuidar bem */
+    font-size: 0.9rem;
+}
+.header-actions .dropdown-item {
+    display: flex;
+    align-items: center;
+}
+
+
+/* Removido .header-title e .header-user-menu, pois a estrutura mudou */
+
+/* Ajustes para telas menores */
+@media (max-width: 767.98px) { /* Ponto de quebra Bootstrap sm/md */
+    .header-search {
+        max-width: 200px; /* Reduz a barra de pesquisa */
+    }
+}
+
+@media (max-width: 575.98px) { /* Ponto de quebra Bootstrap xs */
+    .header-search {
+        display: none; /* Oculta a barra de pesquisa em telas muito pequenas */
+    }
+    .header-left-space {
+        min-width: auto; /* Remove o min-width se a pesquisa sumir */
+    }
+    .app-header .container-fluid {
+        justify-content: flex-end; /* Alinha tudo à direita se a pesquisa sumir */
     }
 }

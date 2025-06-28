@@ -4,23 +4,13 @@
 <div class="page">
 
     <div class="main-content-wrapper"> @* Adicionado um wrapper para sidebar e main *@
-        <div class="sidebar">
-            <NavMenu />
+        <div class="sidebar @(isMinimizedNav ? "minimized" : "")">
+            <NavMenu IsMinimized="isMinimizedNav" OnToggleMinimize="ToggleNavMenuMinimize" />
         </div>
 
-        <main>
+        <main class="@(isMinimizedNav ? "sidebar-minimized" : "")">
             <Header /> @* <-- Adicionado o Header aqui *@
-            @* O .top-row que existia dentro do NavMenu foi removido ou será parte do Header agora?
-               Se o NavMenu ainda tiver seu próprio .top-row para o toggler,
-               e o Header for separado, precisamos garantir que o layout funcione.
-               O Header que criei tem 3.5rem de altura. O .top-row do NavMenu também.
-               Se o .top-row do NavMenu (com o toggler) ainda for necessário DENTRO do sidebar,
-               então o Header é uma barra adicional no topo.
-               Se o toggler do menu lateral deve ir para o Header principal, isso é uma mudança maior.
-               Por enquanto, vou assumir que o Header é uma barra separada NO TOPO de tudo.
-               E o NavMenu continua com sua estrutura interna, incluindo o toggler.
-               Isso pode significar que o .sidebar e .main precisam ser ajustados para ficarem abaixo do Header.
-            *@
+            @* Comentários sobre Header e NavMenu mantidos para referência futura *@
             <article class="content px-4">
                 @Body
             </article>
@@ -37,3 +27,12 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private bool isMinimizedNav = false;
+
+    private void ToggleNavMenuMinimize()
+    {
+        isMinimizedNav = !isMinimizedNav;
+    }
+}
