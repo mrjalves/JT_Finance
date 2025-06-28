@@ -1,0 +1,78 @@
+@if (IsOpen)
+{
+    <div class="custom-modal-backdrop @(IsOpen ? "show" : "")" @onclick="CloseModalOnBackdropClick">
+        <div class="custom-modal @(IsOpen ? "show" : "") @SizeCssClass" role="dialog" @onclick:stopPropagation="true">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title">@Title</h5>
+                @if(ShowCloseButton)
+                {
+                    <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
+                }
+            </div>
+            <div class="custom-modal-body">
+                @BodyContent
+            </div>
+            @if (FooterContent != null)
+            {
+                <div class="custom-modal-footer">
+                    @FooterContent
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public string Title { get; set; } = "Modal Title";
+    [Parameter] public RenderFragment BodyContent { get; set; }
+    [Parameter] public RenderFragment FooterContent { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; } // Callback quando o modal é fechado
+    [Parameter] public bool ShowCloseButton { get; set; } = true;
+    [Parameter] public ModalSize Size { get; set; } = ModalSize.Default;
+    [Parameter] public bool CloseOnBackdropClick { get; set; } = true;
+
+
+    public async Task Open()
+    {
+        IsOpen = true;
+        StateHasChanged();
+    }
+
+    public async Task Close()
+    {
+        IsOpen = false;
+        await OnClose.InvokeAsync();
+        StateHasChanged();
+    }
+
+    private async Task CloseModalOnBackdropClick()
+    {
+        if (CloseOnBackdropClick)
+        {
+            await Close();
+        }
+    }
+
+    private string SizeCssClass
+    {
+        get
+        {
+            return Size switch
+            {
+                ModalSize.Small => "custom-modal-sm",
+                ModalSize.Large => "custom-modal-lg",
+                ModalSize.ExtraLarge => "custom-modal-xl",
+                _ => ""
+            };
+        }
+    }
+}
+
+public enum ModalSize
+{
+    Default,
+    Small,
+    Large,
+    ExtraLarge
+}

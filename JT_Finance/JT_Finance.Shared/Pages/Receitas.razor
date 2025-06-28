@@ -1,112 +1,170 @@
 @page "/receitas"
 @using JT_Finance.Shared.Components
 @using System.ComponentModel.DataAnnotations
+@using System.Linq.Expressions // Necessário para ValueExpression no CustomInput dentro do RenderFragment
+@using JT_Finance.Shared.Components // Confirmar que está aqui
+@using JT_Finance.Shared.Services // Para ToastService
+
+@inject ToastService ToastService // Injetar ToastService
 
 <h3>Receitas</h3>
 
-@if (exibirFormulario)
-{
-    <h4>@(receitaAtual.Id == Guid.Empty ? "Nova Receita" : "Editar Receita")</h4>
-    <CrudForm TItem="ReceitaModel" Item="receitaAtual" OnSubmit="SalvarReceita" OnCancel="CancelarFormulario">
-        <ChildContent Context="receita">
-            <CustomInput Label="Descrição" @bind-Value="receita.Descricao" />
-            <CustomInput Label="Valor" Type="number" @bind-Value="receita.ValorAsString"  />
-            <div class="form-group">
-                <label for="data">Data</label>
-                <InputDate id="data" class="form-control" @bind-Value="receita.Data" />
-                <ValidationMessage For="@(() => receita.Data)" />
-            </div>
-            <CustomInput Label="Fonte" @bind-Value="receita.Fonte"  />
-        </ChildContent>
-    </CrudForm>
-}
-else
-{
-    <button class="btn btn-primary mb-3" @onclick="() => AdicionarNovaReceita()">Nova Receita</button>
+<button class="btn btn-primary mb-3" @onclick="AbrirModalParaNovaReceita">Nova Receita</button>
 
-    <DataGrid TItem="ReceitaModel" Items="listaReceitas">
-        <HeaderTemplate>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Data</th>
-            <th>Fonte</th>
-            <th>Ações</th>
-        </HeaderTemplate>
-        <RowTemplate Context="receita">
-            <td>@receita.Descricao</td>
-            <td>@receita.Valor.ToString("C")</td>
-            <td>@receita.Data.ToShortDateString()</td>
-            <td>@receita.Fonte</td>
-            <td>
-                <button class="btn btn-sm btn-info" @onclick="() => EditarReceita(receita)">Editar</button>
-                <button class="btn btn-sm btn-danger" @onclick="() => RemoverReceita(receita.Id)">Remover</button>
-            </td>
-        </RowTemplate>
-    </DataGrid>
-}
+<DataGrid TItem="ReceitaModel" Items="listaReceitas">
+    <HeaderTemplate>
+        <th>Descrição</th>
+        <th>Valor</th>
+        <th>Data</th>
+        <th>Fonte</th>
+        <th>Ações</th>
+    </HeaderTemplate>
+    <RowTemplate Context="receita">
+        <td>@receita.Descricao</td>
+        <td>@receita.Valor.ToString("C")</td>
+        <td>@receita.Data.ToShortDateString()</td>
+        <td>@receita.Fonte</td>
+        <td>
+            <button class="btn btn-sm btn-info" @onclick="() => AbrirModalParaEditarReceita(receita)">Editar</button>
+            <button class="btn btn-sm btn-danger" @onclick="() => ConfirmarRemocaoReceita(receita.Id)">Remover</button>
+        </td>
+    </RowTemplate>
+</DataGrid>
+
+<Modal @ref="crudModal" Title="@modalTitle" OnClose="ResetarEstadoAposModal" Size="ModalSize.Large">
+    <BodyContent>
+        @if (receitaAtual != null)
+        {
+            <CrudForm TItem="ReceitaModel" Item="receitaAtual" OnSubmit="HandleSalvarReceita" OnCancel="HandleCancelarFormularioModal">
+                <ChildContent Context="receitaContext">
+                    <CustomInput Label="Descrição" @bind-Value="receitaContext.Descricao" />
+                    <CustomInput Label="Valor" Type="number" @bind-Value="receitaContext.ValorAsString" />
+                    <div class="form-group mb-3">
+                        <label for="data_receita">Data</label>
+                        <InputDate id="data_receita" class="form-control" @bind-Value="receitaContext.Data" />
+                        <ValidationMessage For="@(() => receitaContext.Data)" />
+                    </div>
+                    <CustomInput Label="Fonte" @bind-Value="receitaContext.Fonte" />
+                </ChildContent>
+            </CrudForm>
+        }
+        else
+        {
+            <p>Carregando formulário...</p>
+        }
+    </BodyContent>
+</Modal>
+
+<ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoReceita" />
 
 @code {
     private List<ReceitaModel> listaReceitas = new List<ReceitaModel>();
-    private ReceitaModel receitaAtual = new ReceitaModel();
-    private bool exibirFormulario = false;
+    private ReceitaModel receitaAtual = null; // Inicializa como null
+
+    private Modal crudModal; // Referência para o componente Modal para Adicionar/Editar
+    private string modalTitle = "";
+
+    private ConfirmDialog confirmDeleteDialog; // Referência para o modal de confirmação de remoção
+    private Guid? idReceitaParaRemover; // Nullable Guid para armazenar o ID
 
     protected override void OnInitialized()
     {
         // Dados de exemplo
         listaReceitas.Add(new ReceitaModel { Id = Guid.NewGuid(), Descricao = "Salário", Valor = 5000.00M, Data = DateTime.Now.AddDays(-15), Fonte = "Empresa X" });
         listaReceitas.Add(new ReceitaModel { Id = Guid.NewGuid(), Descricao = "Freelance", Valor = 850.00M, Data = DateTime.Now.AddDays(-3), Fonte = "Cliente Y" });
+        // TODO: Carregar dados reais de um serviço
     }
 
-    private void AdicionarNovaReceita()
+    private void AbrirModalParaNovaReceita()
     {
         receitaAtual = new ReceitaModel { Data = DateTime.Now };
-        exibirFormulario = true;
+        modalTitle = "Nova Receita";
+        StateHasChanged();
+        crudModal.Open();
     }
 
-    private void EditarReceita(ReceitaModel receitaParaEditar)
+    private void AbrirModalParaEditarReceita(ReceitaModel receitaParaEditar)
     {
         receitaAtual = new ReceitaModel
         {
             Id = receitaParaEditar.Id,
             Descricao = receitaParaEditar.Descricao,
             Valor = receitaParaEditar.Valor,
+            ValorAsString = receitaParaEditar.ValorAsString, // Copiar a string também
             Data = receitaParaEditar.Data,
             Fonte = receitaParaEditar.Fonte
         };
-        exibirFormulario = true;
+        modalTitle = "Editar Receita";
+        StateHasChanged();
+        crudModal.Open();
     }
 
-    private void SalvarReceita(ReceitaModel receita)
+    private async Task HandleSalvarReceita(ReceitaModel receita)
     {
-        if (receita.Id == Guid.Empty)
+        bool isNew = receita.Id == Guid.Empty;
+        if (isNew)
         {
             receita.Id = Guid.NewGuid();
-            listaReceitas.Add(receita);
+            listaReceitas.Add(receita); // TODO: Salvar via serviço
+            ToastService.ShowSuccess("Sucesso!", "Nova receita adicionada.");
         }
         else
         {
             var index = listaReceitas.FindIndex(r => r.Id == receita.Id);
             if (index != -1)
             {
-                listaReceitas[index] = receita;
+                listaReceitas[index] = receita; // TODO: Atualizar via serviço
+                ToastService.ShowSuccess("Sucesso!", "Receita atualizada.");
+            }
+            else
+            {
+                ToastService.ShowError("Erro!", "Receita não encontrada para atualização.");
             }
         }
-        CancelarFormulario();
+        await crudModal.Close();
     }
 
-    private void RemoverReceita(Guid id)
+    private async Task HandleCancelarFormularioModal()
     {
-        var receitaParaRemover = listaReceitas.FirstOrDefault(r => r.Id == id);
-        if (receitaParaRemover != null)
+        await crudModal.Close();
+    }
+
+    private void ResetarEstadoAposModal()
+    {
+        receitaAtual = null;
+        modalTitle = "";
+        StateHasChanged();
+    }
+
+    private async Task ConfirmarRemocaoReceita(Guid id)
+    {
+        idReceitaParaRemover = id;
+        await confirmDeleteDialog.Show(
+            title: "Confirmar Remoção",
+            message: "Tem certeza que deseja remover esta receita? Esta ação não pode ser desfeita.",
+            confirmText: "Sim, Remover",
+            cancelText: "Cancelar",
+            confirmClass: "btn-danger"
+        );
+    }
+
+    private void EfetuarRemocaoReceita()
+    {
+        if (idReceitaParaRemover.HasValue)
         {
-            listaReceitas.Remove(receitaParaRemover);
+            var receitaParaRemover = listaReceitas.FirstOrDefault(r => r.Id == idReceitaParaRemover.Value);
+            if (receitaParaRemover != null)
+            {
+                listaReceitas.Remove(receitaParaRemover); // TODO: Remover via serviço
+                ToastService.ShowSuccess("Removida!", $"Receita \"{receitaParaRemover.Descricao}\" foi removida.");
+                StateHasChanged();
+            }
+            else
+            {
+                ToastService.ShowError("Erro!", "Receita não encontrada para remoção.");
+            }
+            idReceitaParaRemover = null;
         }
-    }
-
-    private void CancelarFormulario()
-    {
-        exibirFormulario = false;
-        receitaAtual = new ReceitaModel();
     }
 
     public class ReceitaModel

@@ -1,0 +1,121 @@
+@implements IDisposable
+@inject ToastService ToastService
+
+@if (_isVisible)
+{
+    <div class="@($"toast-single fade {_animationClass}")" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="@($"toast-header {_toastLevelCssClass}")">
+            <strong class="me-auto">@Settings.Heading</strong>
+            <small class="text-muted ms-2">@TimeAgo(Settings.Timestamp)</small>
+            <button type="button" class="btn-close @(_toastLevelCssClass.Contains("text-white") ? "btn-close-white" : "")" @onclick="Close" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            @Settings.Message
+        </div>
+        @if (Settings.DurationInSeconds > 0)
+        {
+            <div class="toast-progress" style="width: @_progressWidth%;"></div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public ToastSettings Settings { get; set; }
+
+    private bool _isVisible = false;
+    private string _animationClass = "";
+    private string _toastLevelCssClass = "";
+    private Timer _timer;
+    private Timer _progressTimer;
+    private double _progressWidth = 100;
+    private const int ProgressUpdateIntervalMs = 50; // Intervalo para atualizar a barra de progresso
+
+    protected override void OnInitialized()
+    {
+        _toastLevelCssClass = GetToastLevelCssClass(Settings.Level);
+
+        // Inicia a animação de entrada
+        // Atraso mínimo para garantir que o elemento esteja no DOM antes de aplicar a classe 'show'
+        Task.Delay(10).ContinueWith(_ =>
+        {
+            _isVisible = true;
+            _animationClass = "show"; // Triggers fade-in
+            InvokeAsync(StateHasChanged);
+        });
+
+        if (Settings.DurationInSeconds > 0)
+        {
+            _timer = new Timer(CloseAfterDelay, null, Settings.DurationInSeconds * 1000, Timeout.Infinite);
+
+            // Iniciar o timer para a barra de progresso
+            _progressTimer = new Timer(UpdateProgress, null, 0, ProgressUpdateIntervalMs);
+        }
+    }
+
+    private void UpdateProgress(object state)
+    {
+        if (!_isVisible || Settings.DurationInSeconds <= 0)
+        {
+            _progressTimer?.Change(Timeout.Infinite, Timeout.Infinite); // Para o timer
+            return;
+        }
+
+        var elapsedTimeMs = (DateTime.Now - Settings.Timestamp).TotalMilliseconds;
+        var totalDurationMs = Settings.DurationInSeconds * 1000;
+
+        _progressWidth = Math.Max(0, 100 - (elapsedTimeMs / totalDurationMs * 100));
+
+        if (_progressWidth <= 0)
+        {
+             _progressWidth = 0;
+            _progressTimer?.Change(Timeout.Infinite, Timeout.Infinite); // Para o timer
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    private void CloseAfterDelay(object state)
+    {
+        InvokeAsync(Close);
+    }
+
+    public async Task Close()
+    {
+        _animationClass = ""; // Triggers fade-out
+        await InvokeAsync(StateHasChanged);
+
+        // Espera a animação de fade-out terminar antes de remover do serviço
+        await Task.Delay(200); // Deve ser igual ou maior que a duração da transição CSS
+        _isVisible = false;
+        ToastService.RemoveToast(Settings.Id); // Notifica o serviço para remover este toast da lista global
+                                              // O ToastContainer então re-renderizará sem este toast.
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string GetToastLevelCssClass(ToastLevel level)
+    {
+        return level switch
+        {
+            ToastLevel.Success => "bg-success text-white",
+            ToastLevel.Error => "bg-danger text-white",
+            ToastLevel.Warning => "bg-warning text-dark", // text-dark para melhor contraste com amarelo
+            ToastLevel.Info => "bg-info text-white",
+            _ => "bg-light text-dark" // Default
+        };
+    }
+
+    private string TimeAgo(DateTime timestamp)
+    {
+        var timespan = DateTime.Now - timestamp;
+        if (timespan.TotalSeconds < 60) return $"{(int)timespan.TotalSeconds}s ago";
+        if (timespan.TotalMinutes < 60) return $"{(int)timespan.TotalMinutes}m ago";
+        if (timespan.TotalHours < 24) return $"{(int)timespan.TotalHours}h ago";
+        return $"{timestamp:g}";
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+        _progressTimer?.Dispose();
+    }
+}

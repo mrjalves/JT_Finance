@@ -1,0 +1,78 @@
+@inject IJSRuntime JSRuntime
+
+<div class="chart-container" style="position: relative; height:40vh; width:80vw; max-width: 500px; margin: auto;">
+    <canvas id="@ChartId"></canvas>
+</div>
+
+@code {
+    [Parameter]
+    public string ChartId { get; set; } = "pieChartCanvas"; // Default ID, pode ser sobrescrito
+
+    [Parameter]
+    public List<string> Labels { get; set; } = new List<string>();
+
+    [Parameter]
+    public List<decimal> DataValues { get; set; } = new List<decimal>();
+
+    [Parameter]
+    public string Title { get; set; } = "Gráfico de Pizza";
+
+    // Cores pré-definidas para as fatias do gráfico
+    private List<string> backgroundColors = new List<string>
+    {
+        "rgba(255, 99, 132, 0.7)",
+        "rgba(54, 162, 235, 0.7)",
+        "rgba(255, 206, 86, 0.7)",
+        "rgba(75, 192, 192, 0.7)",
+        "rgba(153, 102, 255, 0.7)",
+        "rgba(255, 159, 64, 0.7)",
+        "rgba(199, 199, 199, 0.7)",
+        "rgba(83, 102, 255, 0.7)",
+        "rgba(40, 159, 64, 0.7)",
+        "rgba(210, 99, 132, 0.7)"
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Se os parâmetros mudarem e o componente já foi renderizado uma vez, atualize o gráfico.
+        // OnAfterRenderAsync com firstRender=false também pode ser usado, mas OnParametersSetAsync
+        // é bom para quando os dados de entrada mudam.
+        // Verifica se DataValues não é nulo e tem elementos para evitar erros ao renderizar.
+        if (DataValues != null && DataValues.Any())
+        {
+            await RenderChart();
+        }
+    }
+
+    public async Task RenderChart()
+    {
+        // Garante que temos cores suficientes, repetindo se necessário
+        var chartColors = new List<string>();
+        for (int i = 0; i < DataValues.Count; i++)
+        {
+            chartColors.Add(backgroundColors[i % backgroundColors.Count]);
+        }
+
+        await JSRuntime.InvokeVoidAsync("blazorCharts.createPieChart",
+            ChartId, Labels, DataValues, chartColors, Title);
+    }
+
+    // Este método pode ser chamado externamente se você tiver uma referência ao componente
+    public async Task UpdateChartData(List<string> newLabels, List<decimal> newDataValues, string newTitle = null)
+    {
+        Labels = newLabels;
+        DataValues = newDataValues;
+        if(newTitle != null) Title = newTitle;
+
+        if (DataValues != null && DataValues.Any())
+        {
+            var chartColors = new List<string>();
+            for (int i = 0; i < DataValues.Count; i++)
+            {
+                chartColors.Add(backgroundColors[i % backgroundColors.Count]);
+            }
+            await JSRuntime.InvokeVoidAsync("blazorCharts.updatePieChart",
+                ChartId, Labels, DataValues, chartColors, Title);
+        }
+    }
+}

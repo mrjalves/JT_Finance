@@ -1,0 +1,44 @@
+.app-header {
+    background-color: #0a2752; /* Um tom de azul escuro, pode ajustar para combinar com o NavMenu */
+    color: #ffffff;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    height: 3.5rem; /* Mesma altura que o .top-row do NavMenu para consistência */
+    display: flex;
+    align-items: center;
+}
+
+.app-header .container-fluid {
+    width: 100%;
+}
+
+.header-brand a {
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.header-brand a:hover {
+    color: #dddddd;
+}
+
+.header-title {
+    font-size: 1.1rem;
+    /* Centralizado - pode precisar de mais trabalho se o conteúdo for dinâmico */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+.header-user-menu {
+    /* Alinhado à direita pelo flex justify-content-between no container-fluid */
+}
+
+/* Ajustes para telas menores se necessário */
+@media (max-width: 640px) {
+    .header-title {
+        display: none; /* Ocultar título central em telas pequenas para evitar sobreposição com brand/menu */
+    }
+}

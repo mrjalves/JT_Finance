@@ -1,0 +1,29 @@
+@using JT_Finance.Shared.Services
+@inject IFormFactor FormFactor
+
+<footer class="app-footer">
+    <div class="container-fluid">
+        <span class="footer-item">
+            <a href="#" @onclick="ShowLogs" @onclick:preventDefault>Logs do Sistema</a>
+        </span>
+        <span class="footer-item">
+            Versão: @AppVersion
+        </span>
+        <span class="footer-item">
+            Plataforma: @CurrentPlatform
+        </span>
+    </div>
+</footer>
+
+@code {
+    private string AppVersion { get; set; } = "1.0.0-beta"; // Mock version
+    private string CurrentPlatform => FormFactor.GetPlatform();
+
+    private void ShowLogs()
+    {
+        // Lógica para mostrar logs pode ser implementada aqui no futuro.
+        // Por exemplo, navegar para uma página de logs ou abrir um modal.
+        Console.WriteLine("Tentativa de exibir logs do sistema.");
+        // JSRuntime.InvokeVoidAsync("alert", "Logs do sistema ainda não implementados."); // Exemplo com JS
+    }
+}

@@ -2,16 +2,35 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    height: 100vh; /* Garante que a página ocupe toda a altura da viewport */
+}
+
+.main-content-wrapper {
+    display: flex;
+    flex: 1; /* Ocupa o espaço restante abaixo do Header */
+    overflow-y: hidden; /* Evita scroll duplo se o conteúdo interno já tiver scroll */
 }
 
 main {
     flex: 1;
+    overflow-y: auto; /* Permite scroll no conteúdo principal se necessário */
+    position: relative; /* Para que o .top-row do NavMenu (se o toggler for movido para cá) possa se posicionar */
 }
 
 .sidebar {
     background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    /* Em telas pequenas, o NavMenu.razor.css controla o sidebar (nav-scrollable) como um overlay.
+       Portanto, não precisamos de muita estilização para .sidebar em si aqui para < 641px. */
 }
 
+/* Estilos para .top-row que eram genéricos.
+   O Header.razor tem sua própria altura (3.5rem).
+   O NavMenu.razor tem seu próprio .top-row interno com altura de 3.5rem.
+   Se houver um .top-row diretamente em <main> (o que não é o caso agora),
+   ele precisaria de estilização. Vou remover/comentar os estilos .top-row daqui
+   para evitar confusão, pois eles não se aplicam mais da mesma forma.
+*/
+/*
 .top-row {
     background-color: #f7f7f7;
     border-bottom: 1px solid #d6d5d5;
@@ -35,32 +54,50 @@ main {
         overflow: hidden;
         text-overflow: ellipsis;
     }
+*/
 
 @media (max-width: 640.98px) {
-    .top-row {
+    /* .top-row {
         justify-content: space-between;
     }
 
     .top-row ::deep a, .top-row ::deep .btn-link {
         margin-left: 0;
+    } */
+    .main-content-wrapper {
+        flex-direction: column; /* Empilha sidebar e main em telas muito pequenas se o sidebar fosse visível aqui */
+    }
+    main {
+         /* Em telas pequenas, o main content pode precisar de um padding-top
+            se o Header estiver fixed e sobrepondo. Mas o Header não é fixed por padrão.
+            O NavMenu quando aberto é fixed. */
     }
 }
 
 @media (min-width: 641px) {
-    .page {
-        flex-direction: row;
+    .main-content-wrapper {
+        flex-direction: row; /* Sidebar ao lado do main content */
     }
 
     .sidebar {
         width: 250px;
-        height: 100vh;
-        position: sticky;
-        top: 0;
+        height: 100%; /* Ocupa 100% da altura do .main-content-wrapper */
+        /* position: sticky; não é mais necessário aqui, pois o main-content-wrapper scrolla
+           ou o .nav-scrollable dentro do sidebar scrolla.
+           Se quisermos o sidebar sticky em relação à página inteira (abaixo do Header),
+           o .main-content-wrapper precisaria gerenciar o scroll, e o sidebar seria sticky top: 3.5rem
+           ou o .page seria o container de scroll.
+           Por simplicidade, o sidebar terá altura total do wrapper e o conteúdo interno (.nav-scrollable) scrolla.
+        */
     }
 
-    .top-row {
+    /* Se .top-row se referia ao header da página, ele foi substituído pelo componente Header.
+       Se se referia a uma barra de ferramentas dentro de <main>, ela não existe por padrão.
+       As regras de padding para article e .top-row aqui podem ser ajustadas ou removidas.
+    */
+    /* .top-row {
         position: sticky;
-        top: 0;
+        top: 0; // Isto seria problemático se o Header já tem 3.5rem. Seria top: 3.5rem.
         z-index: 1;
     }
 
@@ -68,9 +105,9 @@ main {
         flex: 1;
         text-align: right;
         width: 0;
-    }
+    } */
 
-    .top-row, article {
+    article.content { /* Ajustado para article.content para especificidade */
         padding-left: 2rem !important;
         padding-right: 1.5rem !important;
     }

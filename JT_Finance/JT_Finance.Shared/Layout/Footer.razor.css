@@ -1,0 +1,51 @@
+.app-footer {
+    background-color: #f8f9fa; /* Cor de fundo clara, similar a footers comuns */
+    color: #6c757d; /* Cor de texto suave */
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #dee2e6; /* Linha sutil no topo */
+    font-size: 0.875rem; /* Texto um pouco menor */
+    text-align: center; /* Centraliza o container-fluid se ele não for width 100% */
+    height: 3rem; /* Altura definida para o footer */
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centraliza o conteúdo do container-fluid */
+}
+
+.app-footer .container-fluid {
+    display: flex;
+    justify-content: space-between; /* Espaça os itens */
+    align-items: center;
+    width: 100%;
+    max-width: 1200px; /* Limita a largura máxima do conteúdo do footer */
+}
+
+.footer-item {
+    margin: 0 0.5rem; /* Espaçamento entre os itens */
+}
+
+.footer-item a {
+    color: #007bff; /* Cor de link padrão Bootstrap */
+    text-decoration: none;
+}
+
+.footer-item a:hover {
+    text-decoration: underline;
+}
+
+/* Ajustes para telas menores */
+@media (max-width: 768px) {
+    .app-footer .container-fluid {
+        flex-direction: column; /* Empilha os itens verticalmente */
+        justify-content: center;
+        text-align: center;
+    }
+
+    .app-footer {
+        height: auto; /* Altura automática para acomodar itens empilhados */
+        padding: 1rem; /* Mais padding vertical */
+    }
+
+    .footer-item {
+        margin: 0.25rem 0; /* Ajusta a margem para empilhamento vertical */
+    }
+}

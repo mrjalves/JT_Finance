@@ -19,6 +19,9 @@ namespace JT_Finance
             // Add device-specific services used by the JT_Finance.Shared project
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
+            // Register ToastService
+            builder.Services.AddSingleton<ToastService>();
+
             builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG
