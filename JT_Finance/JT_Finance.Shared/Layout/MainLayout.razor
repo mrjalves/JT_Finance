@@ -1,7 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="page">
-    <Header /> @* <-- Adicionado o Header aqui *@
 
     <div class="main-content-wrapper"> @* Adicionado um wrapper para sidebar e main *@
         <div class="sidebar">
@@ -9,6 +8,7 @@
         </div>
 
         <main>
+            <Header /> @* <-- Adicionado o Header aqui *@
             @* O .top-row que existia dentro do NavMenu foi removido ou será parte do Header agora?
                Se o NavMenu ainda tiver seu próprio .top-row para o toggler,
                e o Header for separado, precisamos garantir que o layout funcione.
