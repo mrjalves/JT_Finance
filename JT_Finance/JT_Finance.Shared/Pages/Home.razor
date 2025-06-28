@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Services
 @inject IFormFactor FormFactor
 
@@ -60,14 +61,8 @@
     </div>
 </div>
 
-<hr />
-
-<p><em>Informações de debug: App rodando em @factor usando @platform.</em></p>
 
 @code {
-    private string factor => FormFactor.GetFormFactor();
-    private string platform => FormFactor.GetPlatform();
-
     // Variáveis para os cards de resumo
     private decimal totalReceitas;
     private decimal totalDespesas;
