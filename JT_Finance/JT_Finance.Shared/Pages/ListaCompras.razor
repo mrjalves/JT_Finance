@@ -1,0 +1,145 @@
+@page "/listacompras"
+@using JT_Finance.Shared.Components
+@using System.ComponentModel.DataAnnotations
+
+<h3>Lista de Compras</h3>
+
+@if (exibirFormulario)
+{
+    <h4>@(itemAtual.Id == Guid.Empty ? "Novo Item" : "Editar Item")</h4>
+    <CrudForm TItem="ItemListaCompraModel" Item="itemAtual" OnSubmit="SalvarItem" OnCancel="CancelarFormulario">
+        <ChildContent Context="item">
+            <CustomInput Label="Nome do Item" @bind-Value="item.Nome" ValueExpression="@(() => item.Nome)" />
+            <CustomInput Label="Quantidade" Type="number" @bind-Value="item.QuantidadeAsString" ValueExpression="@(() => item.QuantidadeAsString)" />
+            <div class="form-group form-check">
+                <InputCheckbox id="comprado" class="form-check-input" @bind-Value="item.Comprado" />
+                <label class="form-check-label" for="comprado">Comprado</label>
+            </div>
+        </ChildContent>
+    </CrudForm>
+}
+else
+{
+    <button class="btn btn-primary mb-3" @onclick="() => AdicionarNovoItem()">Novo Item</button>
+
+    <DataGrid TItem="ItemListaCompraModel" Items="listaItensCompra">
+        <HeaderTemplate>
+            <th>Nome</th>
+            <th>Quantidade</th>
+            <th>Comprado</th>
+            <th>Ações</th>
+        </HeaderTemplate>
+        <RowTemplate Context="item">
+            <td style="@(item.Comprado ? "text-decoration: line-through;" : "")">@item.Nome</td>
+            <td style="@(item.Comprado ? "text-decoration: line-through;" : "")">@item.Quantidade</td>
+            <td>
+                <InputCheckbox @bind-Value="item.Comprado" @oninput="(e) => ToggleComprado(item, (bool)e.Value)" />
+            </td>
+            <td>
+                <button class="btn btn-sm btn-info" @onclick="() => EditarItem(item)" disabled="@item.Comprado">Editar</button>
+                <button class="btn btn-sm btn-danger" @onclick="() => RemoverItem(item.Id)">Remover</button>
+            </td>
+        </RowTemplate>
+    </DataGrid>
+}
+
+@code {
+    private List<ItemListaCompraModel> listaItensCompra = new List<ItemListaCompraModel>();
+    private ItemListaCompraModel itemAtual = new ItemListaCompraModel();
+    private bool exibirFormulario = false;
+
+    protected override void OnInitialized()
+    {
+        // Dados de exemplo
+        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Leite", Quantidade = 2, Comprado = false });
+        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Pão", Quantidade = 1, Comprado = true });
+        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Ovos", Quantidade = 12, Comprado = false });
+    }
+
+    private void AdicionarNovoItem()
+    {
+        itemAtual = new ItemListaCompraModel();
+        exibirFormulario = true;
+    }
+
+    private void EditarItem(ItemListaCompraModel itemParaEditar)
+    {
+        itemAtual = new ItemListaCompraModel
+        {
+            Id = itemParaEditar.Id,
+            Nome = itemParaEditar.Nome,
+            Quantidade = itemParaEditar.Quantidade,
+            Comprado = itemParaEditar.Comprado
+        };
+        exibirFormulario = true;
+    }
+
+    private void SalvarItem(ItemListaCompraModel item)
+    {
+        if (item.Id == Guid.Empty)
+        {
+            item.Id = Guid.NewGuid();
+            listaItensCompra.Add(item);
+        }
+        else
+        {
+            var index = listaItensCompra.FindIndex(i => i.Id == item.Id);
+            if (index != -1)
+            {
+                listaItensCompra[index] = item;
+            }
+        }
+        CancelarFormulario();
+    }
+
+    private void RemoverItem(Guid id)
+    {
+        var itemParaRemover = listaItensCompra.FirstOrDefault(i => i.Id == id);
+        if (itemParaRemover != null)
+        {
+            listaItensCompra.Remove(itemParaRemover);
+        }
+    }
+
+    private void CancelarFormulario()
+    {
+        exibirFormulario = false;
+        itemAtual = new ItemListaCompraModel();
+    }
+
+    private void ToggleComprado(ItemListaCompraModel item, bool comprado)
+    {
+        var itemNaLista = listaItensCompra.FirstOrDefault(i => i.Id == item.Id);
+        if (itemNaLista != null)
+        {
+            itemNaLista.Comprado = comprado;
+            // StateHasChanged(); // Pode ser necessário se a atualização não for refletida automaticamente na UI
+        }
+    }
+
+    public class ItemListaCompraModel
+    {
+        public Guid Id { get; set; }
+
+        [Required(ErrorMessage = "O nome do item é obrigatório.")]
+        [StringLength(100, ErrorMessage = "O nome do item deve ter no máximo 100 caracteres.")]
+        public string Nome { get; set; }
+
+        [Required(ErrorMessage = "A quantidade é obrigatória.")]
+        [Range(1, int.MaxValue, ErrorMessage = "A quantidade deve ser pelo menos 1.")]
+        public int Quantidade { get; set; }
+
+        public string QuantidadeAsString
+        {
+            get => Quantidade.ToString();
+            set
+            {
+                if (int.TryParse(value, out var intValue))
+                {
+                    Quantidade = intValue;
+                }
+            }
+        }
+        public bool Comprado { get; set; }
+    }
+}

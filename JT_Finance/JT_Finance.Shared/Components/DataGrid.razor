@@ -1,0 +1,56 @@
+@typeparam TItem
+
+@if (Items == null)
+{
+    <p><em>Carregando...</em></p>
+}
+else if (!Items.Any())
+{
+    <p><em>Nenhum item para exibir.</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                @if (HeaderTemplate != null)
+                {
+                    @HeaderTemplate
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Items)
+            {
+                <tr>
+                    @if (RowTemplate != null)
+                    {
+                        @RowTemplate(item)
+                    }
+                </tr>
+            }
+        </tbody>
+        @if (FooterTemplate != null)
+        {
+            <tfoot>
+                <tr>
+                    @FooterTemplate
+                </tr>
+            </tfoot>
+        }
+    </table>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<TItem> Items { get; set; }
+
+    [Parameter]
+    public RenderFragment HeaderTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem> RowTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment FooterTemplate { get; set; }
+}

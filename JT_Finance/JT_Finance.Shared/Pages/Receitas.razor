@@ -1,0 +1,142 @@
+@page "/receitas"
+@using JT_Finance.Shared.Components
+@using System.ComponentModel.DataAnnotations
+
+<h3>Receitas</h3>
+
+@if (exibirFormulario)
+{
+    <h4>@(receitaAtual.Id == Guid.Empty ? "Nova Receita" : "Editar Receita")</h4>
+    <CrudForm TItem="ReceitaModel" Item="receitaAtual" OnSubmit="SalvarReceita" OnCancel="CancelarFormulario">
+        <ChildContent Context="receita">
+            <CustomInput Label="Descrição" @bind-Value="receita.Descricao" ValueExpression="@(() => receita.Descricao)" />
+            <CustomInput Label="Valor" Type="number" @bind-Value="receita.ValorAsString" ValueExpression="@(() => receita.ValorAsString)" />
+            <div class="form-group">
+                <label for="data">Data</label>
+                <InputDate id="data" class="form-control" @bind-Value="receita.Data" />
+                <ValidationMessage For="@(() => receita.Data)" />
+            </div>
+            <CustomInput Label="Fonte" @bind-Value="receita.Fonte" ValueExpression="@(() => receita.Fonte)" />
+        </ChildContent>
+    </CrudForm>
+}
+else
+{
+    <button class="btn btn-primary mb-3" @onclick="() => AdicionarNovaReceita()">Nova Receita</button>
+
+    <DataGrid TItem="ReceitaModel" Items="listaReceitas">
+        <HeaderTemplate>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th>Data</th>
+            <th>Fonte</th>
+            <th>Ações</th>
+        </HeaderTemplate>
+        <RowTemplate Context="receita">
+            <td>@receita.Descricao</td>
+            <td>@receita.Valor.ToString("C")</td>
+            <td>@receita.Data.ToShortDateString()</td>
+            <td>@receita.Fonte</td>
+            <td>
+                <button class="btn btn-sm btn-info" @onclick="() => EditarReceita(receita)">Editar</button>
+                <button class="btn btn-sm btn-danger" @onclick="() => RemoverReceita(receita.Id)">Remover</button>
+            </td>
+        </RowTemplate>
+    </DataGrid>
+}
+
+@code {
+    private List<ReceitaModel> listaReceitas = new List<ReceitaModel>();
+    private ReceitaModel receitaAtual = new ReceitaModel();
+    private bool exibirFormulario = false;
+
+    protected override void OnInitialized()
+    {
+        // Dados de exemplo
+        listaReceitas.Add(new ReceitaModel { Id = Guid.NewGuid(), Descricao = "Salário", Valor = 5000.00M, Data = DateTime.Now.AddDays(-15), Fonte = "Empresa X" });
+        listaReceitas.Add(new ReceitaModel { Id = Guid.NewGuid(), Descricao = "Freelance", Valor = 850.00M, Data = DateTime.Now.AddDays(-3), Fonte = "Cliente Y" });
+    }
+
+    private void AdicionarNovaReceita()
+    {
+        receitaAtual = new ReceitaModel { Data = DateTime.Now };
+        exibirFormulario = true;
+    }
+
+    private void EditarReceita(ReceitaModel receitaParaEditar)
+    {
+        receitaAtual = new ReceitaModel
+        {
+            Id = receitaParaEditar.Id,
+            Descricao = receitaParaEditar.Descricao,
+            Valor = receitaParaEditar.Valor,
+            Data = receitaParaEditar.Data,
+            Fonte = receitaParaEditar.Fonte
+        };
+        exibirFormulario = true;
+    }
+
+    private void SalvarReceita(ReceitaModel receita)
+    {
+        if (receita.Id == Guid.Empty)
+        {
+            receita.Id = Guid.NewGuid();
+            listaReceitas.Add(receita);
+        }
+        else
+        {
+            var index = listaReceitas.FindIndex(r => r.Id == receita.Id);
+            if (index != -1)
+            {
+                listaReceitas[index] = receita;
+            }
+        }
+        CancelarFormulario();
+    }
+
+    private void RemoverReceita(Guid id)
+    {
+        var receitaParaRemover = listaReceitas.FirstOrDefault(r => r.Id == id);
+        if (receitaParaRemover != null)
+        {
+            listaReceitas.Remove(receitaParaRemover);
+        }
+    }
+
+    private void CancelarFormulario()
+    {
+        exibirFormulario = false;
+        receitaAtual = new ReceitaModel();
+    }
+
+    public class ReceitaModel
+    {
+        public Guid Id { get; set; }
+
+        [Required(ErrorMessage = "A descrição é obrigatória.")]
+        [StringLength(100, ErrorMessage = "A descrição deve ter no máximo 100 caracteres.")]
+        public string Descricao { get; set; }
+
+        [Required(ErrorMessage = "O valor é obrigatório.")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "O valor deve ser maior que zero.")]
+        public decimal Valor { get; set; }
+
+        public string ValorAsString
+        {
+            get => Valor.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            set
+            {
+                if (decimal.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var decimalValue))
+                {
+                    Valor = decimalValue;
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "A data é obrigatória.")]
+        public DateTime Data { get; set; } = DateTime.Now;
+
+        [StringLength(50, ErrorMessage = "A fonte deve ter no máximo 50 caracteres.")]
+        public string Fonte { get; set; }
+    }
+}

@@ -1,0 +1,62 @@
+@page "/cadastro"
+
+<h3>Cadastro</h3>
+
+<EditForm Model="@registerModel" OnValidSubmit="@HandleRegistration">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="name">Nome</label>
+        <InputText id="name" class="form-control" @bind-Value="registerModel.Name" />
+        <ValidationMessage For="@(() => registerModel.Name)" />
+    </div>
+
+    <div class="form-group">
+        <label for="email">Email</label>
+        <InputText id="email" class="form-control" @bind-Value="registerModel.Email" />
+        <ValidationMessage For="@(() => registerModel.Email)" />
+    </div>
+
+    <div class="form-group">
+        <label for="password">Senha</label>
+        <InputText id="password" type="password" class="form-control" @bind-Value="registerModel.Password" />
+        <ValidationMessage For="@(() => registerModel.Password)" />
+    </div>
+
+    <div class="form-group">
+        <label for="confirmPassword">Confirmar Senha</label>
+        <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" />
+        <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Cadastrar</button>
+    <NavLink href="login">Já tem conta? Faça login</NavLink>
+</EditForm>
+
+@code {
+    private RegisterModel registerModel = new RegisterModel();
+
+    private void HandleRegistration()
+    {
+        // Lógica de cadastro aqui
+        Console.WriteLine($"Registration attempt for: {registerModel.Email}");
+    }
+
+    public class RegisterModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "O nome é obrigatório.")]
+        public string Name { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "O email é obrigatório.")]
+        [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "Formato de email inválido.")]
+        public string Email { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "A senha é obrigatória.")]
+        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "A senha deve ter pelo menos {2} caracteres.", MinimumLength = 6)]
+        public string Password { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Compare("Password", ErrorMessage = "As senhas não conferem.")]
+        public string ConfirmPassword { get; set; }
+    }
+}
