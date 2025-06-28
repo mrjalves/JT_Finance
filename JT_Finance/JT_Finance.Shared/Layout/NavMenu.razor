@@ -34,21 +34,3 @@
     </nav>
 </div>
 
-<div class="nav-menu-minimizer">
-    <button title="Toggle Navigation" class="btn btn-link nav-link" @onclick="HandleToggleMinimize">
-        <span class="bi @(IsMinimized ? "bi-arrow-right-square-fill" : "bi-arrow-left-square-fill")" aria-hidden="true"></span>
-    </button>
-</div>
-
-@code {
-    [Parameter]
-    public bool IsMinimized { get; set; }
-
-    [Parameter]
-    public EventCallback OnToggleMinimize { get; set; }
-
-    private async Task HandleToggleMinimize()
-    {
-        await OnToggleMinimize.InvokeAsync();
-    }
-}

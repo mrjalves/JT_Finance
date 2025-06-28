@@ -82,32 +82,14 @@ main {
     .sidebar {
         width: 250px;
         height: 100%; /* Ocupa 100% da altura do .main-content-wrapper */
-        transition: width 0.3s ease-in-out;
-        /* Outros estilos existentes... */
+        /* position: sticky; não é mais necessário aqui, pois o main-content-wrapper scrolla
+           ou o .nav-scrollable dentro do sidebar scrolla.
+           Se quisermos o sidebar sticky em relação à página inteira (abaixo do Header),
+           o .main-content-wrapper precisaria gerenciar o scroll, e o sidebar seria sticky top: 3.5rem
+           ou o .page seria o container de scroll.
+           Por simplicidade, o sidebar terá altura total do wrapper e o conteúdo interno (.nav-scrollable) scrolla.
+        */
     }
-
-    .sidebar.minimized {
-        width: 70px; /* Largura do sidebar minimizado */
-    }
-
-    main { /* Ajuste para que o main também transicione seu margin/padding */
-        transition: margin-left 0.3s ease-in-out;
-        /* flex: 1; já existe */
-        /* overflow-y: auto; já existe */
-    }
-
-    /* Ajustar o main content quando a sidebar é minimizada */
-    /* Não é necessário um .main.sidebar-minimized se o .sidebar apenas muda de largura
-       e o .main é flex:1. O main naturalmente ocupará o espaço.
-       No entanto, se o sidebar tivesse position:fixed e o main um margin-left,
-       então o margin-left do main precisaria mudar.
-       Dado o setup atual com flexbox no .main-content-wrapper,
-       a mudança de largura do .sidebar deve ser suficiente.
-       A classe .sidebar-minimized em <main> pode ser usada para ajustes finos se necessário,
-       ou se o comportamento do flex não for o desejado (ex: se o conteúdo do main não deve
-       refluir imediatamente). Por enquanto, vamos ver como o flex se comporta.
-    */
-
 
     /* Se .top-row se referia ao header da página, ele foi substituído pelo componente Header.
        Se se referia a uma barra de ferramentas dentro de <main>, ela não existe por padrão.

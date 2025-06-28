@@ -4,296 +4,116 @@
 
 <h3>Lista de Compras</h3>
 
-<button class="btn btn-success mb-3" @onclick="AbrirModalNovaLista">Criar Nova Lista</button>
-
-<Modal @ref="modalNovaLista" Title="Criar Nova Lista de Compras" OnClose="FecharModalNovaLista">
-        <BodyContent>
-            <div class="form-group">
-                <label for="nomeNovaListaInput">Nome da Lista:</label>
-                <InputText id="nomeNovaListaInput" class="form-control" @bind-Value="nomeNovaLista" @oninput="ValidarNomeNovaLista" />
-                @if (!string.IsNullOrWhiteSpace(erroNomeNovaLista))
-                {
-                    <div class="text-danger">@erroNomeNovaLista</div>
-                }
+@if (exibirFormulario)
+{
+    <h4>@(itemAtual.Id == Guid.Empty ? "Novo Item" : "Editar Item")</h4>
+    <CrudForm TItem="ItemListaCompraModel" Item="itemAtual" OnSubmit="SalvarItem" OnCancel="CancelarFormulario">
+        <ChildContent Context="item">
+            <CustomInput Label="Nome do Item" @bind-Value="item.Nome"  />
+            <CustomInput Label="Quantidade" Type="number" @bind-Value="item.QuantidadeAsString" />
+            <div class="form-group form-check">
+                <InputCheckbox id="comprado" class="form-check-input" @bind-Value="item.Comprado" />
+                <label class="form-check-label" for="comprado">Comprado</label>
             </div>
-        </BodyContent>
-        <FooterContent>
-            <button class="btn btn-primary" @onclick="SalvarNovaListaDoModal" disabled="@(!string.IsNullOrWhiteSpace(erroNomeNovaLista) || string.IsNullOrWhiteSpace(nomeNovaLista))">Salvar Lista</button>
-            <button class="btn btn-secondary" @onclick="FecharModalNovaLista">Cancelar</button>
-        </FooterContent>
-    </Modal>
+        </ChildContent>
+    </CrudForm>
+}
+else
+{
+    <button class="btn btn-primary mb-3" @onclick="() => AdicionarNovoItem()">Novo Item</button>
 
-    <Modal @ref="modalItemLista" Title="@(itemAtual.Id == Guid.Empty ? "Adicionar Novo Item" : "Editar Item")" OnClose="FecharModalItemLista">
-        <BodyContent>
-            @if (listaAtualParaAdicionarItem != null) // Garante que temos uma lista selecionada
-            {
-                <p>Lista: <strong>@listaAtualParaAdicionarItem.Nome</strong></p>
-                <CrudForm TItem="ItemListaCompraModel" Item="itemAtual" OnSubmit="SalvarItemNaLista" OnCancel="FecharModalItemLista">
-                    <ChildContent Context="formularioItem">
-                        <CustomInput Label="Nome do Item" @bind-Value="formularioItem.Nome" />
-                        <CustomInput Label="Quantidade" Type="number" @bind-Value="formularioItem.QuantidadeAsString" />
-                        <div class="form-group form-check">
-                            <InputCheckbox id="itemComprado" class="form-check-input" @bind-Value="formularioItem.Comprado" />
-                            <label class="form-check-label" for="itemComprado">Comprado</label>
-                        </div>
-                    </ChildContent>
-                </CrudForm>
-            }
-            else
-            {
-                <p>Ocorreu um erro ao tentar carregar o formulário do item. Nenhuma lista selecionada.</p>
-            }
-        </BodyContent>
-        @* O FooterContent é gerenciado pelo CrudForm (botões Salvar/Cancelar) *@
-    </Modal>
-
-
-    @if (!minhasListasDeCompras.Any())
-    {
-        <p>Nenhuma lista de compras criada ainda. Clique em "Criar Nova Lista" para começar.</p>
-    }
-
-    @foreach (var lista in minhasListasDeCompras)
-    {
-        <div class="card mb-3">
-            <div class="card-header">
-                <h4>
-                    @lista.Nome
-                    <button class="btn btn-sm btn-danger float-end" @onclick="() => RemoverLista(lista.Id)">Remover Lista</button>
-                </h4>
-            </div>
-            <div class="card-body">
-                <button class="btn btn-primary mb-2" @onclick="() => PrepararAdicionarNovoItem(lista)">Adicionar Item à Lista</button>
-
-                @if (!lista.Itens.Any())
-                {
-                    <p>Nenhum item nesta lista ainda.</p>
-                }
-                else
-                {
-                    <DataGrid TItem="ItemListaCompraModel" Items="lista.Itens">
-                        <HeaderTemplate>
-                            <th>Nome</th>
-                            <th>Quantidade</th>
-                            <th>Comprado</th>
-                            <th>Ações</th>
-                        </HeaderTemplate>
-                        <RowTemplate Context="itemDaLista">
-                            <td style="@(itemDaLista.Comprado ? "text-decoration: line-through;" : "")">@itemDaLista.Nome</td>
-                            <td style="@(itemDaLista.Comprado ? "text-decoration: line-through;" : "")">@itemDaLista.Quantidade</td>
-                            <td>
-                                <InputCheckbox @bind-Value="itemDaLista.Comprado" @oninput="(e) => ToggleComprado(lista, itemDaLista, (bool)e.Value)" />
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-info" @onclick="() => EditarItem(lista, itemDaLista)" disabled="@itemDaLista.Comprado">Editar</button>
-                                <button class="btn btn-sm btn-danger" @onclick="() => RemoverItemDaLista(lista, itemDaLista.Id)">Remover</button>
-                            </td>
-                        </RowTemplate>
-                    </DataGrid>
-                }
-            </div>
-        </div>
-    }
+    <DataGrid TItem="ItemListaCompraModel" Items="listaItensCompra">
+        <HeaderTemplate>
+            <th>Nome</th>
+            <th>Quantidade</th>
+            <th>Comprado</th>
+            <th>Ações</th>
+        </HeaderTemplate>
+        <RowTemplate Context="item">
+            <td style="@(item.Comprado ? "text-decoration: line-through;" : "")">@item.Nome</td>
+            <td style="@(item.Comprado ? "text-decoration: line-through;" : "")">@item.Quantidade</td>
+            <td>
+                <InputCheckbox @bind-Value="item.Comprado" @oninput="(e) => ToggleComprado(item, (bool)e.Value)" />
+            </td>
+            <td>
+                <button class="btn btn-sm btn-info" @onclick="() => EditarItem(item)" disabled="@item.Comprado">Editar</button>
+                <button class="btn btn-sm btn-danger" @onclick="() => RemoverItem(item.Id)">Remover</button>
+            </td>
+        </RowTemplate>
+    </DataGrid>
 }
 
 @code {
-    // Novo modelo para múltiplas listas de compras
-    public class ListaCompraModel
-    {
-        public Guid Id { get; set; }
-
-        [Required(ErrorMessage = "O nome da lista é obrigatório.")]
-        [StringLength(100, ErrorMessage = "O nome da lista deve ter no máximo 100 caracteres.")]
-        public string Nome { get; set; }
-
-        public List<ItemListaCompraModel> Itens { get; set; } = new List<ItemListaCompraModel>();
-    }
-
-    private List<ListaCompraModel> minhasListasDeCompras = new List<ListaCompraModel>();
-    private ListaCompraModel listaAtualParaAdicionarItem; // Para saber a qual lista adicionar o item
+    private List<ItemListaCompraModel> listaItensCompra = new List<ItemListaCompraModel>();
     private ItemListaCompraModel itemAtual = new ItemListaCompraModel();
-
-    // Variáveis para o Modal de Nova Lista
-    private Modal modalNovaLista; // Referência ao componente Modal
-    private string nomeNovaLista = ""; // Para o input do nome da nova lista
-    private string erroNomeNovaLista = ""; // Mensagem de erro para o nome da nova lista
-
-    // Variáveis para o Modal de Item da Lista
-    private Modal modalItemLista; // Referência ao componente Modal
-
+    private bool exibirFormulario = false;
 
     protected override void OnInitialized()
     {
-        // Dados de exemplo com múltiplas listas
-        var listaMercado = new ListaCompraModel
-        {
-            Id = Guid.NewGuid(),
-            Nome = "Compras de Supermercado",
-            Itens = new List<ItemListaCompraModel>
-            {
-                new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Leite", Quantidade = 2, Comprado = false },
-                new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Pão", Quantidade = 1, Comprado = true },
-                new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Ovos", Quantidade = 12, Comprado = false }
-            }
-        };
-
-        var listaFeira = new ListaCompraModel
-        {
-            Id = Guid.NewGuid(),
-            Nome = "Compras da Feira",
-            Itens = new List<ItemListaCompraModel>
-            {
-                new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Alface", Quantidade = 1, Comprado = false },
-                new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Tomate", Quantidade = 5, Comprado = false }
-            }
-        };
-
-        minhasListasDeCompras.Add(listaMercado);
-        minhasListasDeCompras.Add(listaFeira);
+        // Dados de exemplo
+        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Leite", Quantidade = 2, Comprado = false });
+        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Pão", Quantidade = 1, Comprado = true });
+        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Ovos", Quantidade = 12, Comprado = false });
     }
 
-    // Método para abrir o modal de adicionar novo item para uma lista específica
-    private void PrepararAdicionarNovoItem(ListaCompraModel lista)
+    private void AdicionarNovoItem()
     {
-        listaAtualParaAdicionarItem = lista;
-        itemAtual = new ItemListaCompraModel(); // Novo item
-        modalItemLista.Open();
+        itemAtual = new ItemListaCompraModel();
+        exibirFormulario = true;
     }
 
-    private void AdicionarNovoItem() // Este método pode ser removido ou adaptado se o "Novo Item" global não fizer mais sentido
+    private void EditarItem(ItemListaCompraModel itemParaEditar)
     {
-        // Este método não é mais usado diretamente dessa forma. Usamos PrepararAdicionarNovoItem(lista).
-        // Se precisar de um botão global "Adicionar Novo Item" que pergunte a qual lista adicionar,
-        // a lógica precisaria ser diferente (ex: mostrar um seletor de lista).
-        // Por ora, vamos manter o fluxo de adicionar item a uma lista específica.
-        Console.WriteLine("AdicionarNovoItem obsoleto chamado");
-    }
-
-    // Métodos para o Modal de Nova Lista
-    private void AbrirModalNovaLista()
-    {
-        nomeNovaLista = ""; // Limpa o campo ao abrir
-        erroNomeNovaLista = ""; // Limpa erros anteriores
-        modalNovaLista.Open();
-    }
-
-    private async Task FecharModalNovaLista()
-    {
-        await modalNovaLista.Close();
-    }
-
-    private void ValidarNomeNovaLista(ChangeEventArgs e)
-    {
-        nomeNovaLista = e.Value?.ToString() ?? "";
-        if (string.IsNullOrWhiteSpace(nomeNovaLista))
-        {
-            erroNomeNovaLista = "O nome da lista não pode estar vazio.";
-        }
-        else if (minhasListasDeCompras.Any(l => l.Nome.Equals(nomeNovaLista, StringComparison.OrdinalIgnoreCase)))
-        {
-            erroNomeNovaLista = "Já existe uma lista com este nome.";
-        }
-        else
-        {
-            erroNomeNovaLista = "";
-        }
-    }
-
-    private async Task SalvarNovaListaDoModal()
-    {
-        if (string.IsNullOrWhiteSpace(erroNomeNovaLista) && !string.IsNullOrWhiteSpace(nomeNovaLista))
-        {
-            var novaLista = new ListaCompraModel
-            {
-                Id = Guid.NewGuid(),
-                Nome = nomeNovaLista,
-                Itens = new List<ItemListaCompraModel>()
-            };
-            minhasListasDeCompras.Add(novaLista);
-            await FecharModalNovaLista();
-        }
-    }
-
-
-    private void RemoverLista(Guid listaId)
-    {
-        var listaParaRemover = minhasListasDeCompras.FirstOrDefault(l => l.Id == listaId);
-        if (listaParaRemover != null)
-        {
-            // TODO: Adicionar confirmação antes de remover
-            minhasListasDeCompras.Remove(listaParaRemover);
-        }
-    }
-
-    // Método para abrir o modal de edição de item
-    private void EditarItem(ListaCompraModel lista, ItemListaCompraModel itemParaEditar)
-    {
-        listaAtualParaAdicionarItem = lista; // Define a lista atual
-        itemAtual = new ItemListaCompraModel // Cria uma cópia para edição
+        itemAtual = new ItemListaCompraModel
         {
             Id = itemParaEditar.Id,
             Nome = itemParaEditar.Nome,
             Quantidade = itemParaEditar.Quantidade,
             Comprado = itemParaEditar.Comprado
         };
-        modalItemLista.Open();
+        exibirFormulario = true;
     }
 
-    // Salva o item (novo ou editado) e fecha o modal
-    private async Task SalvarItemNaLista(ItemListaCompraModel itemSalvo)
+    private void SalvarItem(ItemListaCompraModel item)
     {
-        if (listaAtualParaAdicionarItem == null)
+        if (item.Id == Guid.Empty)
         {
-            // Idealmente, logar este erro ou mostrar uma mensagem ao usuário
-            await modalItemLista.Close();
-            return;
-        }
-
-        if (itemSalvo.Id == Guid.Empty)
-        {
-            itemSalvo.Id = Guid.NewGuid();
-            listaAtualParaAdicionarItem.Itens.Add(itemSalvo);
+            item.Id = Guid.NewGuid();
+            listaItensCompra.Add(item);
         }
         else
         {
-            var index = listaAtualParaAdicionarItem.Itens.FindIndex(i => i.Id == itemSalvo.Id);
+            var index = listaItensCompra.FindIndex(i => i.Id == item.Id);
             if (index != -1)
             {
-                listaAtualParaAdicionarItem.Itens[index] = itemSalvo;
-            }
-            else
-            {
-                // Item não encontrado para edição, talvez logar ou tratar
+                listaItensCompra[index] = item;
             }
         }
-        await FecharModalItemLista();
+        CancelarFormulario();
     }
 
-    private void RemoverItemDaLista(ListaCompraModel lista, Guid itemId)
+    private void RemoverItem(Guid id)
     {
-        var itemParaRemover = lista.Itens.FirstOrDefault(i => i.Id == itemId);
+        var itemParaRemover = listaItensCompra.FirstOrDefault(i => i.Id == id);
         if (itemParaRemover != null)
         {
-            // TODO: Adicionar confirmação antes de remover
-            lista.Itens.Remove(itemParaRemover);
+            listaItensCompra.Remove(itemParaRemover);
         }
     }
 
-    // Fecha o modal de item e reseta os estados
-    private async Task FecharModalItemLista()
+    private void CancelarFormulario()
     {
-        await modalItemLista.Close();
-        itemAtual = new ItemListaCompraModel(); // Reseta o item atual
-        // listaAtualParaAdicionarItem = null; // Não resetar aqui, pois o título do modal pode precisar dele ao fechar. Resetar ao abrir novo.
+        exibirFormulario = false;
+        itemAtual = new ItemListaCompraModel();
     }
 
-    private void ToggleComprado(ListaCompraModel lista, ItemListaCompraModel item, bool comprado)
+    private void ToggleComprado(ItemListaCompraModel item, bool comprado)
     {
-        var itemNaLista = lista.Itens.FirstOrDefault(i => i.Id == item.Id);
+        var itemNaLista = listaItensCompra.FirstOrDefault(i => i.Id == item.Id);
         if (itemNaLista != null)
         {
             itemNaLista.Comprado = comprado;
-            // StateHasChanged(); // Pode ser necessário se a UI não atualizar
+            // StateHasChanged(); // Pode ser necessário se a atualização não for refletida automaticamente na UI
         }
     }
 

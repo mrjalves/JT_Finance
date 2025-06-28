@@ -125,72 +125,11 @@
         display: block !important; /* Garante que seja visível */
 
         /* Allow sidebar to scroll for tall menus */
-    height: calc(100% - 3.5rem); /* Subtrai a altura do .top-row interno do NavMenu */
+        /* A altura do .sidebar (pai do .nav-scrollable em telas grandes)
+           já considera a altura do Header global.
+           Então, aqui, .nav-scrollable precisa ocupar 100% da altura do .sidebar
+           menos a altura do seu próprio .top-row (3.5rem). */
+        height: calc(100% - 3.5rem);
         overflow-y: auto;
-    }
-
-  /* Estilos para o NavMenu quando o sidebar estiver minimizado (em telas grandes) */
-  .sidebar.minimized .nav-scrollable .nav-item ::deep .nav-link {
-    justify-content: center; /* Centraliza o ícone */
-  }
-
-  .sidebar.minimized .nav-scrollable .nav-item ::deep .nav-link span:not(.bi) {
-    display: none; /* Esconde o texto do link, mas mantém o ícone (span.bi) */
-  }
-
-  .sidebar.minimized .nav-scrollable .nav-item ::deep .nav-link .bi {
-    margin-right: 0; /* Remove a margem do ícone quando minimizado */
-  }
-
-  .sidebar.minimized .top-row .navbar-brand {
-    display: none; /* Esconde o nome da marca quando minimizado */
-  }
-
-  .sidebar.minimized .top-row {
-    justify-content: center; /* Centraliza o toggler de tela pequena se ainda estiver visível (não deveria) */
-  }
-
-  .nav-menu-minimizer {
-    display: none; /* Escondido por padrão (em telas pequenas) */
-    text-align: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.5rem 0;
-    position: absolute; /* Para fixar na parte inferior do NavMenu */
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); /* Mesmo fundo do sidebar */
-  }
-
-  .sidebar .nav-menu-minimizer .nav-link { /* Estilo para o botão dentro do minimizador */
-    color: #d7d7d7;
-    justify-content: center;
-    padding: 0.5rem;
-  }
-  .sidebar .nav-menu-minimizer .nav-link:hover {
-    color: white;
-    background-color: rgba(255,255,255,0.1);
-  }
-
-  .sidebar.minimized .nav-menu-minimizer {
-    /* O botão de minimizar ainda deve ser visível e funcional */
-  }
-
-  .nav-scrollable {
-    /* ... estilos existentes ... */
-    /* Ajustar altura para acomodar o minimizador */
-    height: calc(100% - 3.5rem - 3.5rem); /* Subtrai top-row e minimizer-row */
-  }
-
-  .sidebar.minimized .nav-scrollable {
-    height: calc(100% - 3.5rem - 3.5rem); /* Mantém a mesma lógica de altura */
-  }
-
-}
-
-/* Mostrar o botão de minimizar/expandir apenas em telas grandes */
-@media (min-width: 641px) {
-    .nav-menu-minimizer {
-        display: block;
     }
 }
