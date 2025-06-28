@@ -9,14 +9,14 @@
     <h4>@(despesaAtual.Id == Guid.Empty ? "Nova Despesa" : "Editar Despesa")</h4>
     <CrudForm TItem="DespesaModel" Item="despesaAtual" OnSubmit="SalvarDespesa" OnCancel="CancelarFormulario">
         <ChildContent Context="despesa">
-            <CustomInput Label="Descrição" @bind-Value="despesa.Descricao" ValueExpression="@(() => despesa.Descricao)" />
-            <CustomInput Label="Valor" Type="number" @bind-Value="despesa.ValorAsString" ValueExpression="@(() => despesa.ValorAsString)" />
+            <CustomInput Label="Descrição" @bind-Value="despesa.Descricao"  />
+            <CustomInput Label="Valor" Type="number" @bind-Value="despesa.ValorAsString"  />
             <div class="form-group">
                 <label for="data">Data</label>
                 <InputDate id="data" class="form-control" @bind-Value="despesa.Data" />
                 <ValidationMessage For="@(() => despesa.Data)" />
             </div>
-            <CustomInput Label="Categoria" @bind-Value="despesa.Categoria" ValueExpression="@(() => despesa.Categoria)" />
+            <CustomInput Label="Categoria" @bind-Value="despesa.Categoria"  />
         </ChildContent>
     </CrudForm>
 }

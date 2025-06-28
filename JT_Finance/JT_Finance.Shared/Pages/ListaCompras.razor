@@ -9,8 +9,8 @@
     <h4>@(itemAtual.Id == Guid.Empty ? "Novo Item" : "Editar Item")</h4>
     <CrudForm TItem="ItemListaCompraModel" Item="itemAtual" OnSubmit="SalvarItem" OnCancel="CancelarFormulario">
         <ChildContent Context="item">
-            <CustomInput Label="Nome do Item" @bind-Value="item.Nome" ValueExpression="@(() => item.Nome)" />
-            <CustomInput Label="Quantidade" Type="number" @bind-Value="item.QuantidadeAsString" ValueExpression="@(() => item.QuantidadeAsString)" />
+            <CustomInput Label="Nome do Item" @bind-Value="item.Nome"  />
+            <CustomInput Label="Quantidade" Type="number" @bind-Value="item.QuantidadeAsString" />
             <div class="form-group form-check">
                 <InputCheckbox id="comprado" class="form-check-input" @bind-Value="item.Comprado" />
                 <label class="form-check-label" for="comprado">Comprado</label>

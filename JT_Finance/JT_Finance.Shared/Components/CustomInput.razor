@@ -5,7 +5,7 @@
     {
         <label for="@Id">@Label</label>
     }
-    <InputText id="@Id" class="form-control @CssClass" @bind-Value="CurrentValue" type="@Type" placeholder="@Placeholder" />
+    <InputText id="@Id" class="@($"form-control {CssClass}")" @bind-Value="CurrentValue" type="@Type" placeholder="@Placeholder" />
     <ValidationMessage For="ValueExpression" />
 </div>
 
