@@ -1,0 +1,34 @@
+@page "/recuperarsenha"
+
+<h3>Recuperação de Senha</h3>
+
+<EditForm Model="@recoveryModel" OnValidSubmit="@HandlePasswordRecovery">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="email">Email</label>
+        <InputText id="email" class="form-control" @bind-Value="recoveryModel.Email" />
+        <ValidationMessage For="@(() => recoveryModel.Email)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Enviar Link de Recuperação</button>
+    <NavLink href="login">Voltar para o Login</NavLink>
+</EditForm>
+
+@code {
+    private RecoveryModel recoveryModel = new RecoveryModel();
+
+    private void HandlePasswordRecovery()
+    {
+        // Lógica de recuperação de senha aqui
+        Console.WriteLine($"Password recovery attempt for: {recoveryModel.Email}");
+    }
+
+    public class RecoveryModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "O email é obrigatório.")]
+        [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "Formato de email inválido.")]
+        public string Email { get; set; }
+    }
+}

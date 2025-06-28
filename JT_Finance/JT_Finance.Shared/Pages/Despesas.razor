@@ -1,0 +1,150 @@
+@page "/despesas"
+@using JT_Finance.Shared.Components
+@using System.ComponentModel.DataAnnotations
+
+<h3>Despesas</h3>
+
+@if (exibirFormulario)
+{
+    <h4>@(despesaAtual.Id == Guid.Empty ? "Nova Despesa" : "Editar Despesa")</h4>
+    <CrudForm TItem="DespesaModel" Item="despesaAtual" OnSubmit="SalvarDespesa" OnCancel="CancelarFormulario">
+        <ChildContent Context="despesa">
+            <CustomInput Label="Descrição" @bind-Value="despesa.Descricao" ValueExpression="@(() => despesa.Descricao)" />
+            <CustomInput Label="Valor" Type="number" @bind-Value="despesa.ValorAsString" ValueExpression="@(() => despesa.ValorAsString)" />
+            <div class="form-group">
+                <label for="data">Data</label>
+                <InputDate id="data" class="form-control" @bind-Value="despesa.Data" />
+                <ValidationMessage For="@(() => despesa.Data)" />
+            </div>
+            <CustomInput Label="Categoria" @bind-Value="despesa.Categoria" ValueExpression="@(() => despesa.Categoria)" />
+        </ChildContent>
+    </CrudForm>
+}
+else
+{
+    <button class="btn btn-primary mb-3" @onclick="() => AdicionarNovaDespesa()">Nova Despesa</button>
+
+    <DataGrid TItem="DespesaModel" Items="listaDespesas">
+        <HeaderTemplate>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th>Data</th>
+            <th>Categoria</th>
+            <th>Ações</th>
+        </HeaderTemplate>
+        <RowTemplate Context="despesa">
+            <td>@despesa.Descricao</td>
+            <td>@despesa.Valor.ToString("C")</td>
+            <td>@despesa.Data.ToShortDateString()</td>
+            <td>@despesa.Categoria</td>
+            <td>
+                <button class="btn btn-sm btn-info" @onclick="() => EditarDespesa(despesa)">Editar</button>
+                <button class="btn btn-sm btn-danger" @onclick="() => RemoverDespesa(despesa.Id)">Remover</button>
+            </td>
+        </RowTemplate>
+    </DataGrid>
+}
+
+
+@code {
+    private List<DespesaModel> listaDespesas = new List<DespesaModel>();
+    private DespesaModel despesaAtual = new DespesaModel();
+    private bool exibirFormulario = false;
+
+    protected override void OnInitialized()
+    {
+        // Dados de exemplo
+        listaDespesas.Add(new DespesaModel { Id = Guid.NewGuid(), Descricao = "Aluguel", Valor = 1200.50M, Data = DateTime.Now.AddDays(-10), Categoria = "Moradia" });
+        listaDespesas.Add(new DespesaModel { Id = Guid.NewGuid(), Descricao = "Supermercado", Valor = 350.75M, Data = DateTime.Now.AddDays(-5), Categoria = "Alimentação" });
+    }
+
+    private void AdicionarNovaDespesa()
+    {
+        despesaAtual = new DespesaModel { Data = DateTime.Now }; // Preenche a data atual por padrão
+        exibirFormulario = true;
+    }
+
+    private void EditarDespesa(DespesaModel despesaParaEditar)
+    {
+        // Cria uma cópia para edição, para não alterar a lista diretamente antes de salvar
+        despesaAtual = new DespesaModel
+        {
+            Id = despesaParaEditar.Id,
+            Descricao = despesaParaEditar.Descricao,
+            Valor = despesaParaEditar.Valor,
+            Data = despesaParaEditar.Data,
+            Categoria = despesaParaEditar.Categoria
+        };
+        exibirFormulario = true;
+    }
+
+    private void SalvarDespesa(DespesaModel despesa)
+    {
+        if (despesa.Id == Guid.Empty)
+        {
+            despesa.Id = Guid.NewGuid();
+            listaDespesas.Add(despesa);
+        }
+        else
+        {
+            var index = listaDespesas.FindIndex(d => d.Id == despesa.Id);
+            if (index != -1)
+            {
+                listaDespesas[index] = despesa;
+            }
+        }
+        CancelarFormulario();
+    }
+
+    private void RemoverDespesa(Guid id)
+    {
+        var despesaParaRemover = listaDespesas.FirstOrDefault(d => d.Id == id);
+        if (despesaParaRemover != null)
+        {
+            listaDespesas.Remove(despesaParaRemover);
+        }
+        // Em uma aplicação real, você pode querer pedir confirmação antes de remover.
+    }
+
+    private void CancelarFormulario()
+    {
+        exibirFormulario = false;
+        despesaAtual = new DespesaModel();
+    }
+
+    public class DespesaModel
+    {
+        public Guid Id { get; set; }
+
+        [Required(ErrorMessage = "A descrição é obrigatória.")]
+        [StringLength(100, ErrorMessage = "A descrição deve ter no máximo 100 caracteres.")]
+        public string Descricao { get; set; }
+
+        [Required(ErrorMessage = "O valor é obrigatório.")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "O valor deve ser maior que zero.")]
+        public decimal Valor { get; set; }
+
+        // Propriedade auxiliar para binding com InputNumber/CustomInput type="number"
+        public string ValorAsString
+        {
+            get => Valor.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            set
+            {
+                if (decimal.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var decimalValue))
+                {
+                    Valor = decimalValue;
+                }
+                else
+                {
+                    // Tratar erro de conversão se necessário, ou deixar a validação do Range pegar
+                }
+            }
+        }
+
+        [Required(ErrorMessage = "A data é obrigatória.")]
+        public DateTime Data { get; set; } = DateTime.Now;
+
+        [StringLength(50, ErrorMessage = "A categoria deve ter no máximo 50 caracteres.")]
+        public string Categoria { get; set; }
+    }
+}
