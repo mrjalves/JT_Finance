@@ -12,9 +12,10 @@ builder.Services.AddRazorComponents()
 
 // Add device-specific services used by the JT_Finance.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
-// ToastService is registered in the Web.Client project for WASM components.
-// If server-rendered pages from JT_Finance.Shared also need ToastService, it might need to be registered here too,
-// but the primary use case and reported error were client-side.
+
+// Register ToastService
+builder.Services.AddScoped<ToastService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
