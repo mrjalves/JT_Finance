@@ -1,36 +1,51 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
+﻿<div class="top-row ps-3 navbar navbar-dark bg-dark">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
         <a class="navbar-brand" href="">JT_Finance</a>
+
+        <button class="btn btn-sm btn-outline-light"
+                @onclick="ToggleMenu"
+                title="@(_menuMinimizado ? "Expandir menu" : "Minimizar menu")">
+            <span class="@($"bi {(_menuMinimizado ? "bi-arrow-right-circle-fill" : "bi-arrow-right-circle-fill")}")"></span>
+        </button>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
+<div class="@NavMenuClass">
+    <nav class="flex-column" @onclick="() => _menuMinimizado = false">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill" aria-hidden="true"></span> Home
+                <span class="bi bi-house-door-fill" aria-hidden="true"></span>
+                <span class="link-text">Home</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="receitas">
-                <span class="bi bi-cash-stack" aria-hidden="true"></span> Receitas
+                <span class="bi bi-cash-stack" aria-hidden="true"></span>
+                <span class="link-text">Receitas</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="despesas">
-                <span class="bi bi-credit-card-fill" aria-hidden="true"></span> Despesas
+                <span class="bi bi-credit-card-fill" aria-hidden="true"></span>
+                <span class="link-text">Despesas</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="listacompras">
-                <span class="bi bi-cart-fill" aria-hidden="true"></span> Lista Compras
+                <span class="bi bi-cart-fill" aria-hidden="true"></span>
+                <span class="link-text">Lista Compras</span>
             </NavLink>
         </div>
     </nav>
 </div>
 
+@code {
+    private bool _menuMinimizado = false;
+
+    private string NavMenuClass => _menuMinimizado ? "nav-scrollable minimized" : "nav-scrollable";
+
+    private void ToggleMenu() => _menuMinimizado = !_menuMinimizado;
+}

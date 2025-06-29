@@ -6,7 +6,7 @@
 
 @code {
     [Parameter]
-    public string ChartId { get; set; } = "pieChartCanvas"; // Default ID, pode ser sobrescrito
+    public string ChartId { get; set; } = "pieChartCanvas";
 
     [Parameter]
     public List<string> Labels { get; set; } = new List<string>();
@@ -17,8 +17,7 @@
     [Parameter]
     public string Title { get; set; } = "Gráfico de Pizza";
 
-    // Cores pré-definidas para as fatias do gráfico
-    private List<string> backgroundColors = new List<string>
+    private List<string> backgroundColors = new()
     {
         "rgba(255, 99, 132, 0.7)",
         "rgba(54, 162, 235, 0.7)",
@@ -32,13 +31,17 @@
         "rgba(210, 99, 132, 0.7)"
     };
 
-    protected override async Task OnParametersSetAsync()
+    private bool _shouldRenderChart;
+
+    protected override void OnParametersSet()
     {
-        // Se os parâmetros mudarem e o componente já foi renderizado uma vez, atualize o gráfico.
-        // OnAfterRenderAsync com firstRender=false também pode ser usado, mas OnParametersSetAsync
-        // é bom para quando os dados de entrada mudam.
-        // Verifica se DataValues não é nulo e tem elementos para evitar erros ao renderizar.
-        if (DataValues != null && DataValues.Any())
+        // Marca que deve renderizar o gráfico após o carregamento
+        _shouldRenderChart = DataValues != null && DataValues.Any();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _shouldRenderChart)
         {
             await RenderChart();
         }
@@ -46,7 +49,6 @@
 
     public async Task RenderChart()
     {
-        // Garante que temos cores suficientes, repetindo se necessário
         var chartColors = new List<string>();
         for (int i = 0; i < DataValues.Count; i++)
         {
@@ -57,12 +59,11 @@
             ChartId, Labels, DataValues, chartColors, Title);
     }
 
-    // Este método pode ser chamado externamente se você tiver uma referência ao componente
     public async Task UpdateChartData(List<string> newLabels, List<decimal> newDataValues, string newTitle = null)
     {
         Labels = newLabels;
         DataValues = newDataValues;
-        if(newTitle != null) Title = newTitle;
+        if (newTitle != null) Title = newTitle;
 
         if (DataValues != null && DataValues.Any())
         {
@@ -71,6 +72,7 @@
             {
                 chartColors.Add(backgroundColors[i % backgroundColors.Count]);
             }
+
             await JSRuntime.InvokeVoidAsync("blazorCharts.updatePieChart",
                 ChartId, Labels, DataValues, chartColors, Title);
         }

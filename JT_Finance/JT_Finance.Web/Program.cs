@@ -2,6 +2,8 @@ using JT_Finance.Shared.Services;
 using JT_Finance.Web.Components;
 using JT_Finance.Web.Services;
 
+using System;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -10,7 +12,7 @@ builder.Services.AddRazorComponents()
 
 // Add device-specific services used by the JT_Finance.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
-
+builder.Services.AddScoped<JT_Finance.Shared.Services.ToastService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
