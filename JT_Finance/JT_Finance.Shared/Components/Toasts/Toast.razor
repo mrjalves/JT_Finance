@@ -34,22 +34,29 @@
     protected override void OnInitialized()
     {
         _toastLevelCssClass = GetToastLevelCssClass(Settings.Level);
+        // A visibilidade inicial e a configuração do timer serão feitas em OnAfterRenderAsync
+    }
 
-        // Inicia a animação de entrada
-        // Atraso mínimo para garantir que o elemento esteja no DOM antes de aplicar a classe 'show'
-        Task.Delay(10).ContinueWith(_ =>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
         {
+            // Inicia a animação de entrada
             _isVisible = true;
-            _animationClass = "show"; // Triggers fade-in
-            InvokeAsync(StateHasChanged);
-        });
+            // Primeiro renderiza o toast como visível mas sem a classe 'show'
+            await InvokeAsync(StateHasChanged);
 
-        if (Settings.DurationInSeconds > 0)
-        {
-            _timer = new Timer(CloseAfterDelay, null, Settings.DurationInSeconds * 1000, Timeout.Infinite);
+            // Pequeno atraso para garantir que o navegador processou a renderização anterior
+            await Task.Delay(10);
+            _animationClass = "show"; // Ativa a animação de fade-in
 
-            // Iniciar o timer para a barra de progresso
-            _progressTimer = new Timer(UpdateProgress, null, 0, ProgressUpdateIntervalMs);
+            if (Settings.DurationInSeconds > 0)
+            {
+                _timer = new Timer(CloseAfterDelay, null, Settings.DurationInSeconds * 1000, Timeout.Infinite);
+                _progressTimer = new Timer(UpdateProgress, null, 0, ProgressUpdateIntervalMs);
+            }
+            // Notifica o Blazor para re-renderizar com a classe de animação e potencialmente iniciar os timers
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -87,10 +94,12 @@
 
         // Espera a animação de fade-out terminar antes de remover do serviço
         await Task.Delay(200); // Deve ser igual ou maior que a duração da transição CSS
-        _isVisible = false;
-        ToastService.RemoveToast(Settings.Id); // Notifica o serviço para remover este toast da lista global
-                                              // O ToastContainer então re-renderizará sem este toast.
-        await InvokeAsync(StateHasChanged);
+        _isVisible = false; // Marcar como não visível pode ajudar a evitar interações enquanto o container o remove.
+        ToastService.RemoveToast(Settings.Id); // Notifica o serviço para remover este toast da lista global.
+                                              // O ToastContainer irá re-renderizar e remover este componente.
+                                              // A chamada StateHasChanged() anterior aqui foi removida,
+                                              // pois o componente pode já ter sido descartado pelo seu pai (ToastContainer)
+                                              // após a chamada a ToastService.RemoveToast.
     }
 
     private string GetToastLevelCssClass(ToastLevel level)

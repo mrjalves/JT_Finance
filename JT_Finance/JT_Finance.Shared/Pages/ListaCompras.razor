@@ -4,49 +4,56 @@
 
 <h3>Lista de Compras</h3>
 
-@if (exibirFormulario)
-{
-    <h4>@(itemAtual.Id == Guid.Empty ? "Novo Item" : "Editar Item")</h4>
-    <CrudForm TItem="ItemListaCompraModel" Item="itemAtual" OnSubmit="SalvarItem" OnCancel="CancelarFormulario">
-        <ChildContent Context="item">
-            <CustomInput Label="Nome do Item" @bind-Value="item.Nome"  />
-            <CustomInput Label="Quantidade" Type="number" @bind-Value="item.QuantidadeAsString" />
-            <div class="form-group form-check">
-                <InputCheckbox id="comprado" class="form-check-input" @bind-Value="item.Comprado" />
-                <label class="form-check-label" for="comprado">Comprado</label>
-            </div>
-        </ChildContent>
-    </CrudForm>
-}
-else
-{
-    <button class="btn btn-primary mb-3" @onclick="() => AdicionarNovoItem()">Novo Item</button>
+<button class="btn btn-primary mb-3" @onclick="() => AdicionarNovoItem()">Novo Item</button>
 
-    <DataGrid TItem="ItemListaCompraModel" Items="listaItensCompra">
-        <HeaderTemplate>
-            <th>Nome</th>
-            <th>Quantidade</th>
-            <th>Comprado</th>
-            <th>Ações</th>
-        </HeaderTemplate>
-        <RowTemplate Context="item">
-            <td style="@(item.Comprado ? "text-decoration: line-through;" : "")">@item.Nome</td>
-            <td style="@(item.Comprado ? "text-decoration: line-through;" : "")">@item.Quantidade</td>
-            <td>
-                <InputCheckbox @bind-Value="item.Comprado" @oninput="(e) => ToggleComprado(item, (bool)e.Value)" />
-            </td>
-            <td>
-                <button class="btn btn-sm btn-info" @onclick="() => EditarItem(item)" disabled="@item.Comprado">Editar</button>
-                <button class="btn btn-sm btn-danger" @onclick="() => RemoverItem(item.Id)">Remover</button>
-            </td>
-        </RowTemplate>
-    </DataGrid>
-}
+<DataGrid TItem="ItemListaCompraModel" Items="listaItensCompra">
+    <HeaderTemplate>
+        <th>Nome</th>
+        <th>Quantidade</th>
+        <th>Comprado</th>
+        <th>Ações</th>
+    </HeaderTemplate>
+    <RowTemplate Context="item">
+        <td style="@(item.Comprado ? "text-decoration: line-through;" : "")">@item.Nome</td>
+        <td style="@(item.Comprado ? "text-decoration: line-through;" : "")">@item.Quantidade</td>
+        <td>
+            <InputCheckbox @bind-Value="item.Comprado" @oninput="(e) => ToggleComprado(item, (bool)e.Value)" />
+        </td>
+        <td>
+            <button class="btn btn-sm btn-info" @onclick="() => EditarItem(item)" disabled="@item.Comprado">Editar</button>
+            <button class="btn btn-sm btn-danger" @onclick="() => RemoverItem(item.Id)">Remover</button>
+        </td>
+    </RowTemplate>
+</DataGrid>
+
+<Modal @ref="modalRef"
+       IsOpen="exibirModalFormulario"
+       Title="@(itemAtual.Id == Guid.Empty ? "Novo Item" : "Editar Item")"
+       OnClose="FecharModalFormulario"
+       ShowCloseButton="true"
+       CloseOnBackdropClick="false">
+    <BodyContent>
+        @if (exibirModalFormulario) // Renderiza o formulário apenas quando o modal está aberto para garantir que o itemAtual está correto
+        {
+            <CrudForm TItem="ItemListaCompraModel" Item="itemAtual" OnSubmit="SalvarItem" OnCancel="FecharModalFormulario">
+                <ChildContent Context="formItem">
+                    <CustomInput Label="Nome do Item" @bind-Value="formItem.Nome" />
+                    <CustomInput Label="Quantidade" Type="number" @bind-Value="formItem.QuantidadeAsString" />
+                    <div class="form-group form-check">
+                        <InputCheckbox id="compradoModal" class="form-check-input" @bind-Value="formItem.Comprado" />
+                        <label class="form-check-label" for="compradoModal">Comprado</label>
+                    </div>
+                </ChildContent>
+            </CrudForm>
+        }
+    </BodyContent>
+</Modal>
 
 @code {
     private List<ItemListaCompraModel> listaItensCompra = new List<ItemListaCompraModel>();
     private ItemListaCompraModel itemAtual = new ItemListaCompraModel();
-    private bool exibirFormulario = false;
+    private bool exibirModalFormulario = false; // Renomeado de exibirFormulario
+    private Modal modalRef; // Referência para o componente Modal, se necessário para chamadas programáticas
 
     protected override void OnInitialized()
     {
@@ -59,11 +66,12 @@ else
     private void AdicionarNovoItem()
     {
         itemAtual = new ItemListaCompraModel();
-        exibirFormulario = true;
+        exibirModalFormulario = true; // Mostra o modal
     }
 
     private void EditarItem(ItemListaCompraModel itemParaEditar)
     {
+        // Cria uma cópia para edição para não afetar a lista diretamente até salvar
         itemAtual = new ItemListaCompraModel
         {
             Id = itemParaEditar.Id,
@@ -71,25 +79,25 @@ else
             Quantidade = itemParaEditar.Quantidade,
             Comprado = itemParaEditar.Comprado
         };
-        exibirFormulario = true;
+        exibirModalFormulario = true; // Mostra o modal
     }
 
-    private void SalvarItem(ItemListaCompraModel item)
+    private void SalvarItem(ItemListaCompraModel itemSalvo) // Parâmetro renomeado para clareza
     {
-        if (item.Id == Guid.Empty)
+        if (itemSalvo.Id == Guid.Empty)
         {
-            item.Id = Guid.NewGuid();
-            listaItensCompra.Add(item);
+            itemSalvo.Id = Guid.NewGuid();
+            listaItensCompra.Add(itemSalvo);
         }
         else
         {
-            var index = listaItensCompra.FindIndex(i => i.Id == item.Id);
+            var index = listaItensCompra.FindIndex(i => i.Id == itemSalvo.Id);
             if (index != -1)
             {
-                listaItensCompra[index] = item;
+                listaItensCompra[index] = itemSalvo;
             }
         }
-        CancelarFormulario();
+        FecharModalFormulario(); // Fecha o modal após salvar
     }
 
     private void RemoverItem(Guid id)
@@ -101,10 +109,13 @@ else
         }
     }
 
-    private void CancelarFormulario()
+    // Este método é chamado pelo Modal quando ele é fechado (pelo botão X ou OnClose)
+    // e também pelo CrudForm quando o botão Cancelar é clicado.
+    private void FecharModalFormulario()
     {
-        exibirFormulario = false;
-        itemAtual = new ItemListaCompraModel();
+        exibirModalFormulario = false;
+        itemAtual = new ItemListaCompraModel(); // Limpa o item atual
+        StateHasChanged(); // Garante que a UI reaja à mudança de estado do modal
     }
 
     private void ToggleComprado(ItemListaCompraModel item, bool comprado)
