@@ -7,4 +7,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 // Add device-specific services used by the JT_Finance.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
+// Register ToastService for Blazor WebAssembly
+builder.Services.AddScoped<ToastService>();
+
 await builder.Build().RunAsync();

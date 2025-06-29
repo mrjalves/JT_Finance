@@ -17,6 +17,8 @@
     [Parameter]
     public string Title { get; set; } = "Gráfico de Pizza";
 
+    private bool _hasRenderedInitially = false;
+
     // Cores pré-definidas para as fatias do gráfico
     private List<string> backgroundColors = new List<string>
     {
@@ -32,15 +34,29 @@
         "rgba(210, 99, 132, 0.7)"
     };
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (DataValues != null && DataValues.Any())
+            {
+                await RenderChart();
+                _hasRenderedInitially = true;
+            }
+        }
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         // Se os parâmetros mudarem e o componente já foi renderizado uma vez, atualize o gráfico.
-        // OnAfterRenderAsync com firstRender=false também pode ser usado, mas OnParametersSetAsync
-        // é bom para quando os dados de entrada mudam.
-        // Verifica se DataValues não é nulo e tem elementos para evitar erros ao renderizar.
-        if (DataValues != null && DataValues.Any())
+        if (_hasRenderedInitially)
         {
-            await RenderChart();
+            // Os dados foram alterados, então podemos chamar UpdateChartData ou RenderChart
+            // UpdateChartData é mais específico se apenas os dados mudaram.
+            // Se a intenção é recriar o gráfico (por exemplo, se o ChartId pudesse mudar), RenderChart seria mais apropriado.
+            // Para este caso, vamos assumir que queremos atualizar com os novos dados.
+            // A própria UpdateChartData já verifica se DataValues é null ou vazio.
+            await UpdateChartData(Labels, DataValues, Title);
         }
     }
 
