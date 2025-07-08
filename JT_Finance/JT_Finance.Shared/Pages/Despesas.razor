@@ -1,223 +1,318 @@
 @page "/despesas"
+@using JT_Classes
+@using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
-@using System.ComponentModel.DataAnnotations
-@using JT_Finance.Shared.Services 
-@using System.Linq.Expressions
+@using JT_Finance.Shared.Services
 @using static JT_Finance.Shared.Components.Modal
-
-@inject ToastService ToastService 
+@inject ToastService ToastService
 
 <h3>Despesas</h3>
-
 <button class="btn btn-primary mb-3" @onclick="AbrirModalParaNovaDespesa">Nova Despesa</button>
+@if (listaDespesas == null)
+{
+    <p><em>Carregando despesas...</em></p>
+}
+else
+{
+    <DataGrid TItem="Despesa" Items="listaDespesas">
+        <HeaderTemplate>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th>Data</th>
+            <th>Categoria</th>
+            <th>Paga</th>
+            <th>Ações</th>
+        </HeaderTemplate>
+        <RowTemplate Context="despesa">
+            <td>@despesa.Descricao</td>
+            <td>@despesa.Valor.ToString("C")</td>
+            <td>@despesa.DataDespesa.ToShortDateString()</td>
+            <td>@despesa.Categoria</td>
+            <td>@(despesa.DespesaPaga ? "Sim" : "Não")</td>
+            <td>
+                <button class="btn btn-sm btn-info" @onclick="() => AbrirModalParaEditarDespesa(despesa.Id)">Editar</button>
+                <button class="btn btn-sm btn-danger" @onclick="() => ConfirmarRemocaoDespesa(despesa.Id)">Remover</button>
+            </td>
+        </RowTemplate>
+    </DataGrid>
+}
 
-<DataGrid TItem="DespesaModel" Items="listaDespesas">
-    <HeaderTemplate>
-        <th>Descrição</th>
-        <th>Valor</th>
-        <th>Data</th>
-        <th>Categoria</th>
-        <th>Ações</th>
-    </HeaderTemplate>
-    <RowTemplate Context="despesa">
-        <td>@despesa.Descricao</td>
-        <td>@despesa.Valor.ToString("C")</td>
-        <td>@despesa.Data.ToShortDateString()</td>
-        <td>@despesa.Categoria</td>
-        <td>
-            <button class="btn btn-sm btn-info" @onclick="() => AbrirModalParaEditarDespesa(despesa)">Editar</button>
-            <button class="btn btn-sm btn-danger" @onclick="() => ConfirmarRemocaoDespesa(despesa.Id)">Remover</button>
-        </td>
-    </RowTemplate>
-</DataGrid>
 
 <Modal @ref="crudModal" Title="@modalTitle" OnClose="ResetarEstadoAposModal" Size="ModalSize.Large">
+
     <BodyContent>
-        @if (despesaAtual != null) // Renderiza o formulário apenas se despesaAtual estiver definida
+
+        @if (despesaAtual != null)
+
         {
-            <CrudForm TItem="DespesaModel" Item="despesaAtual" OnSubmit="HandleSalvarDespesa" OnCancel="HandleCancelarFormularioModal">
+
+            <CrudForm TItem="Despesa" Item="despesaAtual" OnSubmit="HandleSalvarDespesa" OnCancel="HandleCancelarFormularioModal">
+
                 <ChildContent Context="despesaContext">
-                    <CustomInput Label="Descrição" @bind-Value="despesaContext.Descricao" />
-                    <CustomInput Label="Valor" Type="number" @bind-Value="despesaContext.ValorAsString" />
+
+
+
+                    <!-- Descrição -->
+
                     <div class="form-group mb-3">
-                        <label for="data_despesa">Data</label>
-                        <InputDate id="data_despesa" class="form-control" @bind-Value="despesaContext.Data" />
-                        <ValidationMessage For="@(() => despesaContext.Data)" />
+
+                        <label for="descricao">Descrição</label>
+
+                        <InputText id="descricao" class="form-control" @bind-Value="despesaContext.Descricao" />
+
+                        <ValidationMessage For="@(() => despesaContext.Descricao)" />
+
                     </div>
-                    <CustomInput Label="Categoria" @bind-Value="despesaContext.Categoria" />
+
+
+
+                    <!-- Valor -->
+
+                    <div class="form-group mb-3">
+
+                        <label for="valor">Valor</label>
+
+                        <InputNumber id="valor" class="form-control" @bind-Value="despesaContext.Valor" />
+
+                        <ValidationMessage For="@(() => despesaContext.Valor)" />
+
+                    </div>
+
+
+
+                    <!-- Data da Despesa -->
+
+                    <div class="form-group mb-3">
+
+                        <label for="data_despesa">Data da Despesa</label>
+
+                        <InputDate id="data_despesa" class="form-control" @bind-Value="despesaContext.DataDespesa" />
+
+                        <ValidationMessage For="@(() => despesaContext.DataDespesa)" />
+
+                    </div>
+
+
+
+                    <!-- Tipo de Despesa (enum) -->
+
+                    <div class="form-group mb-3">
+
+                        <label for="tipo_despesa">Tipo de Despesa</label>
+
+                        <InputSelect id="tipo_despesa" class="form-control" @bind-Value="despesaContext.TipoDespesa">
+
+                            @foreach (TipoDespesa tipo in Enum.GetValues<TipoDespesa>())
+
+                            {
+
+                                <option value="@tipo">@tipo</option>
+
+                            }
+
+                        </InputSelect>
+
+                        <ValidationMessage For="@(() => despesaContext.TipoDespesa)" />
+
+                    </div>
+
+
+
+                    <!-- Categoria (enum) -->
+
+                    <div class="form-group mb-3">
+
+                        <label for="categoria">Categoria</label>
+
+                        <InputSelect id="categoria" class="form-control" @bind-Value="despesaContext.Categoria">
+
+                            @foreach (CategoriaDespesa cat in Enum.GetValues<CategoriaDespesa>())
+
+                            {
+
+                                <option value="@cat">@cat</option>
+
+                            }
+
+                        </InputSelect>
+
+                        <ValidationMessage For="@(() => despesaContext.Categoria)" />
+
+                    </div>
+
+
+
+                    <!-- Despesa Paga (bool) -->
+
+                    <div class="form-group mb-3 form-check">
+
+                        <InputCheckbox id="paga" class="form-check-input" @bind-Value="despesaContext.DespesaPaga" />
+
+                        <label class="form-check-label" for="paga">Despesa Paga</label>
+
+                    </div>
+
+
+
+                    <!-- Observação -->
+
+                    <div class="form-group mb-3">
+
+                        <label for="observacao">Observação</label>
+
+                        <InputText id="observacao" class="form-control" @bind-Value="despesaContext.Observacao" />
+
+                        <ValidationMessage For="@(() => despesaContext.Observacao)" />
+
+                    </div>
+
+
+
+                    <!-- Data de Pagamento (nullable) -->
+
+                    <div class="form-group mb-3">
+
+                        <label for="data_pagamento">Data de Pagamento</label>
+
+                        <InputDate id="data_pagamento" class="form-control" @bind-Value="despesaContext.DataPagamento" />
+
+                        <ValidationMessage For="@(() => despesaContext.DataPagamento)" />
+
+                    </div>
+
+
+
                 </ChildContent>
+
             </CrudForm>
+
+
+
         }
+
         else
+
         {
+
             <p>Carregando formulário...</p>
+
         }
+
     </BodyContent>
-    @* O FooterContent não é necessário, pois CrudForm já tem botões Salvar/Cancelar *@
 </Modal>
 
 <ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoDespesa" />
 
 
 @code {
-    private List<DespesaModel> listaDespesas = new List<DespesaModel>();
-    private DespesaModel despesaAtual = null; // Inicializa como null
+    private List<Despesa>? listaDespesas;
+    private Despesa? despesaAtual;
 
-    private Modal crudModal; // Referência para o componente Modal para Adicionar/Editar
+    private Modal crudModal = new();
     private string modalTitle = "";
 
-    private ConfirmDialog confirmDeleteDialog; // Referência para o modal de confirmação de remoção
-    private Guid? idDespesaParaRemover; // Nullable Guid para armazenar o ID da despesa a ser removida
+    private ConfirmDialog confirmDeleteDialog = new();
+    private int? idDespesaParaRemover;
 
-
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        // Dados de exemplo
-        listaDespesas.Add(new DespesaModel { Id = Guid.NewGuid(), Descricao = "Aluguel", Valor = 1200.50M, Data = DateTime.Now.AddDays(-10), Categoria = "Moradia" });
-        listaDespesas.Add(new DespesaModel { Id = Guid.NewGuid(), Descricao = "Supermercado", Valor = 350.75M, Data = DateTime.Now.AddDays(-5), Categoria = "Alimentação" });
-        // TODO: Carregar dados reais de um serviço
+        await CarregarDespesas();
+    }
+
+    // 1. Lógica de Carregamento Direta
+    private Task CarregarDespesas()
+    {
+        // Criamos uma instância temporária apenas para acessar o método "Consultar" herdado.
+        listaDespesas = new Despesa().Consultar<Despesa>("SELECT * FROM Despesas ORDER BY DataDespesa DESC");
+        StateHasChanged(); // Garante que a UI será atualizada
+        return Task.CompletedTask;
     }
 
     private void AbrirModalParaNovaDespesa()
     {
-        despesaAtual = new DespesaModel { Data = DateTime.Now }; // Preenche a data atual por padrão
+        despesaAtual = new Despesa();
         modalTitle = "Nova Despesa";
-        // O StateHasChanged é chamado implicitamente por Open() se ele chamar StateHasChanged internamente,
-        // mas para garantir que despesaAtual seja refletido no CrudForm ANTES do modal abrir, chamamos aqui.
-        StateHasChanged();
         crudModal.Open();
     }
 
-    private void AbrirModalParaEditarDespesa(DespesaModel despesaParaEditar)
+    // 2. Lógica de Edição usando diretamente o construtor "Active Record"
+    private void AbrirModalParaEditarDespesa(int id)
     {
-        // Cria uma cópia para edição, para não alterar a lista diretamente antes de salvar
-        despesaAtual = new DespesaModel
-        {
-            Id = despesaParaEditar.Id,
-            Descricao = despesaParaEditar.Descricao,
-            Valor = despesaParaEditar.Valor,
-            ValorAsString = despesaParaEditar.ValorAsString, // Importante copiar a string também
-            Data = despesaParaEditar.Data,
-            Categoria = despesaParaEditar.Categoria
-        };
+        // O construtor `new Despesa(id)` já busca e carrega o objeto do banco de dados.
+        // É a essência do padrão Active Record em ação.
+        despesaAtual = new Despesa(id);
         modalTitle = "Editar Despesa";
-        StateHasChanged();
         crudModal.Open();
     }
 
-    private async Task HandleSalvarDespesa(DespesaModel despesa)
+    // 3. Lógica de Salvamento chamando métodos do próprio objeto
+    private async Task HandleSalvarDespesa(Despesa despesa)
     {
-        bool isNew = despesa.Id == Guid.Empty;
-        if (isNew)
+        bool sucesso;
+
+        if (despesa.Id == 0) // Se é um novo registro
         {
-            despesa.Id = Guid.NewGuid();
-            listaDespesas.Add(despesa); // TODO: Salvar via serviço
-            ToastService.ShowSuccess("Sucesso!", "Nova despesa adicionada.");
+            // O próprio objeto "despesa" pode buscar o próximo ID e se salvar.
+            despesa.Id = despesa.GetNextId<Despesa>();
+            sucesso = despesa.Salvar(despesa);
+            ToastService.ShowSuccess("Sucesso!", "Nova despesa salva.");
         }
-        else
+        else // Se é uma edição
         {
-            var index = listaDespesas.FindIndex(d => d.Id == despesa.Id);
-            if (index != -1)
+            // O objeto "despesa" se atualiza.
+            sucesso = despesa.Atualizar(despesa);
+            ToastService.ShowSuccess("Sucesso!", "Despesa atualizada.");
+        }
+
+        if (!sucesso)
+        {
+            ToastService.ShowError("Erro!", "Ocorreu um problema ao salvar a despesa.");
+        }
+
+        await crudModal.Close();
+        await CarregarDespesas(); // Recarrega a lista
+    }
+
+    // 4. Lógica de Remoção usando o objeto carregado
+    private async Task EfetuarRemocaoDespesa()
+    {
+        if (idDespesaParaRemover.HasValue)
+        {
+            // Carregamos o objeto que queremos remover
+            var despesaParaRemover = new Despesa(idDespesaParaRemover.Value);
+
+            // O objeto "despesaParaRemover" é responsável por se excluir do banco.
+            var sucesso = despesaParaRemover.Excluir(despesaParaRemover);
+
+            if (sucesso)
             {
-                listaDespesas[index] = despesa; // TODO: Atualizar via serviço
-                ToastService.ShowSuccess("Sucesso!", "Despesa atualizada.");
+                ToastService.ShowSuccess("Removida!", "A despesa foi removida.");
             }
             else
             {
-                ToastService.ShowError("Erro!", "Despesa não encontrada para atualização.");
+                ToastService.ShowError("Erro!", "Não foi possível remover a despesa.");
             }
+
+            idDespesaParaRemover = null;
+            await CarregarDespesas();
         }
-        await crudModal.Close(); // Fecha o modal após salvar. OnClose do Modal vai chamar ResetarEstadoAposModal.
     }
 
+    // Métodos auxiliares do modal (sem alterações)
     private async Task HandleCancelarFormularioModal()
     {
-        await crudModal.Close(); // OnClose do Modal vai chamar ResetarEstadoAposModal.
+        await crudModal.Close();
     }
 
     private void ResetarEstadoAposModal()
     {
-        despesaAtual = null; // Limpa o item atual para que o formulário não retenha dados antigos
+        despesaAtual = null;
         modalTitle = "";
-        StateHasChanged(); // Garante que a UI reflita que despesaAtual é null se necessário
     }
 
-    // Método chamado pelo botão de remover na grid
-    private async Task ConfirmarRemocaoDespesa(Guid id)
+    private async Task ConfirmarRemocaoDespesa(int id)
     {
         idDespesaParaRemover = id;
-        // Define os textos e a classe do botão de confirmação para o diálogo de remoção
-        await confirmDeleteDialog.Show(
-            title: "Confirmar Remoção",
-            message: "Tem certeza que deseja remover esta despesa? Esta ação não pode ser desfeita.",
-            confirmText: "Sim, Remover",
-            cancelText: "Cancelar",
-            confirmClass: "btn-danger"
-        );
-    }
-
-    private void EfetuarRemocaoDespesa()
-    {
-        if (idDespesaParaRemover.HasValue)
-        {
-            var despesaParaRemover = listaDespesas.FirstOrDefault(d => d.Id == idDespesaParaRemover.Value);
-            if (despesaParaRemover != null)
-            {
-                listaDespesas.Remove(despesaParaRemover); // TODO: Remover via serviço
-                ToastService.ShowSuccess("Removida!", $"Despesa \"{despesaParaRemover.Descricao}\" foi removida.");
-                StateHasChanged(); // Atualiza a UI após remover da lista
-            }
-            else
-            {
-                ToastService.ShowError("Erro!", "Despesa não encontrada para remoção.");
-            }
-            idDespesaParaRemover = null; // Limpa o ID após a operação
-        }
-    }
-
-    // private void RemoverDespesa(Guid id) // Método antigo de remoção direta, agora substituído por EfetuarRemocaoDespesa
-    // {
-    //     var despesaParaRemover = listaDespesas.FirstOrDefault(d => d.Id == id);
-    //     if (despesaParaRemover != null)
-    //     {
-    //         listaDespesas.Remove(despesaParaRemover);
-    //     }
-    // }
-
-
-    public class DespesaModel
-    {
-        public Guid Id { get; set; }
-
-        [Required(ErrorMessage = "A descrição é obrigatória.")]
-        [StringLength(100, ErrorMessage = "A descrição deve ter no máximo 100 caracteres.")]
-        public string Descricao { get; set; }
-
-        [Required(ErrorMessage = "O valor é obrigatório.")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "O valor deve ser maior que zero.")]
-        public decimal Valor { get; set; }
-
-        // Propriedade auxiliar para binding com InputNumber/CustomInput type="number"
-        public string ValorAsString
-        {
-            get => Valor.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            set
-            {
-                if (decimal.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var decimalValue))
-                {
-                    Valor = decimalValue;
-                }
-                else
-                {
-                    // Tratar erro de conversão se necessário, ou deixar a validação do Range pegar
-                }
-            }
-        }
-
-        [Required(ErrorMessage = "A data é obrigatória.")]
-        public DateTime Data { get; set; } = DateTime.Now;
-
-        [StringLength(50, ErrorMessage = "A categoria deve ter no máximo 50 caracteres.")]
-        public string Categoria { get; set; }
+        await confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover esta despesa?");
     }
 }
