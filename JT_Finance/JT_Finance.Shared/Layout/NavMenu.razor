@@ -1,51 +1,86 @@
-﻿<div class="top-row ps-3 navbar navbar-dark bg-dark">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-        <a class="navbar-brand" href="">JT_Finance</a>
+﻿<div class="sidebar-component @(_menuMinimizado ? "minimized" : "")">
+    <div class="top-row ps-3 navbar navbar-dark bg-dark">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <a class="navbar-brand" href="">@(!_menuMinimizado ? "JT_Finance" : "")</a>
+            <button class="btn btn-sm btn-outline-light"
+                    @onclick="ToggleMenu"
+                    title="@(_menuMinimizado ? "Expandir menu" : "Minimizar menu")">
+                <span class="@($"bi {(_menuMinimizado ? "bi-arrow-bar-right" : "bi-arrow-bar-left")}")" style="font-size: 1.2rem;"></span>
+            </button>
+        </div>
+    </div>
 
-        <button class="btn btn-sm btn-outline-light"
-                @onclick="ToggleMenu"
-                title="@(_menuMinimizado ? "Expandir menu" : "Minimizar menu")">
-            <span class="@($"bi {(_menuMinimizado ? "bi-arrow-right-circle-fill" : "bi-arrow-right-circle-fill")}")"></span>
-        </button>
+    <div class="@NavMenuContentClass" @onclick="HandleNavContentClick">
+        <nav class="flex-column">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="bi bi-house-door-fill" aria-hidden="true"></span>
+                    <span class="link-text">Home</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="receitas">
+                    <span class="bi bi-cash-stack" aria-hidden="true"></span>
+                    <span class="link-text">Receitas</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="despesas">
+                    <span class="bi bi-credit-card-fill" aria-hidden="true"></span>
+                    <span class="link-text">Despesas</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="listacompras">
+                    <span class="bi bi-cart-fill" aria-hidden="true"></span>
+                    <span class="link-text">Lista Compras</span>
+                </NavLink>
+            </div>
+             <div class="nav-item px-3">
+                <NavLink class="nav-link" href="toolstripexample">
+                    <span class="bi bi-tools" aria-hidden="true"></span>
+                    <span class="link-text">ToolStrip</span>
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="searchabletableexample">
+                    <span class="bi bi-table" aria-hidden="true"></span>
+                    <span class="link-text">Search Table</span>
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="basetextboxexample">
+                    <span class="bi bi-input-cursor-text" aria-hidden="true"></span>
+                    <span class="link-text">Base TextBox</span>
+                </NavLink>
+            </div>
+        </nav>
     </div>
 </div>
 
-<div class="@NavMenuClass">
-    <nav class="flex-column" @onclick="() => _menuMinimizado = false">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill" aria-hidden="true"></span>
-                <span class="link-text">Home</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="receitas">
-                <span class="bi bi-cash-stack" aria-hidden="true"></span>
-                <span class="link-text">Receitas</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="despesas">
-                <span class="bi bi-credit-card-fill" aria-hidden="true"></span>
-                <span class="link-text">Despesas</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="listacompras">
-                <span class="bi bi-cart-fill" aria-hidden="true"></span>
-                <span class="link-text">Lista Compras</span>
-            </NavLink>
-        </div>
-    </nav>
-</div>
-
 @code {
-    private bool _menuMinimizado = false;
+    private bool _menuMinimizado = false; // Default to expanded
 
-    private string NavMenuClass => _menuMinimizado ? "nav-scrollable minimized" : "nav-scrollable";
+    // Class for the main content area of the nav menu, separate from the overall component state
+    private string NavMenuContentClass => _menuMinimizado ? "nav-scrollable nav-content-minimized" : "nav-scrollable";
 
-    private void ToggleMenu() => _menuMinimizado = !_menuMinimizado;
+    private void ToggleMenu()
+    {
+        _menuMinimizado = !_menuMinimizado;
+    }
+
+    // If the menu is minimized and user clicks on the content area (e.g. an icon), expand it.
+    // This is optional behavior. The original guide didn't specify this.
+    // The original NavMenu had @onclick="() => _menuMinimizado = false" on the nav element.
+    private void HandleNavContentClick()
+    {
+        if (_menuMinimizado)
+        {
+            // For now, let's not auto-expand. User must use the toggle.
+            // If auto-expansion is desired: _menuMinimizado = false;
+        }
+    }
 }
