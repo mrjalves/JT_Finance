@@ -1,0 +1,32 @@
+@using JT_Finance.Shared.Models
+
+<div class="toolstrip">
+    @if (Items != null)
+    {
+        @foreach (var item in Items)
+        {
+            if (item.IsSeparator)
+            {
+                <div class="toolstrip-separator"></div>
+            }
+            else
+            {
+                <button class="toolstrip-button" @onclick="item.OnClick">
+                    @if (!string.IsNullOrEmpty(item.IconCssClass))
+                    {
+                        <i class="@item.IconCssClass"></i>
+                    }
+                    @if (!string.IsNullOrEmpty(item.Text))
+                    {
+                        <span class="toolstrip-text">@item.Text</span>
+                    }
+                </button>
+            }
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<ToolStripItem>? Items { get; set; }
+}

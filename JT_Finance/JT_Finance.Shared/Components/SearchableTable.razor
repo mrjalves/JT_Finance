@@ -1,0 +1,80 @@
+@typeparam TItem
+@using System.Reflection
+
+<div class="mb-3">
+    <input @bind="searchTerm" @bind:event="oninput" class="form-control" placeholder="Search..." />
+</div>
+
+@if (FilteredData == null || !FilteredData.Any())
+{
+    <p><em>@(string.IsNullOrWhiteSpace(searchTerm) ? "No data available." : "No matching records found.")</em></p>
+}
+else
+{
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                @if (Headers != null && Headers.Any())
+                {
+                    @foreach (var header in Headers)
+                    {
+                        <th>@header</th>
+                    }
+                }
+                else if (Data != null && Data.Any()) // Auto-generate headers from TItem properties
+                {
+                    @foreach (var prop in typeof(TItem).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                    {
+                        <th>@prop.Name</th>
+                    }
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in FilteredData)
+            {
+                <tr>
+                    @if (RenderRow != null)
+                    {
+                        @RenderRow(item)
+                    }
+                    else // Default rendering: iterate through properties
+                    {
+                        @foreach (var prop in typeof(TItem).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                        {
+                            <td>@(prop.GetValue(item)?.ToString())</td>
+                        }
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public List<string>? Headers { get; set; }
+
+    [Parameter]
+    public List<TItem>? Data { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? RenderRow { get; set; } // For custom row rendering
+
+    private string searchTerm = "";
+
+    private List<TItem>? FilteredData =>
+        Data == null ? new List<TItem>() :
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? Data
+            : Data.Where(item =>
+                typeof(TItem).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .Any(prop => prop.GetValue(item)?.ToString()?
+                        .Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)
+            ).ToList();
+
+    protected override void OnInitialized()
+    {
+        if (Data == null) Data = new List<TItem>();
+    }
+}

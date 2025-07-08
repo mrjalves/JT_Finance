@@ -1,0 +1,67 @@
+@page "/searchabletableexample"
+@using JT_Finance.Shared.Components // For SearchableTable
+@using JT_Finance.Shared.Models // For potential models, though using an anonymous type here
+
+<h3>Searchable Table Example</h3>
+
+<h4>Example 1: Basic Usage with Auto-Headers and Default Row Rendering</h4>
+<SearchableTable TItem="Product" Data="@products" />
+
+<hr class="my-4" />
+
+<h4>Example 2: Custom Headers and Default Row Rendering</h4>
+<SearchableTable TItem="Product" Data="@products" Headers="@customHeaders" />
+
+<hr class="my-4" />
+
+<h4>Example 3: Custom Row Rendering (and Custom Headers)</h4>
+<SearchableTable TItem="Product" Data="@products" Headers="@customHeaders">
+    <RenderRow Context="product">
+        <td>@product.Id</td>
+        <td style="color: @(product.Price > 50 ? "green" : "blue");">@product.Name</td>
+        <td>@product.Price.ToString("C")</td>
+        <td>@product.Category</td>
+        <td>@(product.IsAvailable ? "Yes" : "No")</td>
+    </RenderRow>
+</SearchableTable>
+
+<hr class="my-4" />
+
+<h4>Example 4: Different Data Type (Simple String List - Not ideal for this component version but shows property search)</h4>
+<p><em>Note: This example shows searching on properties of an object. For a list of simple strings, a different component or simpler rendering would be more typical. Here, it searches the 'Length' property of strings.</em></p>
+<SearchableTable TItem="string" Data="@stringList" Headers="@(new List<string> { "Value", "Length" })">
+    <RenderRow Context="str">
+        <td>@str</td>
+        <td>@str.Length</td>
+    </RenderRow>
+</SearchableTable>
+
+
+@code {
+    // Example Data Model
+    public class Product
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+        public decimal Price { get; set; }
+        public string? Category { get; set; }
+        public bool IsAvailable { get; set; }
+    }
+
+    private List<Product> products = new List<Product>();
+    private List<string> customHeaders = new List<string> { "Product ID", "Product Name", "Unit Price", "Category", "Available?" };
+    private List<string> stringList = new List<string> { "Apple", "Banana", "Cherry", "Date", "Elderberry" };
+
+    protected override void OnInitialized()
+    {
+        products = new List<Product>
+        {
+            new Product { Id = 1, Name = "Laptop Pro", Price = 1200.50m, Category = "Electronics", IsAvailable = true },
+            new Product { Id = 2, Name = "Office Chair", Price = 150.75m, Category = "Furniture", IsAvailable = true },
+            new Product { Id = 3, Name = "Wireless Mouse", Price = 25.99m, Category = "Electronics", IsAvailable = false },
+            new Product { Id = 4, Name = "Desk Lamp", Price = 45.00m, Category = "Furniture", IsAvailable = true },
+            new Product { Id = 5, Name = "Keyboard", Price = 75.00m, Category = "Electronics", IsAvailable = true },
+            new Product { Id = 6, Name = "Monitor Arm", Price = 99.90m, Category = "Accessories", IsAvailable = false }
+        };
+    }
+}

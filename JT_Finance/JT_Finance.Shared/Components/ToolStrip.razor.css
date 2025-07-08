@@ -1,0 +1,53 @@
+.toolstrip {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #ccc;
+    flex-wrap: wrap; /* Added to allow wrapping on smaller screens */
+}
+
+.toolstrip-button {
+    background: none;
+    border: 1px solid transparent;
+    padding: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem; /* Added for spacing when wrapped */
+}
+
+.toolstrip-button:hover {
+    background-color: #e0e0e0;
+    border-color: #bbb;
+}
+
+.toolstrip-button i { /* Style for icon within button */
+    margin-right: 0.25rem; /* Default spacing, applied if text is also present */
+}
+
+.toolstrip-button .toolstrip-text + i, /* If text is before icon (not typical here but for completeness) */
+.toolstrip-button i + .toolstrip-text { /* If icon is before text */
+    margin-left: 0.5rem;
+}
+
+.toolstrip-button .toolstrip-text:only-child { /* If only text, no extra margin needed */
+    margin-left: 0;
+}
+
+.toolstrip-button i:only-child { /* If only icon, no extra margin needed */
+    margin-right: 0;
+}
+
+
+.toolstrip-separator {
+    border-left: 1px solid #ccc;
+    height: 1.5rem;
+    margin: 0 0.5rem;
+}
+
+/* Removed .toolstrip-text global style as span is used directly */
+/* .toolstrip-text { */
+/*     margin-left: 0.5rem; */
+/* } */

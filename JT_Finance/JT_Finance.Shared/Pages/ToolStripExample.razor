@@ -1,0 +1,61 @@
+@page "/toolstripexample"
+@using JT_Finance.Shared.Models
+@using JT_Finance.Shared.Components
+
+<h3>ToolStrip Example</h3>
+
+<p>This page demonstrates the ToolStrip component.</p>
+
+<ToolStrip Items="@toolStripItems" />
+
+<div class="mt-3">
+    <strong>Last Action:</strong> @lastActionMessage
+</div>
+
+@code {
+    private List<ToolStripItem> toolStripItems = new List<ToolStripItem>();
+    private string lastActionMessage = "None";
+
+    protected override void OnInitialized()
+    {
+        toolStripItems.Add(new ToolStripItem { Text = "New", IconCssClass = "oi oi-plus", OnClick = EventCallback.Factory.Create(this, NewClicked) });
+        toolStripItems.Add(new ToolStripItem { Text = "Save", IconCssClass = "oi oi-data-transfer-download", OnClick = EventCallback.Factory.Create(this, SaveClicked) });
+        toolStripItems.Add(new ToolStripItem { IsSeparator = true });
+        toolStripItems.Add(new ToolStripItem { Text = "Delete", IconCssClass = "oi oi-trash", OnClick = EventCallback.Factory.Create(this, DeleteClicked) });
+        toolStripItems.Add(new ToolStripItem { IconCssClass = "oi oi-print", OnClick = EventCallback.Factory.Create(this, PrintClicked) }); // Icon only
+        toolStripItems.Add(new ToolStripItem { Text = "Help", OnClick = EventCallback.Factory.Create(this, HelpClicked) }); // Text only
+    }
+
+    private void NewClicked()
+    {
+        lastActionMessage = "New item clicked at " + DateTime.Now.ToLongTimeString();
+        // Logic for creating a new item
+        Console.WriteLine("New item clicked");
+    }
+
+    private void SaveClicked()
+    {
+        lastActionMessage = "Save clicked at " + DateTime.Now.ToLongTimeString();
+        // Logic for saving
+        Console.WriteLine("Save clicked");
+    }
+
+    private void DeleteClicked()
+    {
+        lastActionMessage = "Delete clicked at " + DateTime.Now.ToLongTimeString();
+        // Logic for deleting
+        Console.WriteLine("Delete clicked");
+    }
+
+    private void PrintClicked()
+    {
+        lastActionMessage = "Print clicked at " + DateTime.Now.ToLongTimeString();
+        Console.WriteLine("Print clicked");
+    }
+
+    private void HelpClicked()
+    {
+        lastActionMessage = "Help clicked at " + DateTime.Now.ToLongTimeString();
+        Console.WriteLine("Help clicked");
+    }
+}

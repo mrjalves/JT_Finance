@@ -1,0 +1,35 @@
+@inherits InputText
+
+<div class="form-group mb-3">
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <label for="@Id">@Label</label>
+    }
+    <input id="@Id" class="@CssClass" @bind="CurrentValueAsString" placeholder="@Placeholder" type="@Type" />
+    <div class="form-text text-danger">
+        <ValidationMessage For="() => CurrentValue" />
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public string? Placeholder { get; set; }
+
+    [Parameter]
+    public string Type { get; set; } = "text"; // Default to text, can be password, email, etc.
+
+    // Id is inherited from InputBase
+    // Value and ValueChanged are effectively handled by InputText's CurrentValue and CurrentValueChanged
+    // CssClass is inherited from InputBase and will include validation classes like "modified invalid"
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrWhiteSpace(Id))
+        {
+            Id = Guid.NewGuid().ToString("N");
+        }
+    }
+}
