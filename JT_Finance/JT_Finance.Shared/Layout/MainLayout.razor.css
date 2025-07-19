@@ -132,3 +132,29 @@ main {
         right: 0.75rem;
         top: 0.5rem;
     }
+.dashboard-layout {
+    display: grid;
+    /* Largura inicial do menu minimizado */
+    grid-template-columns: 80px 1fr;
+    height: 100vh;
+    /* Transição suave ao mudar a largura das colunas */
+    transition: grid-template-columns 0.3s ease-in-out;
+}
+
+    /* Estado expandido do layout */
+    .dashboard-layout.expanded {
+        /* Largura do menu expandido */
+        grid-template-columns: 260px 1fr;
+    }
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--main-bg);
+    overflow-y: auto;
+}
+
+main.content-body {
+    padding: 2rem;
+    flex-grow: 1;
+}

@@ -16,10 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Components\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="JT_Aplicacao">
       <HintPath>..\..\..\JT_BusinessLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_Aplicacao.dll</HintPath>
     </Reference>

@@ -6,198 +6,199 @@
 @using static JT_Finance.Shared.Components.Modal
 @inject ToastService ToastService
 
-<h3>Despesas</h3>
-<button class="btn btn-primary mb-3" @onclick="AbrirModalParaNovaDespesa">Nova Despesa</button>
-@if (listaDespesas == null)
-{
-    <p><em>Carregando despesas...</em></p>
-}
-else
-{
-    <DataGrid TItem="Despesa" Items="listaDespesas">
-        <HeaderTemplate>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Data</th>
-            <th>Categoria</th>
-            <th>Paga</th>
-            <th>Ações</th>
-        </HeaderTemplate>
-        <RowTemplate Context="despesa">
-            <td>@despesa.Descricao</td>
-            <td>@despesa.Valor.ToString("C")</td>
-            <td>@despesa.DataDespesa.ToShortDateString()</td>
-            <td>@despesa.Categoria</td>
-            <td>@(despesa.DespesaPaga ? "Sim" : "Não")</td>
-            <td>
-                <button class="btn btn-sm btn-info" @onclick="() => AbrirModalParaEditarDespesa(despesa.Id)">Editar</button>
-                <button class="btn btn-sm btn-danger" @onclick="() => ConfirmarRemocaoDespesa(despesa.Id)">Remover</button>
-            </td>
-        </RowTemplate>
-    </DataGrid>
-}
+<button class="btn btn-primary mb-3 shadow-sm" @onclick="AbrirModalParaNovaDespesa">
+    <i class="bi bi-plus-circle-fill me-2"></i>Nova Despesa
+</button>
+
+<DataGrid TItem="Despesa" Items="listaDespesas" IsLoading="isLoading">
+    <HeaderTemplate>
+        <th>Descrição</th>
+        <th>Valor</th>
+        <th>Data</th>
+        <th>Categoria</th>
+        <th>Paga</th>
+        <th>Ações</th>
+    </HeaderTemplate>
+    <RowTemplate Context="despesa">
+        <td>@despesa.Descricao</td>
+        <td>@despesa.Valor.ToString("C")</td>
+        <td>@despesa.DataDespesa.ToShortDateString()</td>
+        <td>@despesa.Categoria</td>
+        <td>
+            @if (despesa.DespesaPaga)
+            {
+                <span class="badge bg-success">Sim</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary">Não</span>
+            }
+        </td>
+        <td>
+           <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirModalParaEditarDespesa(despesa.Id)">
+                <i class="bi bi-pencil-fill me-1"></i>Editar
+            </button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoDespesa(despesa.Id)">
+                <i class="bi bi-trash-fill me-1"></i>Remover
+            </button>
+        </td>
+    </RowTemplate>
+    <EmptyTemplate>
+        <p class="text-muted mb-0">Nenhuma despesa cadastrada ainda. Clique em "Nova Despesa" para começar.</p>
+    </EmptyTemplate>
+</DataGrid>
 
 
 <Modal @ref="crudModal" Title="@modalTitle" OnClose="ResetarEstadoAposModal" Size="ModalSize.Large">
-
     <BodyContent>
-
         @if (despesaAtual != null)
-
         {
+            <EditForm Model="despesaAtual" OnValidSubmit="() => HandleSalvarDespesa(despesaAtual)">
+                <DataAnnotationsValidator />
+                <div class="form-check form-switch mb-3">
+                    <InputCheckbox id="isCardExpense" class="form-check-input" @bind-Value="éDespesaDeCartao" />
+                    <label class="form-check-label" for="isCardExpense">É uma despesa de Cartão de Crédito?</label>
+                </div>
+                <hr />
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <InputText id="descricao" class="form-control" @bind-Value="despesaAtual.Descricao" />
+                        <ValidationMessage For="@(() => despesaAtual.Descricao)" />
+                    </div>
+                </div>
 
-            <CrudForm TItem="Despesa" Item="despesaAtual" OnSubmit="HandleSalvarDespesa" OnCancel="HandleCancelarFormularioModal">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="valor" class="form-label">Valor</label>
+                        <InputNumber id="valor" class="form-control" @bind-Value="despesaAtual.Valor" />
+                        <ValidationMessage For="@(() => despesaAtual.Valor)" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="data_despesa" class="form-label">Data da Despesa</label>
+                        <InputDate id="data_despesa" class="form-control" @bind-Value="despesaAtual.DataDespesa" />
+                        <ValidationMessage For="@(() => despesaAtual.DataDespesa)" />
+                    </div>
+                </div>
+                <!-- SEÇÃO ESPECÍFICA PARA CARTÃO DE CRÉDITO -->
+                @if (éDespesaDeCartao && despesaAtual is DespesaCartao despesaCartao)
+                {
+                    <div class="row p-3 mb-3 bg-light border rounded">
+                        <div class="col-md-6 mb-3">
+                            <label for="cartao" class="form-label">Cartão de Crédito</label>
+                            <InputSelect id="cartao" class="form-select" @bind-Value="despesaCartao.CartaoId">
+                                <option value="0">Selecione um cartão...</option>
+                                @foreach (var cartao in listaCartoesCredito)
+                                {
+                                    <option value="@cartao.Id">@cartao.Nome</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => despesaCartao.CartaoId)" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="parcelas" class="form-label">Quantidade de Parcelas</label>
+                            <InputNumber id="parcelas" class="form-control" @bind-Value="despesaCartao.QuantidadeParcelas" />
+                            <ValidationMessage For="@(() => despesaCartao.QuantidadeParcelas)" />
+                        </div>
+                    </div>
+                }
+                <div class="row">
+                    <!-- Dropdown para TIPO DE DESPESA com formulário inline -->
+                    <div class="col-md-6 mb-3">
+                        <label for="tipo_despesa" class="form-label">Tipo de Despesa</label>
+                        <div class="input-group">
+                            <InputSelect id="tipo_despesa" class="form-select" @bind-Value="despesaAtual.TipoDespesa" disabled="@showNewTipoForm">
+                                <option value="0">Selecione um tipo...</option>
+                                @if (opcoesTipoDespesa != null)
+                                {
+                                    @foreach (var tipo in opcoesTipoDespesa)
+                                    {
+                                        <option value="@tipo.Id">@tipo.Descricao</option>
+                                    }
+                                }
+                            </InputSelect>
+                            <button class="btn btn-outline-secondary" type="button" @onclick='() => ToggleInlineForm("TipoDespesa")' title="Adicionar Novo Tipo">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                        <ValidationMessage For="@(() => despesaAtual.TipoDespesa)" />
 
-                <ChildContent Context="despesaContext">
-
-
-
-                    <!-- Descrição -->
-
-                    <div class="form-group mb-3">
-
-                        <label for="descricao">Descrição</label>
-
-                        <InputText id="descricao" class="form-control" @bind-Value="despesaContext.Descricao" />
-
-                        <ValidationMessage For="@(() => despesaContext.Descricao)" />
-
+                        @if (showNewTipoForm)
+                        {
+                            <div class="input-group mt-2 animate__animated animate__fadeIn">
+                                <InputText @bind-Value="newOptionDescription" class="form-control" placeholder="Nova descrição para Tipo..." />
+                                <button type="button" class="btn btn-success" @onclick='() => SalvarNovaOpcaoInline("TipoDespesa")'>Salvar</button>
+                                <button type="button" class="btn btn-secondary" @onclick='() => ToggleInlineForm("TipoDespesa")'>Cancelar</button>
+                            </div>
+                        }
                     </div>
 
+                    <!-- Dropdown para CATEGORIA com formulário inline -->
+                    <div class="col-md-6 mb-3">
+                        <label for="categoria" class="form-label">Categoria</label>
+                        <div class="input-group">
+                            <InputSelect id="categoria" class="form-select" @bind-Value="despesaAtual.Categoria" disabled="@showNewCategoriaForm">
+                                <option value="0">Selecione uma categoria...</option>
+                                @if (opcoesCategoriaDespesa != null)
+                                {
+                                    @foreach (var cat in opcoesCategoriaDespesa)
+                                    {
+                                        <option value="@cat.Id">@cat.Descricao</option>
+                                    }
+                                }
+                            </InputSelect>
+                            <button class="btn btn-outline-secondary" type="button" @onclick='() => ToggleInlineForm("Categoria")' title="Adicionar Nova Categoria">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                        <ValidationMessage For="@(() => despesaAtual.Categoria)" />
 
-
-                    <!-- Valor -->
-
-                    <div class="form-group mb-3">
-
-                        <label for="valor">Valor</label>
-
-                        <InputNumber id="valor" class="form-control" @bind-Value="despesaContext.Valor" />
-
-                        <ValidationMessage For="@(() => despesaContext.Valor)" />
-
+                        @if (showNewCategoriaForm)
+                        {
+                            <div class="input-group mt-2 animate__animated animate__fadeIn">
+                                <InputText @bind-Value="newOptionDescription" class="form-control" placeholder="Nova descrição para Categoria..." />
+                                <button type="button" class="btn btn-success" @onclick='() => SalvarNovaOpcaoInline("Categoria")'>Salvar</button>
+                                <button type="button" class="btn btn-secondary" @onclick='() => ToggleInlineForm("Categoria")'>Cancelar</button>
+                            </div>
+                        }
                     </div>
+                </div>
 
+                <div class="form-group mb-3">
+                    <label for="observacao" class="form-label">Observação</label>
+                    <InputTextArea id="observacao" class="form-control" @bind-Value="despesaAtual.Observacao" rows="3" />
+                    <ValidationMessage For="@(() => despesaAtual.Observacao)" />
+                </div>
 
-
-                    <!-- Data da Despesa -->
-
-                    <div class="form-group mb-3">
-
-                        <label for="data_despesa">Data da Despesa</label>
-
-                        <InputDate id="data_despesa" class="form-control" @bind-Value="despesaContext.DataDespesa" />
-
-                        <ValidationMessage For="@(() => despesaContext.DataDespesa)" />
-
+                <div class="row align-items-center">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <InputCheckbox id="paga" class="form-check-input" @bind-Value="despesaAtual.DespesaPaga" />
+                            <label class="form-check-label" for="paga">Despesa já foi paga?</label>
+                        </div>
                     </div>
+                    @if (despesaAtual.DespesaPaga)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <label for="data_pagamento" class="form-label">Data de Pagamento</label>
+                            <InputDate id="data_pagamento" class="form-control" @bind-Value="despesaAtual.DataPagamento" />
+                            <ValidationMessage For="@(() => despesaAtual.DataPagamento)" />
+                        </div>
+                    }
+                </div>
 
+                <hr />
 
-
-                    <!-- Tipo de Despesa (enum) -->
-
-                    <div class="form-group mb-3">
-
-                        <label for="tipo_despesa">Tipo de Despesa</label>
-
-                        <InputSelect id="tipo_despesa" class="form-control" @bind-Value="despesaContext.TipoDespesa">
-
-                            @foreach (TipoDespesa tipo in Enum.GetValues<TipoDespesa>())
-
-                            {
-
-                                <option value="@tipo">@tipo</option>
-
-                            }
-
-                        </InputSelect>
-
-                        <ValidationMessage For="@(() => despesaContext.TipoDespesa)" />
-
-                    </div>
-
-
-
-                    <!-- Categoria (enum) -->
-
-                    <div class="form-group mb-3">
-
-                        <label for="categoria">Categoria</label>
-
-                        <InputSelect id="categoria" class="form-control" @bind-Value="despesaContext.Categoria">
-
-                            @foreach (CategoriaDespesa cat in Enum.GetValues<CategoriaDespesa>())
-
-                            {
-
-                                <option value="@cat">@cat</option>
-
-                            }
-
-                        </InputSelect>
-
-                        <ValidationMessage For="@(() => despesaContext.Categoria)" />
-
-                    </div>
-
-
-
-                    <!-- Despesa Paga (bool) -->
-
-                    <div class="form-group mb-3 form-check">
-
-                        <InputCheckbox id="paga" class="form-check-input" @bind-Value="despesaContext.DespesaPaga" />
-
-                        <label class="form-check-label" for="paga">Despesa Paga</label>
-
-                    </div>
-
-
-
-                    <!-- Observação -->
-
-                    <div class="form-group mb-3">
-
-                        <label for="observacao">Observação</label>
-
-                        <InputText id="observacao" class="form-control" @bind-Value="despesaContext.Observacao" />
-
-                        <ValidationMessage For="@(() => despesaContext.Observacao)" />
-
-                    </div>
-
-
-
-                    <!-- Data de Pagamento (nullable) -->
-
-                    <div class="form-group mb-3">
-
-                        <label for="data_pagamento">Data de Pagamento</label>
-
-                        <InputDate id="data_pagamento" class="form-control" @bind-Value="despesaContext.DataPagamento" />
-
-                        <ValidationMessage For="@(() => despesaContext.DataPagamento)" />
-
-                    </div>
-
-
-
-                </ChildContent>
-
-            </CrudForm>
-
-
-
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" @onclick="HandleCancelarFormularioModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </EditForm>
         }
-
         else
-
         {
-
             <p>Carregando formulário...</p>
-
         }
-
     </BodyContent>
 </Modal>
 
@@ -205,61 +206,117 @@ else
 
 
 @code {
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
+
+    // --- Variáveis de Estado da Página ---
     private List<Despesa>? listaDespesas;
     private Despesa? despesaAtual;
-
+    private bool isLoading = true;
+    private bool éDespesaDeCartao = false; // Controla se o formulário de cartão aparece
+    private CartaoCredito cartaoRepository = new CartaoCredito(); // Para buscar os cartões
+    private List<CartaoCredito> listaCartoesCredito = new List<CartaoCredito>(); // Para guardar a lista de cartões
+    // --- Referências de Componentes ---
     private Modal crudModal = new();
     private string modalTitle = "";
-
     private ConfirmDialog confirmDeleteDialog = new();
     private int? idDespesaParaRemover;
 
+    // --- Repositórios e Dados de Categoria ---
+    private Categoria categoriaRepository = new Categoria();
+    private List<Categoria> opcoesTipoDespesa = new List<Categoria>();
+    private List<Categoria> opcoesCategoriaDespesa = new List<Categoria>();
+
+    // --- NOVAS: Variáveis de Estado para o Formulário Inline ---
+    private bool showNewTipoForm = false;
+    private bool showNewCategoriaForm = false;
+    private string newOptionDescription = "";
+
+    // --- Métodos do Ciclo de Vida ---
     protected override async Task OnInitializedAsync()
     {
-        await CarregarDespesas();
+        if (SetPageTitleAsync != null)
+        {
+            await SetPageTitleAsync.Invoke("Despesas");
+        }
+        await CarregarDependencias();
     }
 
-    // 1. Lógica de Carregamento Direta
-    private Task CarregarDespesas()
+    private async Task CarregarDependencias()
     {
-        // Criamos uma instância temporária apenas para acessar o método "Consultar" herdado.
-        listaDespesas = new Despesa().Consultar<Despesa>("SELECT * FROM Despesas ORDER BY DataDespesa DESC");
-        StateHasChanged(); // Garante que a UI será atualizada
+        isLoading = true;
+        await Task.WhenAll(
+            CarregarDespesas(),
+            CarregarOpcoesDeCategoria(),
+            CarregarCartoesDeCredito()
+        );
+        isLoading = false;
+    }
+
+    // --- Métodos de Carregamento de Dados ---
+    private Task CarregarOpcoesDeCategoria()
+    {
+        try
+        {
+            opcoesTipoDespesa = categoriaRepository.ListarPorPapel("Despesa", "TipoDespesa");
+            opcoesCategoriaDespesa = categoriaRepository.ListarPorPapel("Despesa", "Categoria");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar opções de categoria: {ex.Message}");
+            opcoesTipoDespesa = new List<Categoria>();
+            opcoesCategoriaDespesa = new List<Categoria>();
+        }
         return Task.CompletedTask;
     }
+    private Task CarregarCartoesDeCredito()
+    {
+        try
+        {
+            listaCartoesCredito = cartaoRepository.Consultar<CartaoCredito>("SELECT * FROM CartoesCredito WHERE Ativo = 1 ORDER BY Nome");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar cartões: {ex.Message}");
+            listaCartoesCredito = new List<CartaoCredito>();
+        }
+        return Task.CompletedTask;
+    }
+    private async Task CarregarDespesas()
+    {
+        isLoading = true;
+        await Task.Yield();
+        await Task.Delay(250);
+        listaDespesas = new Despesa().Consultar<Despesa>("SELECT * FROM Despesas ORDER BY DataDespesa DESC");
+        isLoading = false;
+    }
 
+    // --- Métodos de Manipulação do Modal Principal (CRUD de Despesas) ---
     private void AbrirModalParaNovaDespesa()
     {
-        despesaAtual = new Despesa();
+        despesaAtual = new Despesa { DataDespesa = DateTime.Today };
         modalTitle = "Nova Despesa";
         crudModal.Open();
     }
 
-    // 2. Lógica de Edição usando diretamente o construtor "Active Record"
     private void AbrirModalParaEditarDespesa(int id)
     {
-        // O construtor `new Despesa(id)` já busca e carrega o objeto do banco de dados.
-        // É a essência do padrão Active Record em ação.
         despesaAtual = new Despesa(id);
         modalTitle = "Editar Despesa";
         crudModal.Open();
     }
 
-    // 3. Lógica de Salvamento chamando métodos do próprio objeto
     private async Task HandleSalvarDespesa(Despesa despesa)
     {
         bool sucesso;
-
-        if (despesa.Id == 0) // Se é um novo registro
+        if (despesa.Id == 0)
         {
-            // O próprio objeto "despesa" pode buscar o próximo ID e se salvar.
             despesa.Id = despesa.GetNextId<Despesa>();
             sucesso = despesa.Salvar(despesa);
             ToastService.ShowSuccess("Sucesso!", "Nova despesa salva.");
         }
-        else // Se é uma edição
+        else
         {
-            // O objeto "despesa" se atualiza.
             sucesso = despesa.Atualizar(despesa);
             ToastService.ShowSuccess("Sucesso!", "Despesa atualizada.");
         }
@@ -270,20 +327,15 @@ else
         }
 
         await crudModal.Close();
-        await CarregarDespesas(); // Recarrega a lista
+        await CarregarDespesas();
     }
 
-    // 4. Lógica de Remoção usando o objeto carregado
     private async Task EfetuarRemocaoDespesa()
     {
         if (idDespesaParaRemover.HasValue)
         {
-            // Carregamos o objeto que queremos remover
             var despesaParaRemover = new Despesa(idDespesaParaRemover.Value);
-
-            // O objeto "despesaParaRemover" é responsável por se excluir do banco.
             var sucesso = despesaParaRemover.Excluir(despesaParaRemover);
-
             if (sucesso)
             {
                 ToastService.ShowSuccess("Removida!", "A despesa foi removida.");
@@ -292,13 +344,11 @@ else
             {
                 ToastService.ShowError("Erro!", "Não foi possível remover a despesa.");
             }
-
             idDespesaParaRemover = null;
             await CarregarDespesas();
         }
     }
 
-    // Métodos auxiliares do modal (sem alterações)
     private async Task HandleCancelarFormularioModal()
     {
         await crudModal.Close();
@@ -308,11 +358,74 @@ else
     {
         despesaAtual = null;
         modalTitle = "";
+        // Garante que os formulários inline também sejam fechados
+        showNewTipoForm = false;
+        showNewCategoriaForm = false;
     }
 
     private async Task ConfirmarRemocaoDespesa(int id)
     {
         idDespesaParaRemover = id;
         await confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover esta despesa?");
+    }
+
+    // --- NOVOS: Métodos para o Formulário Inline de Categorias ---
+    private void ToggleInlineForm(string papel)
+    {
+        newOptionDescription = ""; // Limpa a descrição ao abrir/fechar
+
+        if (papel == "TipoDespesa")
+        {
+            showNewTipoForm = !showNewTipoForm;
+            showNewCategoriaForm = false; // Garante que apenas um formulário esteja aberto
+        }
+        else if (papel == "Categoria")
+        {
+            showNewCategoriaForm = !showNewCategoriaForm;
+            showNewTipoForm = false; // Garante que apenas um formulário esteja aberto
+        }
+    }
+
+    private async Task SalvarNovaOpcaoInline(string papel)
+    {
+        if (string.IsNullOrWhiteSpace(newOptionDescription))
+        {
+            ToastService.ShowWarning("Atenção", "A descrição não pode estar vazia.");
+            return;
+        }
+
+        var novaOpcao = new Categoria
+        {
+            Id = categoriaRepository.GetNextId<Categoria>(),
+            TipoEntidade = "Despesa",
+            Nome = papel, // "TipoDespesa" ou "Categoria"
+            Descricao = newOptionDescription
+        };
+
+        bool sucesso = categoriaRepository.Salvar(novaOpcao);
+
+        if (sucesso)
+        {
+            ToastService.ShowSuccess("Sucesso!", "Nova opção de categoria salva.");
+            await CarregarOpcoesDeCategoria(); // Recarrega as listas
+
+            if (papel == "TipoDespesa")
+            {
+                despesaAtual.TipoDespesa = novaOpcao.Id;
+                showNewTipoForm = false;
+            }
+            else if (papel == "Categoria")
+            {
+                despesaAtual.Categoria = novaOpcao.Id;
+                showNewCategoriaForm = false;
+            }
+
+            newOptionDescription = ""; // Limpa o campo de texto
+            StateHasChanged();
+        }
+        else
+        {
+            ToastService.ShowError("Erro!", "Não foi possível salvar a nova opção.");
+        }
     }
 }

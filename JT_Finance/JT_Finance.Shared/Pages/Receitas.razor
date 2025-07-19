@@ -1,52 +1,76 @@
 @page "/receitas"
 @using JT_Finance.Shared.Components
+@using JT_Finance.Shared.Services
 @using System.ComponentModel.DataAnnotations
-@using System.Linq.Expressions 
-@using JT_Finance.Shared.Services 
 @using static JT_Finance.Shared.Components.Modal
+@inject ToastService ToastService
 
-@inject ToastService ToastService 
+<button class="btn btn-primary mb-3 shadow-sm" @onclick="AbrirModalParaNovaReceita">
+    <i class="bi bi-plus-circle-fill me-2"></i>Nova Receita
+</button>
 
-<h3>Receitas</h3>
-
-<button class="btn btn-primary mb-3" @onclick="AbrirModalParaNovaReceita">Nova Receita</button>
-
-<DataGrid TItem="ReceitaModel" Items="listaReceitas">
+<DataGrid TItem="ReceitaModel" Items="listaReceitas" IsLoading="isLoading">
     <HeaderTemplate>
         <th>Descrição</th>
         <th>Valor</th>
         <th>Data</th>
         <th>Fonte</th>
-        <th>Ações</th>
+        <th class="text-end">Ações</th>
     </HeaderTemplate>
     <RowTemplate Context="receita">
         <td>@receita.Descricao</td>
         <td>@receita.Valor.ToString("C")</td>
         <td>@receita.Data.ToShortDateString()</td>
         <td>@receita.Fonte</td>
-        <td>
-            <button class="btn btn-sm btn-info" @onclick="() => AbrirModalParaEditarReceita(receita)">Editar</button>
-            <button class="btn btn-sm btn-danger" @onclick="() => ConfirmarRemocaoReceita(receita.Id)">Remover</button>
+        <td class="text-end">
+            <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirModalParaEditarReceita(receita)">Editar</button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoReceita(receita.Id)">Remover</button>
         </td>
     </RowTemplate>
+    <EmptyTemplate>
+        <p class="text-muted mb-0">Nenhuma receita cadastrada ainda. Clique em "Nova Receita" para começar.</p>
+    </EmptyTemplate>
 </DataGrid>
 
-<Modal @ref="crudModal" Title="@modalTitle" OnClose="ResetarEstadoAposModal" Size="ModalSize.Large">
+<Modal @ref="crudModal" Title="@modalTitle" OnClose="ResetarEstadoAposModal">
     <BodyContent>
         @if (receitaAtual != null)
         {
-            <CrudForm TItem="ReceitaModel" Item="receitaAtual" OnSubmit="HandleSalvarReceita" OnCancel="HandleCancelarFormularioModal">
-                <ChildContent Context="receitaContext">
-                    <CustomInput Label="Descrição" @bind-Value="receitaContext.Descricao" />
-                    <CustomInput Label="Valor" Type="number" @bind-Value="receitaContext.ValorAsString" />
-                    <div class="form-group mb-3">
-                        <label for="data_receita">Data</label>
-                        <InputDate id="data_receita" class="form-control" @bind-Value="receitaContext.Data" />
-                        <ValidationMessage For="@(() => receitaContext.Data)" />
+            <EditForm Model="receitaAtual" OnValidSubmit="HandleSalvarReceita">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label for="descricao" class="form-label">Descrição</label>
+                    <InputText id="descricao" class="form-control" @bind-Value="receitaAtual.Descricao" />
+                    <ValidationMessage For="@(() => receitaAtual.Descricao)" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="valor" class="form-label">Valor</label>
+                        <InputNumber id="valor" class="form-control" @bind-Value="receitaAtual.Valor" />
+                        <ValidationMessage For="@(() => receitaAtual.Valor)" />
                     </div>
-                    <CustomInput Label="Fonte" @bind-Value="receitaContext.Fonte" />
-                </ChildContent>
-            </CrudForm>
+                    <div class="col-md-6 mb-3">
+                        <label for="data" class="form-label">Data</label>
+                        <InputDate id="data" class="form-control" @bind-Value="receitaAtual.Data" />
+                        <ValidationMessage For="@(() => receitaAtual.Data)" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="fonte" class="form-label">Fonte</label>
+                    <InputText id="fonte" class="form-control" @bind-Value="receitaAtual.Fonte" />
+                    <ValidationMessage For="@(() => receitaAtual.Fonte)" />
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" @onclick="HandleCancelarFormularioModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </EditForm>
         }
         else
         {
@@ -58,67 +82,83 @@
 <ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoReceita" />
 
 @code {
-    private List<ReceitaModel> listaReceitas = new List<ReceitaModel>();
-    private ReceitaModel receitaAtual = null; // Inicializa como null
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
 
-    private Modal crudModal; // Referência para o componente Modal para Adicionar/Editar
+    private List<ReceitaModel> listaReceitas = new();
+    private ReceitaModel? receitaAtual;
+    private bool isLoading = true;
+
+    private Modal crudModal = new();
     private string modalTitle = "";
 
-    private ConfirmDialog confirmDeleteDialog; // Referência para o modal de confirmação de remoção
-    private Guid? idReceitaParaRemover; // Nullable Guid para armazenar o ID
+    private ConfirmDialog confirmDeleteDialog = new();
+    private Guid? idReceitaParaRemover;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        // Dados de exemplo
-        listaReceitas.Add(new ReceitaModel { Id = Guid.NewGuid(), Descricao = "Salário", Valor = 5000.00M, Data = DateTime.Now.AddDays(-15), Fonte = "Empresa X" });
-        listaReceitas.Add(new ReceitaModel { Id = Guid.NewGuid(), Descricao = "Freelance", Valor = 850.00M, Data = DateTime.Now.AddDays(-3), Fonte = "Cliente Y" });
-        // TODO: Carregar dados reais de um serviço
+        if (SetPageTitleAsync != null)
+        {
+            await SetPageTitleAsync.Invoke("Receitas");
+        }
+
+        // Simula carregamento de dados do "banco"
+        isLoading = true;
+        await Task.Delay(250);
+        CarregarDadosIniciais();
+        isLoading = false;
+    }
+
+    private void CarregarDadosIniciais()
+    {
+        listaReceitas = new List<ReceitaModel>
+        {
+            new() { Id = Guid.NewGuid(), Descricao = "Salário Mensal", Valor = 7500.00M, Data = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 5), Fonte = "Empresa ABC" },
+            new() { Id = Guid.NewGuid(), Descricao = "Venda de Produto Online", Valor = 350.50M, Data = DateTime.Now.AddDays(-10), Fonte = "Marketplace" },
+            new() { Id = Guid.NewGuid(), Descricao = "Reembolso de Despesa", Valor = 120.00M, Data = DateTime.Now.AddDays(-5), Fonte = "Adiantamento" }
+        };
     }
 
     private void AbrirModalParaNovaReceita()
     {
-        receitaAtual = new ReceitaModel { Data = DateTime.Now };
-        modalTitle = "Nova Receita";
-        StateHasChanged();
+        receitaAtual = new ReceitaModel(); // Cria uma nova instância
+        modalTitle = "Adicionar Nova Receita";
         crudModal.Open();
     }
 
     private void AbrirModalParaEditarReceita(ReceitaModel receitaParaEditar)
     {
+        // Cria uma cópia para edição segura
         receitaAtual = new ReceitaModel
         {
             Id = receitaParaEditar.Id,
             Descricao = receitaParaEditar.Descricao,
             Valor = receitaParaEditar.Valor,
-            ValorAsString = receitaParaEditar.ValorAsString, // Copiar a string também
             Data = receitaParaEditar.Data,
             Fonte = receitaParaEditar.Fonte
         };
         modalTitle = "Editar Receita";
-        StateHasChanged();
         crudModal.Open();
     }
 
-    private async Task HandleSalvarReceita(ReceitaModel receita)
+    private async Task HandleSalvarReceita()
     {
-        bool isNew = receita.Id == Guid.Empty;
+        if (receitaAtual == null) return;
+
+        bool isNew = receitaAtual.Id == Guid.Empty;
         if (isNew)
         {
-            receita.Id = Guid.NewGuid();
-            listaReceitas.Add(receita); // TODO: Salvar via serviço
+            receitaAtual.Id = Guid.NewGuid();
+            listaReceitas.Add(receitaAtual);
             ToastService.ShowSuccess("Sucesso!", "Nova receita adicionada.");
         }
         else
         {
-            var index = listaReceitas.FindIndex(r => r.Id == receita.Id);
+            var index = listaReceitas.FindIndex(r => r.Id == receitaAtual.Id);
             if (index != -1)
             {
-                listaReceitas[index] = receita; // TODO: Atualizar via serviço
+                listaReceitas[index] = receitaAtual;
                 ToastService.ShowSuccess("Sucesso!", "Receita atualizada.");
-            }
-            else
-            {
-                ToastService.ShowError("Erro!", "Receita não encontrada para atualização.");
             }
         }
         await crudModal.Close();
@@ -133,68 +173,39 @@
     {
         receitaAtual = null;
         modalTitle = "";
-        StateHasChanged();
     }
 
     private async Task ConfirmarRemocaoReceita(Guid id)
     {
         idReceitaParaRemover = id;
-        await confirmDeleteDialog.Show(
-            title: "Confirmar Remoção",
-            message: "Tem certeza que deseja remover esta receita? Esta ação não pode ser desfeita.",
-            confirmText: "Sim, Remover",
-            cancelText: "Cancelar",
-            confirmClass: "btn-danger"
-        );
+        await confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover esta receita?");
     }
 
     private void EfetuarRemocaoReceita()
     {
         if (idReceitaParaRemover.HasValue)
         {
-            var receitaParaRemover = listaReceitas.FirstOrDefault(r => r.Id == idReceitaParaRemover.Value);
-            if (receitaParaRemover != null)
-            {
-                listaReceitas.Remove(receitaParaRemover); // TODO: Remover via serviço
-                ToastService.ShowSuccess("Removida!", $"Receita \"{receitaParaRemover.Descricao}\" foi removida.");
-                StateHasChanged();
-            }
-            else
-            {
-                ToastService.ShowError("Erro!", "Receita não encontrada para remoção.");
-            }
+            listaReceitas.RemoveAll(r => r.Id == idReceitaParaRemover.Value);
+            ToastService.ShowSuccess("Removida!", "A receita foi removida.");
             idReceitaParaRemover = null;
         }
     }
-
     public class ReceitaModel
     {
         public Guid Id { get; set; }
 
         [Required(ErrorMessage = "A descrição é obrigatória.")]
-        [StringLength(100, ErrorMessage = "A descrição deve ter no máximo 100 caracteres.")]
-        public string Descricao { get; set; }
+        [StringLength(100, ErrorMessage = "A descrição não pode ter mais de 100 caracteres.")]
+        public string Descricao { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "O valor é obrigatório.")]
         [Range(0.01, double.MaxValue, ErrorMessage = "O valor deve ser maior que zero.")]
         public decimal Valor { get; set; }
 
-        public string ValorAsString
-        {
-            get => Valor.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            set
-            {
-                if (decimal.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var decimalValue))
-                {
-                    Valor = decimalValue;
-                }
-            }
-        }
-
         [Required(ErrorMessage = "A data é obrigatória.")]
         public DateTime Data { get; set; } = DateTime.Now;
 
-        [StringLength(50, ErrorMessage = "A fonte deve ter no máximo 50 caracteres.")]
-        public string Fonte { get; set; }
+        [StringLength(50, ErrorMessage = "A fonte não pode ter mais de 50 caracteres.")]
+        public string? Fonte { get; set; }
     }
 }

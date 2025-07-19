@@ -1,39 +1,44 @@
 ﻿@using JT_Finance.Shared.Components.Toasts
 @inherits LayoutComponentBase
 
-<div class="page">
+@{
+    var layoutClass = _isSidebarExpanded ? "dashboard-layout expanded" : "dashboard-layout";
+}
 
-    <div class="main-content-wrapper"> @* Adicionado um wrapper para sidebar e main *@
-        <div class="sidebar">
-            <NavMenu />
-        </div>
+<div class="@layoutClass">
+    <NavMenu IsExpanded="@_isSidebarExpanded" OnToggle="@ToggleSidebar" />
 
-        <main>
-            <Header /> @* <-- Adicionado o Header aqui *@
-            @* O .top-row que existia dentro do NavMenu foi removido ou será parte do Header agora?
-               Se o NavMenu ainda tiver seu próprio .top-row para o toggler,
-               e o Header for separado, precisamos garantir que o layout funcione.
-               O Header que criei tem 3.5rem de altura. O .top-row do NavMenu também.
-               Se o .top-row do NavMenu (com o toggler) ainda for necessário DENTRO do sidebar,
-               então o Header é uma barra adicional no topo.
-               Se o toggler do menu lateral deve ir para o Header principal, isso é uma mudança maior.
-               Por enquanto, vou assumir que o Header é uma barra separada NO TOPO de tudo.
-               E o NavMenu continua com sua estrutura interna, incluindo o toggler.
-               Isso pode significar que o .sidebar e .main precisam ser ajustados para ficarem abaixo do Header.
-            *@
-            <article class="content px-4">
+    <div class="main-content">
+        <Header PageTitle="@_currentPageTitle" />
+
+        <main class="content-body">
+            <CascadingValue Value="(Func<string, Task>)SetPageTitleAsync">
                 @Body
-            </article>
+            </CascadingValue>
         </main>
+        <Footer/>
     </div>
-
-    <Footer /> @* <-- Adicionado o Footer aqui *@
 </div>
+<ToastContainer /> 
 
-<ToastContainer /> @* <-- Adicionado o ToastContainer aqui *@
+@code {
+    private bool _isSidebarExpanded = false;
+    private string _currentPageTitle = "Dashboard"; // Título padrão
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+    private void ToggleSidebar()
+    {
+        _isSidebarExpanded = !_isSidebarExpanded;
+    }
+
+    // --- INÍCIO DA MUDANÇA ---
+    // Método agora é assíncrono para garantir a atualização da UI
+    private async Task SetPageTitleAsync(string title)
+    {
+        if (_currentPageTitle != title)
+        {
+            _currentPageTitle = title;
+            await InvokeAsync(StateHasChanged); // Força a atualização da UI de forma segura
+        }
+    }
+    // --- FIM DA MUDANÇA ---
+}

@@ -1,19 +1,69 @@
-<header class="app-header">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-        
-        <div class="header-title">
-            <!-- Poderia ser usado para exibir o título da página atual no futuro -->
-            <!-- @CurrentPageTitle -->
-        </div>
-        <div class="header-user-menu">
-            <!-- Placeholder para menu de usuário / login -->
-            <span class="bi bi-person-circle" style="font-size: 1.5rem; color: #fff;"></span>
-            <!-- Exemplo: <LoginDisplay /> se você tiver um -->
+@using Microsoft.AspNetCore.Components.Routing
+@inject NavigationManager Navigation
+
+<header class="header">
+    <div class="header-start">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/">
+                        <i class="bi bi-house-door"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+                @if (!IsHomePage())
+                {
+                    <li class="breadcrumb-item active" aria-current="page">
+                        @PageTitle
+                    </li>
+                }
+            </ol>
+        </nav>
+    </div>
+    <div class="header-end">
+        <div class="header-actions">
+
+            @if (isSearchVisible)
+            {
+                <input @ref="searchInputElement"
+                       type="text"
+                       class="search-input"
+                       placeholder="Pesquisar..."
+                       @onblur="HideSearchInput" />
+            }
+            else
+            {
+                <i class="bi bi-search action-icon" title="Pesquisar" @onclick="ShowSearchInput"></i>
+            }
+
+            <i class="bi bi-filter action-icon" title="Filtrar"></i>
+            <i class="bi bi-three-dots-vertical action-icon" title="Mais Opções"></i>
         </div>
     </div>
 </header>
 
 @code {
-    // Lógica futura, como obter o título da página atual, pode ir aqui.
-    // [Parameter] public string CurrentPageTitle { get; set; }
+    [Parameter]
+    public string PageTitle { get; set; } = "Dashboard";
+
+    private bool isSearchVisible = false;
+    private ElementReference searchInputElement;
+
+    private bool IsHomePage()
+    {
+        return Navigation.Uri == Navigation.BaseUri;
+    }
+
+    private async Task ShowSearchInput()
+    {
+        isSearchVisible = true;
+        // Pequeno delay para garantir que o elemento exista no DOM antes de focar
+        await Task.Delay(50);
+        await searchInputElement.FocusAsync();
+    }
+
+    private void HideSearchInput()
+    {
+        isSearchVisible = false;
+    }
 }

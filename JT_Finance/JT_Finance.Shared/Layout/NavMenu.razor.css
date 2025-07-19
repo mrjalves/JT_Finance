@@ -53,8 +53,14 @@
 .nav-item {
     font-size: 0.9rem;
     padding-bottom: 0.5rem;
-}
+    align-items: center;
+    display:flex;
 
+}
+.nav-item i{
+    margin-left:0.5rem;
+    margin-right:0.5rem;
+}
     .nav-item:first-of-type {
         padding-top: 1rem;
     }
@@ -132,4 +138,110 @@
         height: calc(100% - 3.5rem);
         overflow-y: auto;
     }
+}
+.sidebar {
+    background-color: var(--sidebar-bg);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    white-space: nowrap;
+    transition: width 0.3s ease-in-out;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem 0 1.5rem;
+    height: 70px;
+}
+
+.sidebar-brand .brand-link {
+    color: var(--sidebar-icon-active-color);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-decoration: none;
+    overflow: hidden;
+}
+
+.brand-text, .nav-text {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+}
+
+.expanded .brand-text,
+.expanded .nav-text {
+    opacity: 1;
+    visibility: visible;
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* ESTILO UNIFICADO PARA TODOS OS LINKS DE NAVEGAÇÃO (NAV E FOOTER) */
+.sidebar-nav .nav-link,
+.sidebar-footer .nav-link {
+    display: flex;
+    align-items: center; /* Garante alinhamento vertical perfeito entre ícone e texto */
+    gap: 1.25rem; /* Espaço entre ícone e texto */
+    font-size: 1rem; /* Tamanho da fonte padronizado */
+    color: var(--sidebar-icon-color);
+    border-radius: 8px;
+    position: relative;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+
+    /* Espaçamento da "parede" */
+    margin: 0.25rem 0.75rem;
+    padding: 0.8rem 1rem;
+}
+
+/* Ícones padronizados para todos os links */
+.sidebar-nav .nav-link i,
+.sidebar-footer .nav-link i {
+    font-size: 1.5rem; /* Tamanho do ícone padronizado */
+    flex-shrink: 0;
+    width: 24px; /* Garante que todos os ícones ocupem o mesmo espaço */
+    text-align: center;
+}
+
+
+.sidebar-nav .nav-link:hover,
+.sidebar-footer .nav-link:hover {
+    background-color: var(--sidebar-icon-hover-bg);
+    color: var(--sidebar-icon-active-color);
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: var(--primary-color);
+    color: var(--sidebar-icon-active-color);
+}
+
+
+.sidebar-footer {
+    margin-top: auto;
+    width: 100%;
+    padding: 1rem 0;
+}
+
+.toggle-button {
+    background: none;
+    border: none;
+    color: var(--sidebar-icon-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease;
+    padding: 0.5rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.toggle-button:hover {
+    color: var(--sidebar-icon-active-color);
+    background-color: var(--sidebar-icon-hover-bg);
 }

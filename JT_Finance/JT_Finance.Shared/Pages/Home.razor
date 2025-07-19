@@ -3,7 +3,7 @@
 @using JT_Finance.Shared.Services
 @inject IFormFactor FormFactor
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Dashboard</PageTitle>
 
 <h1>Painel Financeiro</h1>
 <p>Resumo das suas finanças.</p>
@@ -63,6 +63,11 @@
 
 
 @code {
+    // ---- INÍCIO DA MUDANÇA ----
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
+    // ---- FIM DA MUDANÇA ----
+
     // Variáveis para os cards de resumo
     private decimal totalReceitas;
     private decimal totalDespesas;
@@ -75,6 +80,14 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // ---- INÍCIO DA MUDANÇA ----
+        // Chamada agora é assíncrona
+        if (SetPageTitleAsync != null)
+        {
+            await SetPageTitleAsync.Invoke("Dashboard");
+        }
+        // ---- FIM DA MUDANÇA ----
+
         await LoadDashboardData();
     }
 
@@ -128,7 +141,8 @@
         await Task.Delay(20); // Simula trabalho
         Random rnd = new Random();
         // Simula chance de não haver despesas
-        if (rnd.Next(0, 5) == 0) {
+        if (rnd.Next(0, 5) == 0)
+        {
             return new Dictionary<string, decimal>(); // Retorna vazio
         }
         return new Dictionary<string, decimal>

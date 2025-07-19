@@ -1,44 +1,78 @@
-.app-header {
-    background-color: #0a2752; /* Um tom de azul escuro, pode ajustar para combinar com o NavMenu */
-    color: #ffffff;
-    padding: 0.75rem 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    height: 3.5rem; /* Mesma altura que o .top-row do NavMenu para consistência */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    border-bottom: 1px solid var(--header-border);
+    background-color: var(--card-bg);
+    height: 70px;
+    flex-shrink: 0;
+}
+
+/* Estilos do Breadcrumb */
+/* O seletor ::deep é necessário para estilizar componentes filhos (ol, li) de forma confiável */
+::deep .breadcrumb {
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    --bs-breadcrumb-divider: '>';
+}
+
+::deep .breadcrumb-item {
+    font-size: 1.25rem;
+    font-weight: 500;
     display: flex;
     align-items: center;
 }
 
-.app-header .container-fluid {
-    width: 100%;
-}
-
-.header-brand a {
-    color: #ffffff;
-    font-size: 1.25rem;
-    font-weight: bold;
-    text-decoration: none;
-}
-
-.header-brand a:hover {
-    color: #dddddd;
-}
-
-.header-title {
-    font-size: 1.1rem;
-    /* Centralizado - pode precisar de mais trabalho se o conteúdo for dinâmico */
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-}
-
-.header-user-menu {
-    /* Alinhado à direita pelo flex justify-content-between no container-fluid */
-}
-
-/* Ajustes para telas menores se necessário */
-@media (max-width: 640px) {
-    .header-title {
-        display: none; /* Ocultar título central em telas pequenas para evitar sobreposição com brand/menu */
+    ::deep .breadcrumb-item a {
+        color: var(--text-color-light);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: color 0.2s ease;
     }
+
+        ::deep .breadcrumb-item a:hover {
+            color: var(--text-color);
+        }
+
+    ::deep .breadcrumb-item.active {
+        color: var(--text-color);
+        font-weight: 600;
+    }
+
+/* Estilos dos Ícones de Ação */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
 }
+
+.action-icon {
+    font-size: 1.4rem;
+    color: var(--text-color-light);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+    .action-icon:hover {
+        color: var(--text-color);
+    }
+
+
+.search-input {
+    border: none;
+    border-bottom: 2px solid var(--primary-color);
+    outline: none;
+    font-size: 1rem;
+    padding: 0.25rem 0.5rem;
+    background-color: transparent;
+    width: 200px; /* Ou o tamanho que preferir */
+    transition: width 0.3s ease-in-out;
+}
+
+    .search-input:focus {
+        width: 250px;
+    }

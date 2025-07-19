@@ -1,56 +1,75 @@
 @typeparam TItem
 
-@if (Items == null)
-{
-    <p><em>Carregando...</em></p>
-}
-else if (!Items.Any())
-{
-    <p><em>Nenhum item para exibir.</em></p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
             <tr>
-                @if (HeaderTemplate != null)
-                {
-                    @HeaderTemplate
-                }
+                @HeaderTemplate
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Items)
+            @if (IsLoading)
             {
                 <tr>
-                    @if (RowTemplate != null)
-                    {
+                    <td colspan="100%" class="text-center p-4">
+                        @if (LoadingTemplate != null)
+                        {
+                            @LoadingTemplate
+                        }
+                        else
+                        {
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                            <p class="mt-2 mb-0">Carregando dados...</p>
+                        }
+                    </td>
+                </tr>
+            }
+            else if (Items != null && Items.Any())
+            {
+                @foreach (var item in Items)
+                {
+                    <tr>
                         @RowTemplate(item)
-                    }
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="100%" class="text-center p-4">
+                        @if (EmptyTemplate != null)
+                        {
+                            @EmptyTemplate
+                        }
+                        else
+                        {
+                            <p class="mb-0">Nenhum item encontrado.</p>
+                        }
+                    </td>
                 </tr>
             }
         </tbody>
-        @if (FooterTemplate != null)
-        {
-            <tfoot>
-                <tr>
-                    @FooterTemplate
-                </tr>
-            </tfoot>
-        }
     </table>
-}
+</div>
 
 @code {
     [Parameter]
-    public IReadOnlyList<TItem> Items { get; set; }
+    public bool IsLoading { get; set; }
 
     [Parameter]
-    public RenderFragment HeaderTemplate { get; set; }
+    public RenderFragment? LoadingTemplate { get; set; }
 
     [Parameter]
-    public RenderFragment<TItem> RowTemplate { get; set; }
+    public IEnumerable<TItem>? Items { get; set; }
 
     [Parameter]
-    public RenderFragment FooterTemplate { get; set; }
+    public RenderFragment? HeaderTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? RowTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment? EmptyTemplate { get; set; }
 }

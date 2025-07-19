@@ -2,76 +2,118 @@
 @using JT_Finance.Shared.Components
 @using System.ComponentModel.DataAnnotations
 
-<h3>Lista de Compras</h3>
+<button class="btn btn-primary mb-3 shadow-sm" @onclick="AdicionarNovoItem">
+    <i class="bi bi-plus-circle-fill me-2"></i>Novo Item
+</button>
 
-<button class="btn btn-primary mb-3" @onclick="() => AdicionarNovoItem()">Novo Item</button>
-
-<DataGrid TItem="ItemListaCompraModel" Items="listaItensCompra">
+<DataGrid TItem="ItemListaCompraModel" Items="listaItensCompra" IsLoading="isLoading">
     <HeaderTemplate>
-        <th>Nome</th>
-        <th>Quantidade</th>
         <th>Comprado</th>
-        <th>Ações</th>
+        <th>Nome do Item</th>
+        <th>Quantidade</th>
+        <th class="text-end">Ações</th>
     </HeaderTemplate>
     <RowTemplate Context="item">
-        <td style="@(item.Comprado ? "text-decoration: line-through;" : "")">@item.Nome</td>
-        <td style="@(item.Comprado ? "text-decoration: line-through;" : "")">@item.Quantidade</td>
         <td>
-            <InputCheckbox @bind-Value="item.Comprado" @oninput="(e) => ToggleComprado(item, (bool)e.Value)" />
+            <div class="form-check form-switch d-flex justify-content-center">
+                <InputCheckbox class="form-check-input" @bind-Value="item.Comprado" title="@(item.Comprado ? "Marcar como não comprado" : "Marcar como comprado")" />
+            </div>
         </td>
-        <td>
-            <button class="btn btn-sm btn-info" @onclick="() => EditarItem(item)" disabled="@item.Comprado">Editar</button>
-            <button class="btn btn-sm btn-danger" @onclick="() => RemoverItem(item.Id)">Remover</button>
+        <td><span class="@(item.Comprado ? "item-comprado" : "")">@item.Nome</span></td>
+        <td><span class="@(item.Comprado ? "item-comprado" : "")">@item.Quantidade</span></td>
+        <td class="text-end">
+            <button class="btn btn-sm btn-outline-primary" @onclick="() => EditarItem(item)" disabled="@item.Comprado">Editar</button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoverItem(item.Id)">Remover</button>
         </td>
     </RowTemplate>
+    <EmptyTemplate>
+        <p class="text-muted mb-0">Sua lista de compras está vazia. Adicione um novo item para começar!</p>
+    </EmptyTemplate>
 </DataGrid>
 
-<Modal @ref="modalRef"
-       IsOpen="exibirModalFormulario"
-       Title="@(itemAtual.Id == Guid.Empty ? "Novo Item" : "Editar Item")"
-       OnClose="FecharModalFormulario"
-       ShowCloseButton="true"
-       CloseOnBackdropClick="false">
+
+<Modal @ref="modalRef" Title="@modalTitle">
     <BodyContent>
-        @if (exibirModalFormulario) // Renderiza o formulário apenas quando o modal está aberto para garantir que o itemAtual está correto
+        @if (itemAtual != null)
         {
-            <CrudForm TItem="ItemListaCompraModel" Item="itemAtual" OnSubmit="SalvarItem" OnCancel="FecharModalFormulario">
-                <ChildContent Context="formItem">
-                    <CustomInput Label="Nome do Item" @bind-Value="formItem.Nome" />
-                    <CustomInput Label="Quantidade" Type="number" @bind-Value="formItem.QuantidadeAsString" />
-                    <div class="form-group form-check">
-                        <InputCheckbox id="compradoModal" class="form-check-input" @bind-Value="formItem.Comprado" />
-                        <label class="form-check-label" for="compradoModal">Comprado</label>
-                    </div>
-                </ChildContent>
-            </CrudForm>
+            <EditForm Model="itemAtual" OnValidSubmit="SalvarItem">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label for="nomeItem" class="form-label">Nome do Item</label>
+                    <InputText id="nomeItem" class="form-control" @bind-Value="itemAtual.Nome" />
+                    <ValidationMessage For="@(() => itemAtual.Nome)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="quantidadeItem" class="form-label">Quantidade</label>
+                    <InputNumber id="quantidadeItem" class="form-control" @bind-Value="itemAtual.Quantidade" />
+                    <ValidationMessage For="@(() => itemAtual.Quantidade)" />
+                </div>
+
+                <div class="form-check mb-3">
+                    <InputCheckbox id="compradoModal" class="form-check-input" @bind-Value="itemAtual.Comprado" />
+                    <label class="form-check-label" for="compradoModal">Já foi comprado?</label>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </EditForm>
         }
     </BodyContent>
 </Modal>
 
 @code {
-    private List<ItemListaCompraModel> listaItensCompra = new List<ItemListaCompraModel>();
-    private ItemListaCompraModel itemAtual = new ItemListaCompraModel();
-    private bool exibirModalFormulario = false; // Renomeado de exibirFormulario
-    private Modal modalRef; // Referência para o componente Modal, se necessário para chamadas programáticas
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
 
-    protected override void OnInitialized()
+    private List<ItemListaCompraModel> listaItensCompra = new();
+    private ItemListaCompraModel? itemAtual;
+    private bool isLoading = true;
+
+    private Modal modalRef = new();
+    private string modalTitle = "";
+
+    protected override async Task OnInitializedAsync()
     {
-        // Dados de exemplo
-        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Leite", Quantidade = 2, Comprado = false });
-        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Pão", Quantidade = 1, Comprado = true });
-        listaItensCompra.Add(new ItemListaCompraModel { Id = Guid.NewGuid(), Nome = "Ovos", Quantidade = 12, Comprado = false });
+        if (SetPageTitleAsync != null)
+        {
+            await SetPageTitleAsync.Invoke("Lista de Compras");
+        }
+
+        // Simula carregamento de dados
+        isLoading = true;
+        await Task.Delay(250);
+        CarregarDadosIniciais();
+        isLoading = false;
+    }
+
+    private void CarregarDadosIniciais()
+    {
+        // Apenas para exemplo. Em um app real, viria de um banco de dados ou localStorage.
+        listaItensCompra = new List<ItemListaCompraModel>
+        {
+            new() { Id = Guid.NewGuid(), Nome = "Leite Integral", Quantidade = 2, Comprado = false },
+            new() { Id = Guid.NewGuid(), Nome = "Pão de Forma", Quantidade = 1, Comprado = true },
+            new() { Id = Guid.NewGuid(), Nome = "Dúzia de Ovos", Quantidade = 1, Comprado = false },
+            new() { Id = Guid.NewGuid(), Nome = "Café em Pó", Quantidade = 1, Comprado = false }
+        };
     }
 
     private void AdicionarNovoItem()
     {
         itemAtual = new ItemListaCompraModel();
-        exibirModalFormulario = true; // Mostra o modal
+        modalTitle = "Adicionar Novo Item";
+        modalRef.Open();
     }
 
     private void EditarItem(ItemListaCompraModel itemParaEditar)
     {
-        // Cria uma cópia para edição para não afetar a lista diretamente até salvar
+        // Cria uma cópia para edição, preservando a lista original até salvar
         itemAtual = new ItemListaCompraModel
         {
             Id = itemParaEditar.Id,
@@ -79,78 +121,56 @@
             Quantidade = itemParaEditar.Quantidade,
             Comprado = itemParaEditar.Comprado
         };
-        exibirModalFormulario = true; // Mostra o modal
+        modalTitle = "Editar Item";
+        modalRef.Open();
     }
 
-    private void SalvarItem(ItemListaCompraModel itemSalvo) // Parâmetro renomeado para clareza
+    private async Task SalvarItem()
     {
-        if (itemSalvo.Id == Guid.Empty)
+        if (itemAtual == null) return;
+
+        if (itemAtual.Id == Guid.Empty)
         {
-            itemSalvo.Id = Guid.NewGuid();
-            listaItensCompra.Add(itemSalvo);
+            itemAtual.Id = Guid.NewGuid();
+            listaItensCompra.Add(itemAtual);
         }
         else
         {
-            var index = listaItensCompra.FindIndex(i => i.Id == itemSalvo.Id);
+            var index = listaItensCompra.FindIndex(i => i.Id == itemAtual.Id);
             if (index != -1)
             {
-                listaItensCompra[index] = itemSalvo;
+                listaItensCompra[index] = itemAtual;
             }
         }
-        FecharModalFormulario(); // Fecha o modal após salvar
+        await FecharModal();
     }
 
     private void RemoverItem(Guid id)
     {
-        var itemParaRemover = listaItensCompra.FirstOrDefault(i => i.Id == id);
-        if (itemParaRemover != null)
-        {
-            listaItensCompra.Remove(itemParaRemover);
-        }
+        listaItensCompra.RemoveAll(i => i.Id == id);
     }
 
-    // Este método é chamado pelo Modal quando ele é fechado (pelo botão X ou OnClose)
-    // e também pelo CrudForm quando o botão Cancelar é clicado.
-    private void FecharModalFormulario()
+    private async Task FecharModal()
     {
-        exibirModalFormulario = false;
-        itemAtual = new ItemListaCompraModel(); // Limpa o item atual
-        StateHasChanged(); // Garante que a UI reaja à mudança de estado do modal
+        await modalRef.Close();
+        itemAtual = null; // Limpa o item para o próximo uso
     }
 
-    private void ToggleComprado(ItemListaCompraModel item, bool comprado)
-    {
-        var itemNaLista = listaItensCompra.FirstOrDefault(i => i.Id == item.Id);
-        if (itemNaLista != null)
-        {
-            itemNaLista.Comprado = comprado;
-            // StateHasChanged(); // Pode ser necessário se a atualização não for refletida automaticamente na UI
-        }
-    }
+
 
     public class ItemListaCompraModel
     {
         public Guid Id { get; set; }
 
         [Required(ErrorMessage = "O nome do item é obrigatório.")]
-        [StringLength(100, ErrorMessage = "O nome do item deve ter no máximo 100 caracteres.")]
-        public string Nome { get; set; }
+        [StringLength(100, ErrorMessage = "O nome não pode ter mais de 100 caracteres.")]
+        public string Nome { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "A quantidade é obrigatória.")]
         [Range(1, int.MaxValue, ErrorMessage = "A quantidade deve ser pelo menos 1.")]
-        public int Quantidade { get; set; }
+        public int Quantidade { get; set; } = 1;
 
-        public string QuantidadeAsString
-        {
-            get => Quantidade.ToString();
-            set
-            {
-                if (int.TryParse(value, out var intValue))
-                {
-                    Quantidade = intValue;
-                }
-            }
-        }
         public bool Comprado { get; set; }
     }
+
 }
