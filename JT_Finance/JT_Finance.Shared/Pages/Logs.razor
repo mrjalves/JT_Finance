@@ -1,0 +1,162 @@
+﻿@page "/logs"
+@using JT_Classes
+@using JT_Aplicacao
+@using JT_Finance.Shared.Components
+@using System.Text
+@using JT_Persistencia
+@using static JT_Finance.Shared.Components.Modal
+
+<h3 class="mb-3">Visualizador de Logs do Sistema</h3>
+
+<!-- Painel de Filtros -->
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="levelFilter" class="form-label">Nível</label>
+                <InputSelect id="levelFilter" class="form-select" @bind-Value="filtroNivel">
+                    <option value="">Todos</option>
+                    @foreach (var level in Enum.GetNames(typeof(TipoLog)))
+                    {
+                        <option value="@level.ToUpper()">@level</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="col-md-3">
+                <label for="startDateFilter" class="form-label">Data Início</label>
+                <InputDate id="startDateFilter" class="form-control" @bind-Value="filtroDataInicio" />
+            </div>
+            <div class="col-md-3">
+                <label for="endDateFilter" class="form-label">Data Fim</label>
+                <InputDate id="endDateFilter" class="form-control" @bind-Value="filtroDataFim" />
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100" @onclick="AplicarFiltros">
+                    <i class="bi bi-funnel-fill me-2"></i>Filtrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grid de Logs -->
+<DataGrid TItem="LogEntry" Items="listaLogs" IsLoading="isLoading">
+    <HeaderTemplate>
+        <th style="width: 180px;">Timestamp</th>
+        <th style="width: 120px;">Nível</th>
+        <th>Mensagem</th>
+        <th style="width: 150px;">Executor</th>
+    </HeaderTemplate>
+    <RowTemplate Context="log">
+        <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+        <td>
+            <span class="badge @GetBadgeClass(log.Level)">@log.Level</span>
+        </td>
+        <td>
+            @log.Message
+            @if (!string.IsNullOrEmpty(log.StackTrace))
+            {
+                <button class="btn btn-link btn-sm p-0 ms-2" @onclick="() => AbrirModalStackTrace(log)">
+                    Ver Detalhes
+                </button>
+            }
+        </td>
+        <td>@log.Executor</td>
+    </RowTemplate>
+    <EmptyTemplate>
+        <p class="text-muted mb-0">Nenhum log encontrado com os filtros atuais.</p>
+    </EmptyTemplate>
+</DataGrid>
+
+<!-- Modal para StackTrace -->
+<Modal @ref="stackTraceModal" Title="Detalhes do Erro">
+    <BodyContent>
+        @if (logSelecionado != null)
+        {
+            <div>
+                <strong>Mensagem:</strong>
+                <p>@logSelecionado.Message</p>
+            </div>
+            <hr />
+            <div>
+                <strong>Stack Trace:</strong>
+                <pre class="bg-light p-2 rounded" style="white-space: pre-wrap; word-break: break-all;">@logSelecionado.StackTrace</pre>
+            </div>
+        }
+    </BodyContent>
+</Modal>
+
+@code {
+    private List<LogEntry>? listaLogs;
+    private bool isLoading = true;
+
+    // Filtros
+    private string filtroNivel = "";
+    private DateTime? filtroDataInicio;
+    private DateTime? filtroDataFim;
+
+    // Modal
+    private Modal stackTraceModal = new();
+    private LogEntry? logSelecionado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarLogs();
+    }
+
+    private async Task AplicarFiltros()
+    {
+        await CarregarLogs();
+    }
+
+    private async Task CarregarLogs()
+    {
+        isLoading = true;
+        await Task.Yield();
+
+        var sqlBuilder = new StringBuilder("SELECT * FROM Logs");
+        var conditions = new List<string>();
+        
+        if (!string.IsNullOrWhiteSpace(filtroNivel))
+        {
+            // conditions.Add($"Level = {FormatarValorSql(filtroNivel)}");
+        }
+        if (filtroDataInicio.HasValue)
+        {
+            conditions.Add($"Timestamp >= '{filtroDataInicio.Value:yyyy-MM-dd HH:mm:ss}'");
+        }
+        if (filtroDataFim.HasValue)
+        {
+            conditions.Add($"Timestamp <= '{filtroDataFim.Value.AddDays(1):yyyy-MM-dd HH:mm:ss}'");
+        }
+
+        if (conditions.Any())
+        {
+            sqlBuilder.Append(" WHERE ").Append(string.Join(" AND ", conditions));
+        }
+
+        sqlBuilder.Append(" ORDER BY Timestamp DESC");
+
+        // A página apenas monta a consulta e chama a camada de persistência para carregar os dados.
+        listaLogs = new LogEntry().Consultar<LogEntry>(sqlBuilder.ToString());
+        isLoading = false;
+    }
+
+    private string GetBadgeClass(string level)
+    {
+        return level.ToUpper() switch
+        {
+            "ERRO" => "bg-danger",
+            "ATUALIZACAO" => "bg-info",
+            "EXCLUSAO" => "bg-warning",
+            "CONSULTA" => "bg-secondary",
+            _ => "bg-primary",
+        };
+    }
+
+    private void AbrirModalStackTrace(LogEntry log)
+    {
+        logSelecionado = log;
+        stackTraceModal.Open();
+    }
+}

@@ -1,30 +1,48 @@
 @page "/receitas"
+@using JT_Classes
+@using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Services
-@using System.ComponentModel.DataAnnotations
 @using static JT_Finance.Shared.Components.Modal
 @inject ToastService ToastService
+
+<h3 class="mb-3">Gerenciador de Receitas</h3>
 
 <button class="btn btn-primary mb-3 shadow-sm" @onclick="AbrirModalParaNovaReceita">
     <i class="bi bi-plus-circle-fill me-2"></i>Nova Receita
 </button>
 
-<DataGrid TItem="ReceitaModel" Items="listaReceitas" IsLoading="isLoading">
+<DataGrid TItem="Receita" Items="listaReceitas" IsLoading="isLoading">
     <HeaderTemplate>
         <th>Descrição</th>
         <th>Valor</th>
         <th>Data</th>
-        <th>Fonte</th>
+        <th>Categoria</th>
+        <th>Recebida</th>
         <th class="text-end">Ações</th>
     </HeaderTemplate>
     <RowTemplate Context="receita">
         <td>@receita.Descricao</td>
         <td>@receita.Valor.ToString("C")</td>
-        <td>@receita.Data.ToShortDateString()</td>
-        <td>@receita.Fonte</td>
+        <td>@receita.DataReceita.ToShortDateString()</td>
+        <td>@(opcoesCategoriaReceita.FirstOrDefault(c => c.Id == receita.Categoria)?.Descricao)</td>
+        <td>
+            @if (receita.ReceitaRecebida)
+            {
+                <span class="badge bg-success">Sim</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary">Não</span>
+            }
+        </td>
         <td class="text-end">
-            <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirModalParaEditarReceita(receita)">Editar</button>
-            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoReceita(receita.Id)">Remover</button>
+            <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirModalParaEditarReceita(receita)">
+                <i class="bi bi-pencil-fill me-1"></i>Editar
+            </button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoReceita(receita.Id)">
+                <i class="bi bi-trash-fill me-1"></i>Remover
+            </button>
         </td>
     </RowTemplate>
     <EmptyTemplate>
@@ -32,36 +50,99 @@
     </EmptyTemplate>
 </DataGrid>
 
-<Modal @ref="crudModal" Title="@modalTitle" OnClose="ResetarEstadoAposModal">
+<Modal @ref="crudModal" Title="@modalTitle" OnClose="ResetarEstadoAposModal" Size="ModalSize.Large">
     <BodyContent>
         @if (receitaAtual != null)
         {
-            <EditForm Model="receitaAtual" OnValidSubmit="HandleSalvarReceita">
+            <EditForm Model="receitaAtual" OnValidSubmit="() => HandleSalvarReceita(receitaAtual)">
                 <DataAnnotationsValidator />
 
-                <div class="mb-3">
-                    <label for="descricao" class="form-label">Descrição</label>
-                    <InputText id="descricao" class="form-control" @bind-Value="receitaAtual.Descricao" />
-                    <ValidationMessage For="@(() => receitaAtual.Descricao)" />
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <InputText id="descricao" class="form-control" @bind-Value="receitaAtual.Descricao" />
+                        <ValidationMessage For="@(() => receitaAtual.Descricao)" />
+                    </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="valor" class="form-label">Valor</label>
-                        <InputNumber id="valor" class="form-control" @bind-Value="receitaAtual.Valor" />
+                        <InputNumber id="valor" class="form-control" step="0.01" @bind-Value="receitaAtual.Valor" />
                         <ValidationMessage For="@(() => receitaAtual.Valor)" />
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="data" class="form-label">Data</label>
-                        <InputDate id="data" class="form-control" @bind-Value="receitaAtual.Data" />
-                        <ValidationMessage For="@(() => receitaAtual.Data)" />
+                        <label for="data" class="form-label">Data da Receita</label>
+                        <InputDate id="data" class="form-control" @bind-Value="receitaAtual.DataReceita" />
+                        <ValidationMessage For="@(() => receitaAtual.DataReceita)" />
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="fonte" class="form-label">Fonte</label>
-                    <InputText id="fonte" class="form-control" @bind-Value="receitaAtual.Fonte" />
-                    <ValidationMessage For="@(() => receitaAtual.Fonte)" />
+                <div class="row">
+                    <!-- Dropdown para TIPO DE RECEITA -->
+                    <div class="col-md-6 mb-3">
+                        <label for="tipo_receita" class="form-label">Tipo de Receita</label>
+                        <div class="input-group">
+                            <InputSelect id="tipo_receita" class="form-select" @bind-Value="receitaAtual.TipoReceita">
+                                <option value="0">Selecione um tipo...</option>
+                                @foreach (var tipo in opcoesTipoReceita)
+                                {
+                                    <option value="@tipo.Id">@tipo.Descricao</option>
+                                }
+                            </InputSelect>
+                            <button class="btn btn-outline-secondary" type="button" @onclick='() => ToggleInlineForm("TipoReceita")'>+</button>
+                        </div>
+                        @if (showNewTipoForm)
+                        {
+                            <div class="input-group mt-2">
+                                <InputText @bind-Value="newOptionDescription" class="form-control" placeholder="Novo tipo..." />
+                                <button type="button" class="btn btn-success" @onclick='() => SalvarNovaOpcaoInline("TipoReceita")'>Salvar</button>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Dropdown para CATEGORIA DE RECEITA -->
+                    <div class="col-md-6 mb-3">
+                        <label for="categoria_receita" class="form-label">Categoria da Receita</label>
+                        <div class="input-group">
+                            <InputSelect id="categoria_receita" class="form-select" @bind-Value="receitaAtual.Categoria">
+                                <option value="0">Selecione uma categoria...</option>
+                                @foreach (var cat in opcoesCategoriaReceita)
+                                {
+                                    <option value="@cat.Id">@cat.Descricao</option>
+                                }
+                            </InputSelect>
+                            <button class="btn btn-outline-secondary" type="button" @onclick='() => ToggleInlineForm("CategoriaReceita")'>+</button>
+                        </div>
+                        @if (showNewCategoriaForm)
+                        {
+                            <div class="input-group mt-2">
+                                <InputText @bind-Value="newOptionDescription" class="form-control" placeholder="Nova categoria..." />
+                                <button type="button" class="btn btn-success" @onclick='() => SalvarNovaOpcaoInline("CategoriaReceita")'>Salvar</button>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="observacao" class="form-label">Observação</label>
+                    <InputTextArea id="observacao" class="form-control" @bind-Value="receitaAtual.Observacao" rows="3" />
+                </div>
+
+                <div class="row align-items-center">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <InputCheckbox id="recebida" class="form-check-input" @bind-Value="receitaAtual.ReceitaRecebida" />
+                            <label class="form-check-label" for="recebida">Já foi recebida?</label>
+                        </div>
+                    </div>
+                    @if (receitaAtual.ReceitaRecebida)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <label for="data_recebimento" class="form-label">Data de Recebimento</label>
+                            <InputDate id="data_recebimento" class="form-control" @bind-Value="receitaAtual.DataRecebimento" />
+                        </div>
+                    }
                 </div>
 
                 <hr />
@@ -72,10 +153,6 @@
                 </div>
             </EditForm>
         }
-        else
-        {
-            <p>Carregando formulário...</p>
-        }
     </BodyContent>
 </Modal>
 
@@ -84,16 +161,23 @@
 @code {
     [CascadingParameter]
     public Func<string, Task>? SetPageTitleAsync { get; set; }
-
-    private List<ReceitaModel> listaReceitas = new();
-    private ReceitaModel? receitaAtual;
+    private List<Receita>? listaReceitas;
+    private Receita? receitaAtual;
     private bool isLoading = true;
 
     private Modal crudModal = new();
     private string modalTitle = "";
 
     private ConfirmDialog confirmDeleteDialog = new();
-    private Guid? idReceitaParaRemover;
+    private int? idReceitaParaRemover;
+
+    private Categoria categoriaRepository;
+    private List<Categoria> opcoesTipoReceita;
+    private List<Categoria> opcoesCategoriaReceita;
+
+    private bool showNewTipoForm = false;
+    private bool showNewCategoriaForm = false;
+    private string newOptionDescription = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -101,71 +185,65 @@
         {
             await SetPageTitleAsync.Invoke("Receitas");
         }
+        await CarregarDependencias();
+    }
 
-        // Simula carregamento de dados do "banco"
+    private async Task CarregarDependencias()
+    {
         isLoading = true;
-        await Task.Delay(250);
-        CarregarDadosIniciais();
+        await Task.WhenAll(
+            CarregarReceitas(),
+            CarregarOpcoesDeCategoria()
+        );
         isLoading = false;
     }
 
-    private void CarregarDadosIniciais()
+    private async Task CarregarReceitas()
     {
-        listaReceitas = new List<ReceitaModel>
-        {
-            new() { Id = Guid.NewGuid(), Descricao = "Salário Mensal", Valor = 7500.00M, Data = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 5), Fonte = "Empresa ABC" },
-            new() { Id = Guid.NewGuid(), Descricao = "Venda de Produto Online", Valor = 350.50M, Data = DateTime.Now.AddDays(-10), Fonte = "Marketplace" },
-            new() { Id = Guid.NewGuid(), Descricao = "Reembolso de Despesa", Valor = 120.00M, Data = DateTime.Now.AddDays(-5), Fonte = "Adiantamento" }
-        };
+        await Task.Yield();
+        listaReceitas = new Receita().Consultar<Receita>("SELECT * FROM Receitas ORDER BY DataReceita DESC");
+    }
+
+    private Task CarregarOpcoesDeCategoria()
+    {
+        opcoesTipoReceita = Categoria.ListarPorPapel("Receita", "TipoReceita");
+        opcoesCategoriaReceita = Categoria.ListarPorPapel("Receita", "CategoriaReceita");
+        return Task.CompletedTask;
     }
 
     private void AbrirModalParaNovaReceita()
     {
-        receitaAtual = new ReceitaModel(); // Cria uma nova instância
+        receitaAtual = new Receita(JT_Persistencia.Persistencia.StatusObjeto.Novo);
         modalTitle = "Adicionar Nova Receita";
         crudModal.Open();
     }
 
-    private void AbrirModalParaEditarReceita(ReceitaModel receitaParaEditar)
+    private void AbrirModalParaEditarReceita(Receita receitaParaEditar)
     {
-        // Cria uma cópia para edição segura
-        receitaAtual = new ReceitaModel
-        {
-            Id = receitaParaEditar.Id,
-            Descricao = receitaParaEditar.Descricao,
-            Valor = receitaParaEditar.Valor,
-            Data = receitaParaEditar.Data,
-            Fonte = receitaParaEditar.Fonte
-        };
+        receitaAtual = receitaParaEditar;
+        receitaAtual.Status = JT_Persistencia.Persistencia.StatusObjeto.EmEdicao;
         modalTitle = "Editar Receita";
         crudModal.Open();
     }
 
-    private async Task HandleSalvarReceita()
+    private async Task HandleSalvarReceita(Receita receita)
     {
-        if (receitaAtual == null) return;
+        bool sucesso = receita.Salvar();
 
-        bool isNew = receitaAtual.Id == Guid.Empty;
-        if (isNew)
+        if (sucesso)
         {
-            receitaAtual.Id = Guid.NewGuid();
-            listaReceitas.Add(receitaAtual);
-            ToastService.ShowSuccess("Sucesso!", "Nova receita adicionada.");
+            await crudModal.Close();
+            await CarregarDependencias();
         }
         else
         {
-            var index = listaReceitas.FindIndex(r => r.Id == receitaAtual.Id);
-            if (index != -1)
-            {
-                listaReceitas[index] = receitaAtual;
-                ToastService.ShowSuccess("Sucesso!", "Receita atualizada.");
-            }
+            ToastService.ShowError("Erro!", "Não foi possível salvar a receita.");
         }
-        await crudModal.Close();
     }
 
     private async Task HandleCancelarFormularioModal()
     {
+        receitaAtual.LimparReservaDeId();
         await crudModal.Close();
     }
 
@@ -175,37 +253,71 @@
         modalTitle = "";
     }
 
-    private async Task ConfirmarRemocaoReceita(Guid id)
+    private async Task ConfirmarRemocaoReceita(int id)
     {
         idReceitaParaRemover = id;
-        await confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover esta receita?");
+        confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover esta receita?");
+       
     }
 
-    private void EfetuarRemocaoReceita()
+    private async Task EfetuarRemocaoReceita()
     {
         if (idReceitaParaRemover.HasValue)
         {
-            listaReceitas.RemoveAll(r => r.Id == idReceitaParaRemover.Value);
-            ToastService.ShowSuccess("Removida!", "A receita foi removida.");
+            var receitaParaRemover = new Receita { Id = idReceitaParaRemover.Value };
+            if (receitaParaRemover.Excluir(receitaParaRemover))
+            {
+                ToastService.ShowSuccess("Removida!", "A receita foi removida.");
+                await CarregarDependencias();
+            }
+            else
+            {
+                ToastService.ShowError("Erro!", "Não foi possível remover a receita.");
+            }
             idReceitaParaRemover = null;
         }
     }
-    public class ReceitaModel
+
+    private void ToggleInlineForm(string papel)
     {
-        public Guid Id { get; set; }
+        newOptionDescription = "";
+        if (papel == "TipoReceita")
+        {
+            showNewTipoForm = !showNewTipoForm;
+            showNewCategoriaForm = false;
+        }
+        else
+        {
+            showNewCategoriaForm = !showNewCategoriaForm;
+            showNewTipoForm = false;
+        }
+    }
 
-        [Required(ErrorMessage = "A descrição é obrigatória.")]
-        [StringLength(100, ErrorMessage = "A descrição não pode ter mais de 100 caracteres.")]
-        public string Descricao { get; set; } = string.Empty;
+    private async Task SalvarNovaOpcaoInline(string papel)
+    {
+        if (string.IsNullOrWhiteSpace(newOptionDescription)) return;
 
-        [Required(ErrorMessage = "O valor é obrigatório.")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "O valor deve ser maior que zero.")]
-        public decimal Valor { get; set; }
+        var novaOpcao = new Categoria
+        {
+            TipoEntidade = "Receita",
+            Nome = papel,
+            Descricao = newOptionDescription
+        };
 
-        [Required(ErrorMessage = "A data é obrigatória.")]
-        public DateTime Data { get; set; } = DateTime.Now;
-
-        [StringLength(50, ErrorMessage = "A fonte não pode ter mais de 50 caracteres.")]
-        public string? Fonte { get; set; }
+        if (categoriaRepository.Salvar())
+        {
+            await CarregarOpcoesDeCategoria();
+            if (papel == "TipoReceita")
+            {
+                receitaAtual.TipoReceita = novaOpcao.Id;
+                showNewTipoForm = false;
+            }
+            else
+            {
+                receitaAtual.Categoria = novaOpcao.Id;
+                showNewCategoriaForm = false;
+            }
+            newOptionDescription = "";
+        }
     }
 }

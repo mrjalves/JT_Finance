@@ -1,10 +1,10 @@
 @if (IsOpen)
 {
-    <div class="custom-modal-backdrop @(IsOpen ? "show" : "")" @onclick="CloseModalOnBackdropClick">
+    <div class="custom-modal-backdrop @(IsOpen ? "show" : "")" @onclick="CloseModalOnBackdropClickConditional">
         <div class="custom-modal @(IsOpen ? "show" : "") @SizeCssClass" role="dialog" @onclick:stopPropagation="true">
             <div class="custom-modal-header">
                 <h5 class="custom-modal-title">@Title</h5>
-                @if(ShowCloseButton)
+                @if (ShowCloseButton)
                 {
                     <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
                 }
@@ -30,7 +30,7 @@
     [Parameter] public EventCallback OnClose { get; set; } // Callback quando o modal é fechado
     [Parameter] public bool ShowCloseButton { get; set; } = true;
     [Parameter] public ModalSize Size { get; set; } = ModalSize.Default;
-    [Parameter] public bool CloseOnBackdropClick { get; set; } = true;
+    [Parameter] public bool CloseOnBackdropClick { get; set; } = true; // Permite que o consumidor do modal controle isso
 
 
     public async Task Open()
@@ -46,8 +46,10 @@
         StateHasChanged();
     }
 
-    private async Task CloseModalOnBackdropClick()
+    // Renomeado para deixar claro que é o que chamaremos condicionalmente
+    private async Task CloseModalOnBackdropClickConditional()
     {
+        // Só fecha o modal se a propriedade CloseOnBackdropClick for verdadeira
         if (CloseOnBackdropClick)
         {
             await Close();
@@ -75,5 +77,3 @@
         ExtraLarge
     }
 }
-
-

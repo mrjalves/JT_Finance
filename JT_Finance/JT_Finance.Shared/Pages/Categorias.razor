@@ -12,10 +12,10 @@
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
                         <label for="papelCategoria" class="form-label me-2 mb-0 fw-bold">Gerenciar Opções para:</label>
-                        <select id="papelCategoria" class="form-select w-auto" @bind="selectedRole" @bind:event="onchange">
+                        <select id="papelCategoria" class="form-select w-auto" @bind="selectedRole">
                             @foreach (var papel in papeisDeCategoria)
                             {
-                                <option value="@papel.Key">@papel.Value</option>
+                                <option value="@papel.Key">@papel.Value.DisplayName</option>
                             }
                         </select>
                     </div>
@@ -37,7 +37,7 @@
                     else if (opcoesCategoria == null || !opcoesCategoria.Any())
                     {
                         <div class="text-center p-4">
-                            <p class="mb-0">Nenhuma opção encontrada para <strong>@papeisDeCategoria[selectedRole]</strong>.</p>
+                            <p class="mb-0">Nenhuma opção encontrada para <strong>@papeisDeCategoria[selectedRole].DisplayName</strong>.</p>
                         </div>
                     }
                     else
@@ -108,17 +108,32 @@
 }
 
 @code {
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
     private Categoria categoriaRepository = new Categoria();
 
-    // Mapeia o "papel" (valor da coluna NOME) para um texto amigável.
-    private Dictionary<string, string> papeisDeCategoria = new()
+    // ALTERAÇÃO: A estrutura agora guarda o Nome de Exibição e o Tipo de Entidade.
+    private Dictionary<string, (string DisplayName, string EntityType)> papeisDeCategoria = new()
     {
-        { "TipoDespesa", "Tipos de Despesa" },
-        { "Categoria", "Categorias de Despesa" }
-        // Adicione outros aqui, como "TipoReceita", etc.
+        { "TipoDespesa", ("Tipos de Despesa", "Despesa") },
+        { "Categoria", ("Categorias de Despesa", "Despesa") },
+        { "TipoReceita", ("Tipos de Receita", "Receita") },
+        { "CategoriaReceita", ("Categorias de Receita", "Receita") }
     };
 
-    private string selectedRole = "TipoDespesa"; // Valor inicial
+    private string _selectedRole = "TipoDespesa";
+    private string selectedRole
+    {
+        get => _selectedRole;
+        set
+        {
+            if (_selectedRole != value)
+            {
+                _selectedRole = value;
+                InvokeAsync(CarregarOpcoes);
+            }
+        }
+    }
 
     private List<Categoria> opcoesCategoria = new();
     private bool isLoading = true;
@@ -128,13 +143,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await CarregarOpcoes();
-    }
-
-    // Dispara a recarga quando o usuário muda a seleção no dropdown
-    private async Task OnSelectedRoleChanged(ChangeEventArgs e)
-    {
-        selectedRole = e.Value?.ToString() ?? "TipoDespesa";
+        if (SetPageTitleAsync != null)
+        {
+            await SetPageTitleAsync.Invoke("Categorias");
+        }
         await CarregarOpcoes();
     }
 
@@ -145,9 +157,9 @@
 
         try
         {
-            // Assumimos que o TIPO_ENTIDADE para estes papéis é 'Despesa'.
-            // Em um sistema maior, isso poderia ser mais dinâmico.
-            opcoesCategoria = categoriaRepository.ListarPorPapel("Despesa", selectedRole);
+            // ALTERAÇÃO: Busca o tipo de entidade (Despesa/Receita) do dicionário
+            var (displayName, entityType) = papeisDeCategoria[selectedRole];
+            opcoesCategoria = Categoria.ListarPorPapel(entityType, selectedRole);
         }
         catch (Exception ex)
         {
@@ -163,13 +175,15 @@
 
     private void AbrirModalParaNovaOpcao()
     {
-        modalTitle = $"Nova Opção para {papeisDeCategoria[selectedRole]}";
-        opcaoEmEdicao = new Categoria
+        var (displayName, entityType) = papeisDeCategoria[selectedRole];
+        modalTitle = $"Nova Opção para {displayName}";
+
+        opcaoEmEdicao = new Categoria()
         {
-            // Preenche os valores fixos automaticamente
-            TipoEntidade = "Despesa",
-            Nome = selectedRole, // O "papel" vem da seleção do dropdown
-            Id = categoriaRepository.GetNextId<Categoria>()
+            Status = JT_Persistencia.Persistencia.StatusObjeto.Novo,
+            // ALTERAÇÃO: Preenche os valores dinamicamente
+            TipoEntidade = entityType,
+            Nome = selectedRole,
         };
         showModal = true;
     }
@@ -177,9 +191,9 @@
     private void AbrirModalParaEditar(Categoria opcaoParaEditar)
     {
         modalTitle = $"Editar Opção: {opcaoParaEditar.Descricao}";
-        // Cria uma cópia para edição
         opcaoEmEdicao = new Categoria
         {
+            Status = JT_Persistencia.Persistencia.StatusObjeto.EmEdicao,
             Id = opcaoParaEditar.Id,
             Nome = opcaoParaEditar.Nome,
             Descricao = opcaoParaEditar.Descricao,
@@ -193,9 +207,8 @@
     private async Task HandleSave()
     {
         var categoriaExistente = categoriaRepository.CarregarPorId<Categoria>(opcaoEmEdicao.Id);
-        bool sucesso = (categoriaExistente == null)
-            ? categoriaRepository.Salvar(opcaoEmEdicao)
-            : categoriaRepository.Atualizar(opcaoEmEdicao);
+        bool sucesso = categoriaRepository.Salvar();
+
 
         if (sucesso)
         {

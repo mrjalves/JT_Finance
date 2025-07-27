@@ -1,176 +1,312 @@
 @page "/listacompras"
+@using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
-@using System.ComponentModel.DataAnnotations
+@using JT_Finance.Shared.Services
+@using JT_Persistencia
+@using static JT_Finance.Shared.Components.Modal
+@inject ToastService ToastService
 
-<button class="btn btn-primary mb-3 shadow-sm" @onclick="AdicionarNovoItem">
-    <i class="bi bi-plus-circle-fill me-2"></i>Novo Item
-</button>
+<h3 class="mb-3">Listas de Compras</h3>
 
-<DataGrid TItem="ItemListaCompraModel" Items="listaItensCompra" IsLoading="isLoading">
+<!-- Seletor de Listas e Botões de Ação -->
+<div class="card shadow-sm mb-3">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center flex-grow-1">
+            <label for="listaSelect" class="form-label me-2 mb-0 fw-bold">Lista Ativa:</label>
+            <InputSelect id="listaSelect" class="form-select w-auto" @bind-Value="listaSelecionadaId">
+                <option value="0">Selecione uma lista...</option>
+                @if (listasDeCompra != null)
+                {
+                    @foreach (var lista in listasDeCompra)
+                    {
+                        <option value="@lista.Id">@lista.Descricao</option>
+                    }
+                }
+            </InputSelect>
+            <button class="btn btn-outline-secondary ms-2" @onclick="AbrirModalGerenciarListas" title="Gerenciar Listas">
+                <i class="bi bi-gear-fill"></i>
+            </button>
+        </div>
+        <button class="btn btn-primary" @onclick="AbrirModalNovoItem" disabled="@(listaSelecionadaId == 0)">
+            <i class="bi bi-plus-circle-fill me-2"></i>Novo Item
+        </button>
+    </div>
+</div>
+
+<!-- Grid de Itens da Lista Selecionada -->
+<DataGrid TItem="ListaCompraItem" Items="itensDaListaSelecionada" IsLoading="isLoading">
     <HeaderTemplate>
-        <th>Comprado</th>
-        <th>Nome do Item</th>
+        <th style="width: 80px;">Comprado</th>
+        <th>Produto</th>
         <th>Quantidade</th>
+        <th>Unidade</th>
         <th class="text-end">Ações</th>
     </HeaderTemplate>
     <RowTemplate Context="item">
         <td>
             <div class="form-check form-switch d-flex justify-content-center">
-                <InputCheckbox class="form-check-input" @bind-Value="item.Comprado" title="@(item.Comprado ? "Marcar como não comprado" : "Marcar como comprado")" />
+                <InputCheckbox class="form-check-input" @bind-Value="item.Comprado" @bind-Value:after='() => AtualizarStatusItem(item)' />
             </div>
         </td>
-        <td><span class="@(item.Comprado ? "item-comprado" : "")">@item.Nome</span></td>
-        <td><span class="@(item.Comprado ? "item-comprado" : "")">@item.Quantidade</span></td>
+        <td><span class="@(item.Comprado ? "text-decoration-line-through text-muted" : "")">@item.DescricaoProduto</span></td>
+        <td><span class="@(item.Comprado ? "text-decoration-line-through text-muted" : "")">@item.Quantidade</span></td>
+        <td><span class="@(item.Comprado ? "text-decoration-line-through text-muted" : "")">@item.UnidadeMedida</span></td>
+        <td>
+            <span class="@(item.Comprado ? "text-decoration-line-through text-muted" : "")">
+                @item.DescricaoProduto
+            </span>
+
+            @if (!string.IsNullOrWhiteSpace(item.LinkProduto))
+            {
+                <a href="@item.LinkProduto" target="_blank" class="ms-2" title="Abrir link do produto">
+                    <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+            }
+        </td>
         <td class="text-end">
-            <button class="btn btn-sm btn-outline-primary" @onclick="() => EditarItem(item)" disabled="@item.Comprado">Editar</button>
-            <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoverItem(item.Id)">Remover</button>
+            <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirModalEditarItem(item)" disabled="@item.Comprado">Editar</button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoItem(item.Id)">Remover</button>
         </td>
     </RowTemplate>
     <EmptyTemplate>
-        <p class="text-muted mb-0">Sua lista de compras está vazia. Adicione um novo item para começar!</p>
+        <p class="text-muted mb-0">@(listaSelecionadaId == 0 ? "Selecione uma lista para ver os itens." : "Esta lista está vazia. Adicione um novo item!")</p>
     </EmptyTemplate>
 </DataGrid>
 
-
-<Modal @ref="modalRef" Title="@modalTitle">
+<!-- Modal para Adicionar/Editar ITENS -->
+<Modal @ref="itemModalRef" Title="@itemModalTitle" OnClose="() => itemAtual = null">
     <BodyContent>
         @if (itemAtual != null)
         {
             <EditForm Model="itemAtual" OnValidSubmit="SalvarItem">
                 <DataAnnotationsValidator />
+                <div class="mb-3">
+                    <label class="form-label">Produto</label>
+                    <InputText class="form-control" @bind-Value="itemAtual.DescricaoProduto" />
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Quantidade</label>
+                        <InputNumber class="form-control" @bind-Value="itemAtual.Quantidade" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Unidade (un, kg, L)</label>
+                        <InputText class="form-control" @bind-Value="itemAtual.UnidadeMedida" />
+                    </div>
+                </div>
+                <hr />
+                <h5 class="text-muted">Detalhes do Desejo (Opcional)</h5>
 
                 <div class="mb-3">
-                    <label for="nomeItem" class="form-label">Nome do Item</label>
-                    <InputText id="nomeItem" class="form-control" @bind-Value="itemAtual.Nome" />
-                    <ValidationMessage For="@(() => itemAtual.Nome)" />
+                    <label class="form-label">Link do Produto</label>
+                    <InputText class="form-control" @bind-Value="itemAtual.LinkProduto" placeholder="https://..." />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Preço Alvo/Observado</label>
+                        <InputNumber class="form-control" @bind-Value="itemAtual.PrecoAlvo" step="0.01" />
+                    </div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="quantidadeItem" class="form-label">Quantidade</label>
-                    <InputNumber id="quantidadeItem" class="form-control" @bind-Value="itemAtual.Quantidade" />
-                    <ValidationMessage For="@(() => itemAtual.Quantidade)" />
-                </div>
-
-                <div class="form-check mb-3">
-                    <InputCheckbox id="compradoModal" class="form-check-input" @bind-Value="itemAtual.Comprado" />
-                    <label class="form-check-label" for="compradoModal">Já foi comprado?</label>
+                    <label class="form-label">Observações</label>
+                    <InputTextArea class="form-control" @bind-Value="itemAtual.Observacoes" rows="2" />
                 </div>
 
                 <hr />
-
                 <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => itemModalRef.Close()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Item</button>
                 </div>
             </EditForm>
         }
     </BodyContent>
 </Modal>
 
-@code {
-    [CascadingParameter]
-    public Func<string, Task>? SetPageTitleAsync { get; set; }
+<!-- Modal para Gerenciar LISTAS -->
+<Modal @ref="listasModalRef" Title="Gerenciar Listas de Compras">
+    <BodyContent>
+        @foreach (var lista in listasDeCompra)
+        {
+            <div class="input-group mb-2">
+                <InputText class="form-control" @bind-Value="lista.Descricao" />
+                <button class="btn btn-success" @onclick="() => SalvarLista(lista)">Salvar</button>
+                <button class="btn btn-danger" @onclick="() => ConfirmarRemocaoLista(lista.Id)">Excluir</button>
+            </div>
+        }
+        <hr />
+        <h5 class="mt-3">Nova Lista</h5>
+        <div class="input-group">
+            <InputText class="form-control" @bind-Value="novaListaDescricao" placeholder="Descrição da nova lista" />
+            <button class="btn btn-primary" @onclick="AdicionarNovaLista">Criar Nova Lista</button>
+        </div>
+    </BodyContent>
+</Modal>
 
-    private List<ItemListaCompraModel> listaItensCompra = new();
-    private ItemListaCompraModel? itemAtual;
+<ConfirmDialog @ref="confirmDialog" OnConfirm="OnConfirmDelete" />
+
+@code {
+    private List<ListaCompra>? listasDeCompra;
+    private List<ListaCompraItem>? itensDaListaSelecionada;
     private bool isLoading = true;
 
-    private Modal modalRef = new();
-    private string modalTitle = "";
+    private int _listaSelecionadaId;
+    private int listaSelecionadaId
+    {
+        get => _listaSelecionadaId;
+        set
+        {
+            if (_listaSelecionadaId != value)
+            {
+                _listaSelecionadaId = value;
+                InvokeAsync(CarregarItensDaLista);
+            }
+        }
+    }
+
+    private Modal itemModalRef = new();
+    private string itemModalTitle = "";
+    private ListaCompraItem? itemAtual;
+
+    private Modal listasModalRef = new();
+    private string novaListaDescricao = "";
+
+    private ConfirmDialog confirmDialog = new();
+    // Variáveis para guardar o ID do que será removido
+    private int? idItemParaRemover;
+    private int? idListaParaRemover;
 
     protected override async Task OnInitializedAsync()
     {
-        if (SetPageTitleAsync != null)
-        {
-            await SetPageTitleAsync.Invoke("Lista de Compras");
-        }
+        await CarregarListas();
+    }
 
-        // Simula carregamento de dados
+    private async Task CarregarListas()
+    {
         isLoading = true;
-        await Task.Delay(250);
-        CarregarDadosIniciais();
+        await Task.Yield();
+        listasDeCompra = new ListaCompra().Consultar<ListaCompra>("SELECT * FROM ListasCompra ORDER BY Descricao");
+        if (listaSelecionadaId == 0 && listasDeCompra.Any())
+        {
+            listaSelecionadaId = listasDeCompra.First().Id;
+        }
+        else
+        {
+            await CarregarItensDaLista();
+        }
         isLoading = false;
     }
 
-    private void CarregarDadosIniciais()
+    private async Task CarregarItensDaLista()
     {
-        // Apenas para exemplo. Em um app real, viria de um banco de dados ou localStorage.
-        listaItensCompra = new List<ItemListaCompraModel>
+        isLoading = true;
+        await Task.Yield();
+        if (listaSelecionadaId > 0)
         {
-            new() { Id = Guid.NewGuid(), Nome = "Leite Integral", Quantidade = 2, Comprado = false },
-            new() { Id = Guid.NewGuid(), Nome = "Pão de Forma", Quantidade = 1, Comprado = true },
-            new() { Id = Guid.NewGuid(), Nome = "Dúzia de Ovos", Quantidade = 1, Comprado = false },
-            new() { Id = Guid.NewGuid(), Nome = "Café em Pó", Quantidade = 1, Comprado = false }
-        };
+            // itensDaListaSelecionada = ListaCompraItem.Consultar<ListaCompraItem>($"SELECT * FROM ListaCompraItens WHERE IdListaCompra = {listaSelecionadaId}");
+        }
+        else
+        {
+            itensDaListaSelecionada.Clear();
+        }
+        isLoading = false;
     }
 
-    private void AdicionarNovoItem()
+    // --- Lógica para Itens ---
+    private void AbrirModalNovoItem()
     {
-        itemAtual = new ItemListaCompraModel();
-        modalTitle = "Adicionar Novo Item";
-        modalRef.Open();
+        itemAtual = new ListaCompraItem { IdListaCompra = listaSelecionadaId };
+        itemModalTitle = "Adicionar Novo Item";
+        itemModalRef.Open();
     }
 
-    private void EditarItem(ItemListaCompraModel itemParaEditar)
+    private void AbrirModalEditarItem(ListaCompraItem item)
     {
-        // Cria uma cópia para edição, preservando a lista original até salvar
-        itemAtual = new ItemListaCompraModel
-        {
-            Id = itemParaEditar.Id,
-            Nome = itemParaEditar.Nome,
-            Quantidade = itemParaEditar.Quantidade,
-            Comprado = itemParaEditar.Comprado
-        };
-        modalTitle = "Editar Item";
-        modalRef.Open();
+        itemAtual = new ListaCompraItem { Id = item.Id, IdListaCompra = item.IdListaCompra, DescricaoProduto = item.DescricaoProduto, Quantidade = item.Quantidade, UnidadeMedida = item.UnidadeMedida };
+        itemModalTitle = "Editar Item";
+        itemModalRef.Open();
     }
 
     private async Task SalvarItem()
     {
         if (itemAtual == null) return;
+        
+        bool sucesso = itemAtual.Salvar();
 
-        if (itemAtual.Id == Guid.Empty)
+        if (sucesso)
         {
-            itemAtual.Id = Guid.NewGuid();
-            listaItensCompra.Add(itemAtual);
+            await itemModalRef.Close();
+            await CarregarItensDaLista();
         }
-        else
+    }
+
+    private async Task AtualizarStatusItem(ListaCompraItem item)
+    {
+        await Task.Delay(100);
+        item.Salvar();
+    }
+
+    // --- Lógica para Listas ---
+    private void AbrirModalGerenciarListas() => listasModalRef.Open();
+
+    private async Task AdicionarNovaLista()
+    {
+        if (string.IsNullOrWhiteSpace(novaListaDescricao)) return;
+        var novaLista = new ListaCompra { Descricao = novaListaDescricao };
+        if (novaLista.Salvar())
         {
-            var index = listaItensCompra.FindIndex(i => i.Id == itemAtual.Id);
-            if (index != -1)
+            novaListaDescricao = "";
+            await CarregarListas();
+            listaSelecionadaId = novaLista.Id;
+        }
+    }
+
+    private async Task SalvarLista(ListaCompra lista)
+    {
+        if (lista.Salvar())
+        {
+            ToastService.ShowSuccess("Sucesso", "Nome da lista atualizado.");
+        }
+    }
+
+    // --- Lógica de Remoção Refatorada ---
+    private async Task ConfirmarRemocaoItem(int id)
+    {
+        idItemParaRemover = id;
+        idListaParaRemover = null; // Garante que apenas um ID esteja ativo
+        confirmDialog.Show("Confirmar Remoção", "Deseja realmente remover este item?");
+    }
+
+    private async Task ConfirmarRemocaoLista(int id)
+    {
+        idListaParaRemover = id;
+        idItemParaRemover = null; // Garante que apenas um ID esteja ativo
+        confirmDialog.Show("Confirmar Remoção", "Deseja remover esta lista e TODOS os seus itens?");
+    }
+
+    private async Task OnConfirmDelete()
+    {
+        if (idItemParaRemover.HasValue)
+        {
+            var itemParaRemover = new ListaCompraItem { Id = idItemParaRemover.Value };
+            itemParaRemover.Excluir(itemParaRemover);
+            await CarregarItensDaLista();
+            ToastService.ShowSuccess("Sucesso", "Item removido.");
+        }
+        else if (idListaParaRemover.HasValue)
+        {
+            var listaParaRemover = new ListaCompra { Id = idListaParaRemover.Value };
+            if (listaParaRemover.Excluir(listaParaRemover))
             {
-                listaItensCompra[index] = itemAtual;
+                listaSelecionadaId = 0;
+                await CarregarListas();
+                ToastService.ShowSuccess("Sucesso", "Lista removida.");
             }
         }
-        await FecharModal();
+
+        // Limpa os IDs após a operação
+        idItemParaRemover = null;
+        idListaParaRemover = null;
     }
-
-    private void RemoverItem(Guid id)
-    {
-        listaItensCompra.RemoveAll(i => i.Id == id);
-    }
-
-    private async Task FecharModal()
-    {
-        await modalRef.Close();
-        itemAtual = null; // Limpa o item para o próximo uso
-    }
-
-
-
-    public class ItemListaCompraModel
-    {
-        public Guid Id { get; set; }
-
-        [Required(ErrorMessage = "O nome do item é obrigatório.")]
-        [StringLength(100, ErrorMessage = "O nome não pode ter mais de 100 caracteres.")]
-        public string Nome { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "A quantidade é obrigatória.")]
-        [Range(1, int.MaxValue, ErrorMessage = "A quantidade deve ser pelo menos 1.")]
-        public int Quantidade { get; set; } = 1;
-
-        public bool Comprado { get; set; }
-    }
-
 }

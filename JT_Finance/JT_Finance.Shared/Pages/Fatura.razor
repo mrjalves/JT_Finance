@@ -1,0 +1,155 @@
+﻿@page "/fatura/{CartaoId:int}"
+@using JT_Classes.Financeiro
+@inject NavigationManager NavigationManager
+
+@if (isLoading)
+{
+    <p><em>Carregando fatura...</em></p>
+}
+else if (cartao == null)
+{
+    <div class="alert alert-danger">
+        <h4 class="alert-heading">Cartão não encontrado!</h4>
+        <p>O cartão com o ID fornecido não foi encontrado. Por favor, verifique o link ou volte para a lista de cartões.</p>
+        <hr>
+        <button class="btn btn-secondary" @onclick="@(() => NavigationManager.NavigateTo("cartoes-credito"))">
+            <i class="bi bi-arrow-left-circle me-2"></i>Voltar para a Lista
+        </button>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Despesas do Cartão: @cartao.Nome</h3>
+        <button class="btn btn-outline-secondary" @onclick="@(() => NavigationManager.NavigateTo("cartoes-credito"))">
+            <i class="bi bi-arrow-left-circle me-2"></i>Voltar
+        </button>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            Resumo da Fatura
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Total das Despesas: @totalFatura.ToString("C")</h5>
+            <p class="card-text">Exibindo @listaDespesas?.Count despesa(s) para este cartão.</p>
+        </div>
+    </div>
+
+    <DataGrid TItem="Despesa" Items="listaDespesas" IsLoading="isLoading">
+        <HeaderTemplate>
+            <th>Descrição</th>
+            <th>Data Despesa</th>
+            <th>Valor</th>
+            <th>Parcela</th>
+            <th>Vencimento Parcela</th> @* Adicionando Data de Vencimento da Parcela *@
+            <th>Paga</th>
+        </HeaderTemplate>
+        <RowTemplate Context="despesa">
+            <td>@despesa.Descricao</td>
+            <td>@despesa.DataDespesa.ToShortDateString()</td>
+            <td>@despesa.Valor.ToString("C")</td>
+            <td>
+                @* Acessando NumeroParcela via DetalhesCartaoCredito *@
+                @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
+                {
+                    @despesa.DetalhesCartaoCredito.NumeroParcela
+                }
+                else
+                {
+                    <span class="text-muted">—</span> @* Caso não tenha detalhes de cartão (improvável aqui, mas bom para robustez) *@
+                }
+            </td>
+            <td>
+                @* Acessando DataVencimento via DetalhesCartaoCredito *@
+                @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
+                {
+                    @despesa.DetalhesCartaoCredito.DataVencimento.ToShortDateString()
+                }
+                else
+                {
+                    <span class="text-muted">—</span>
+                }
+            </td>
+            <td>
+                @* Acessando ParcelaPaga via DetalhesCartaoCredito *@
+                @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null && despesa.DetalhesCartaoCredito.ParcelaPaga)
+                {
+                    <span class="badge bg-success">Sim</span>
+                }
+                else if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null && !despesa.DetalhesCartaoCredito.ParcelaPaga)
+                {
+                    <span class="badge bg-danger">Não</span>
+                }
+                else
+                {
+                    @* Se por algum motivo não for despesa de cartão ou não tiver detalhes,
+                       você pode decidir como exibir. Talvez despesa.DespesaPaga ainda seja relevante aqui?
+                       Pelo contexto, todas as despesas nessa página serão de cartão. *@
+                    <span class="text-muted">N/A</span>
+                }
+            </td>
+        </RowTemplate>
+        <EmptyTemplate>
+            <p class="text-muted fst-italic">Nenhuma despesa encontrada para este cartão.</p>
+        </EmptyTemplate>
+    </DataGrid>
+}
+
+@code {
+    [Parameter]
+    public int CartaoId { get; set; }
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
+    private CartaoCredito? cartao;
+    private List<Despesa>? listaDespesas; // Continua sendo lista de Despesa, mas com DetalhesCartaoCredito populado
+    private decimal totalFatura = 0;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        await Task.Yield(); // Permite a UI renderizar o "Carregando..."
+        if (SetPageTitleAsync != null)
+        {
+            await SetPageTitleAsync.Invoke("Fatura");
+        }
+
+        // 1. Carrega os detalhes do cartão
+        cartao = new CartaoCredito(CartaoId);
+
+        if (cartao != null && cartao.Id > 0)
+        {
+            // 2. Obtém as despesas de cartão (agora elas virão com DetalhesCartaoCredito populados)
+            listaDespesas = cartao.ObterDespesas();
+
+            // 3. Pós-processamento para garantir que DetalhesCartaoCredito e Cartao sejam corretamente setados
+            //    Este passo é crucial se sua camada de persistência não popula objetos aninhados automaticamente.
+            //    Se CartaoCredito.ObterDespesas() já faz isso perfeitamente, este loop pode ser simplificado.
+            foreach (var despesa in listaDespesas)
+            {
+                if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito == null)
+                {
+                    // Se o ORM não populou, faça manualmente aqui (assumindo que o construtor carrega)
+                    despesa.DetalhesCartaoCredito = new DespesaCartaoCredito(despesa.Id);
+                }
+                // Garante que o objeto Cartao dentro de DetalhesCartaoCredito seja o objeto 'cartao' atual
+                if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
+                {
+                    despesa.DetalhesCartaoCredito.Cartao = cartao; // Vincula ao objeto CartaoCredito já carregado
+                    // Opcional: Se 'ParcelaPaga' da despesa geral for para despesas não-cartão,
+                    // mas queremos a do cartão aqui, podemos sobrescrever.
+                    // No seu código original da tabela, você tinha 'DespesaPaga' na tabela Despesas
+                    // e 'ParcelaPaga' na DespesaCartaoCredito. É importante usar a correta.
+                    // Na UI, estamos usando despesa.DespesaPaga para a coluna "Paga" na tabela.
+                    // Você pode querer mudar para despesa.DetalhesCartaoCredito.ParcelaPaga para despesas de cartão.
+                }
+            }
+
+            // 4. Calcula o total da fatura
+            totalFatura = listaDespesas?.Sum(d => d.Valor) ?? 0;
+        }
+
+        isLoading = false;
+    }
+}

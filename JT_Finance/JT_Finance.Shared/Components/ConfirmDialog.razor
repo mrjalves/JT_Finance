@@ -1,60 +1,115 @@
-@using static JT_Finance.Shared.Components.Modal
-@* Este componente é um wrapper em torno do Modal genérico para diálogos de confirmação. *@
+@* ConfirmDialog.razor *@
+@* Este componente é um modal de confirmação autocontido, projetado para uso com @ref. *@
 
-<Modal @ref="modalInstance" Title="@DialogTitle" OnClose="HandleCancel" Size="@ModalSize" ShowCloseButton="false" CloseOnBackdropClick="false">
-    <BodyContent>
-        <p>@Message</p>
-    </BodyContent>
-    <FooterContent>
-        <button type="button" class="btn btn-secondary" @onclick="HandleCancel">@CancelButtonText</button>
-        <button type="button" class="btn @ConfirmButtonClass" @onclick="HandleConfirm">@ConfirmButtonText</button>
-    </FooterContent>
-</Modal>
+@if (ShowModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog @GetModalSizeClass(ModalSize)" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@DialogTitle</h5>
+                    @* Não queremos um botão de fechar padrão na parte superior,
+                       mas você pode adicioná-lo aqui se desejar, e associá-lo a HandleCancel. *@
+                    @* <button type="button" class="btn-close" @onclick="HandleCancel"></button> *@
+                </div>
+                <div class="modal-body">
+                    <p>@Message</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HandleCancel">@CancelButtonText</button>
+                    <button type="button" class="btn @ConfirmButtonClass" @onclick="HandleConfirm">@ConfirmButtonText</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
+    // Parâmetros que podem ser definidos ao declarar o componente no Razor
     [Parameter] public string DialogTitle { get; set; } = "Confirmação";
-    [Parameter] public string Message { get; set; }
+    [Parameter] public string Message { get; set; } = "Tem certeza que deseja continuar?";
     [Parameter] public string ConfirmButtonText { get; set; } = "Confirmar";
     [Parameter] public string CancelButtonText { get; set; } = "Cancelar";
-    [Parameter] public string ConfirmButtonClass { get; set; } = "btn-primary"; // e.g., btn-danger for destructive actions
-    [Parameter] public ModalSize ModalSize { get; set; } = ModalSize.Small; // Confirmações geralmente são pequenas
+    [Parameter] public string ConfirmButtonClass { get; set; } = "btn-primary"; // Ex: btn-danger para ações destrutivas
+    [Parameter] public ModalS ModalSize { get; set; } = ModalS.Small; // Confirmações geralmente são pequenas
 
+    // Callbacks para notificar o componente pai sobre a ação do usuário
     [Parameter] public EventCallback OnConfirm { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
-    private Modal modalInstance;
+    // Propriedade interna para controlar a visibilidade do modal
+    private bool ShowModal { get; set; } = false;
 
-    public Task Show(string title = null, string message = null, string confirmText = null, string cancelText = null, string confirmClass = null)
+    /// <summary>
+    /// Exibe o diálogo de confirmação com os parâmetros fornecidos.
+    /// Este é o método que você chamará usando a referência (@ref).
+    /// </summary>
+    /// <param name="title">O título do diálogo.</param>
+    /// <param name="message">A mensagem a ser exibida no corpo do diálogo.</param>
+    /// <param name="confirmText">O texto do botão de confirmação (opcional).</param>
+    /// <param name="cancelText">O texto do botão de cancelamento (opcional).</param>
+    /// <param name="confirmClass">A classe CSS para o botão de confirmação (opcional, ex: "btn-danger").</param>
+    public void Show(string title, string message, string? confirmText = null, string? cancelText = null, string? confirmClass = null)
     {
-        DialogTitle = title ?? DialogTitle;
-        Message = message ?? Message;
+        // Atualiza as propriedades do componente com os novos valores
+        // Se um valor não for fornecido, mantém o valor padrão ou o último valor.
+        DialogTitle = title;
+        Message = message;
         ConfirmButtonText = confirmText ?? ConfirmButtonText;
         CancelButtonText = cancelText ?? CancelButtonText;
         ConfirmButtonClass = confirmClass ?? ConfirmButtonClass;
 
-        return modalInstance.Open();
+        ShowModal = true;
+        StateHasChanged(); // Força o Blazor a renderizar o modal
     }
 
-    public Task Hide()
+    /// <summary>
+    /// Oculta o diálogo de confirmação.
+    /// </summary>
+    public void Hide()
     {
-        return modalInstance.Close();
+        ShowModal = false;
+        StateHasChanged(); // Força o Blazor a renderizar, ocultando o modal
     }
 
+    // Lógica para o clique do botão "Confirmar"
     private async Task HandleConfirm()
     {
-        await modalInstance.Close(); // Fecha o modal primeiro
+        Hide(); // Esconde o modal primeiro
         if (OnConfirm.HasDelegate)
         {
-            await OnConfirm.InvokeAsync();
+            await OnConfirm.InvokeAsync(); // Invoca o EventCallback OnConfirm
         }
     }
 
+    // Lógica para o clique do botão "Cancelar"
     private async Task HandleCancel()
     {
-        await modalInstance.Close(); // Fecha o modal
+        Hide(); // Esconde o modal
         if (OnCancel.HasDelegate)
         {
-            await OnCancel.InvokeAsync();
+            await OnCancel.InvokeAsync(); // Invoca o EventCallback OnCancel
         }
+    }
+
+    // Método auxiliar para aplicar classes de tamanho do modal
+    public string GetModalSizeClass(ModalS size)
+    {
+        return size switch
+        {
+            ModalS.Small => "modal-sm",
+            ModalS.Large => "modal-lg",
+            ModalS.ExtraLarge => "modal-xl",
+            _ => "", // Default, sem classe extra
+        };
+    }
+
+    // Definição do enum ModalSize (pode ser movido para um arquivo compartilhado se usado em múltiplos lugares)
+    public enum ModalS
+    {
+        Default,
+        Small,
+        Large,
+        ExtraLarge
     }
 }

@@ -1,0 +1,106 @@
+﻿@page "/configuracoes"
+@using JT_Classes.Comum
+@using JT_Finance.Shared.Services
+@inject ToastService ToastService
+
+<h3 class="mb-3">Configurações do Utilizador</h3>
+
+@if (configuracaoAtual == null)
+{
+    <p>A carregar configurações...</p>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <EditForm Model="configuracaoAtual" OnValidSubmit="HandleSalvarConfiguracoes">
+                <DataAnnotationsValidator />
+
+                <h5 class="card-title">Aparência</h5>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="tema" class="form-label">Tema Visual</label>
+                        <InputSelect id="tema" class="form-select" @bind-Value="configuracaoAtual.Tema">
+                            <option value="Claro">Claro</option>
+                            <option value="Escuro">Escuro</option>
+                        </InputSelect>
+                    </div>
+                </div>
+                <hr />
+
+                <h5 class="card-title">Preferências de Exibição</h5>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="itensPorPagina" class="form-label">Itens por Página nos Grids</label>
+                        <InputNumber id="itensPorPagina" class="form-control" @bind-Value="configuracaoAtual.ItensPorPagina" />
+                    </div>
+                </div>
+                <hr />
+
+                <h5 class="card-title">Notificações</h5>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <InputCheckbox id="notificacoes" class="form-check-input" @bind-Value="configuracaoAtual.NotificacoesEmail" />
+                            <label class="form-check-label" for="notificacoes">Receber notificações por e-mail</label>
+                        </div>
+                    </div>
+                </div>
+                <hr />
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save-fill me-2"></i>Salvar Alterações
+                    </button>
+                </div>
+
+            </EditForm>
+        </div>
+    </div>
+}
+
+
+@code {
+    private Configuracao? configuracaoAtual;
+
+    protected override void OnInitialized()
+    {
+        CarregarConfiguracoes();
+    }
+
+    private void CarregarConfiguracoes()
+    {
+        configuracaoAtual = new Configuracao();
+
+        // Se nenhuma configuração for encontrada, cria uma nova com valores padrão.
+        if (configuracaoAtual == null)
+        {
+            configuracaoAtual = new Configuracao { Id = 1 };
+            // Salva esta configuração inicial para que exista no banco para futuras edições.
+            configuracaoAtual.Salvar();
+        }
+    }
+
+    private void HandleSalvarConfiguracoes()
+    {
+        if (configuracaoAtual == null) return;
+
+        try
+        {
+            bool sucesso = configuracaoAtual.Salvar();
+
+            if (sucesso)
+            {
+                ToastService.ShowSuccess("Sucesso!", "As suas configurações foram guardadas.");
+            }
+            else
+            {
+                ToastService.ShowError("Erro!", "Não foi possível guardar as configurações.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Erro Inesperado!", $"Ocorreu um problema: {ex.Message}");
+        }
+    }
+}
