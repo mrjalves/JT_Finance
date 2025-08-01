@@ -1,0 +1,42 @@
+﻿@inject IJSRuntime JSRuntime
+
+<div class="chart-container" style="position: relative; height:40vh; width:80vw; max-width: 600px; margin: auto;">
+    <canvas id="@ChartId"></canvas>
+</div>
+
+@code {
+    [Parameter]
+    public string ChartId { get; set; } = "myChart";
+
+    [Parameter]
+    public ChartType Type { get; set; } = ChartType.Bar;
+
+    [Parameter]
+    public List<string> Labels { get; set; } = new();
+
+    [Parameter]
+    public List<ChartDataset> Datasets { get; set; } = new();
+
+    [Parameter]
+    public string Title { get; set; } = "Meu Gráfico";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Renderiza o gráfico apenas na primeira vez ou se os dados forem válidos.
+        if (firstRender && Datasets.Any() && Datasets.First().Data.Any())
+        {
+            await RenderChart();
+        }
+    }
+
+    public async Task RenderChart()
+    {
+        await JSRuntime.InvokeVoidAsync("blazorCharts.createChart",
+            ChartId,
+            Type.ToString().ToLower(),
+            Labels,
+            Datasets,
+            Title);
+    }
+  
+}

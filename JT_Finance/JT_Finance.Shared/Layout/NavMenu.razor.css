@@ -204,7 +204,7 @@
 /* Ícones padronizados para todos os links */
 .sidebar-nav .nav-link i,
 .sidebar-footer .nav-link i {
-    font-size: 1.5rem; /* Tamanho do ícone padronizado */
+    font-size: 1.3rem; /* Tamanho do ícone padronizado */
     flex-shrink: 0;
     width: 24px; /* Garante que todos os ícones ocupem o mesmo espaço */
     text-align: center;

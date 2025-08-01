@@ -1,5 +1,8 @@
 ﻿@page "/"
+@using JT_Classes
+@using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
+@using JT_Finance.Shared.Components.Charts
 @using JT_Finance.Shared.Services
 @inject IFormFactor FormFactor
 
@@ -37,122 +40,125 @@
 
 <hr />
 
+
 <div class="row mt-4">
-    <div class="col-lg-8 offset-lg-2 col-xl-6 offset-xl-3">
-        @if (dadosGraficoCarregados && despesaCategoriasValores != null && despesaCategoriasValores.Any())
-        {
-            <PieChart ChartId="despesasMensaisChart"
-                      Labels="despesaCategoriasLabels"
-                      DataValues="despesaCategoriasValores"
-                      Title="Distribuição de Despesas por Categoria (Mês Atual)" />
-        }
-        else if (dadosGraficoCarregados && (despesaCategoriasValores == null || !despesaCategoriasValores.Any()))
-        {
-            <div class="text-center p-4 border rounded bg-light">
-                <p class="mb-0">Não há dados de despesas para exibir no gráfico este mês.</p>
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                @if (dadosGraficoCarregados && datasetsGraficoPorTipo.Any() && datasetsGraficoPorTipo.First().Data.Any())
+                {
+                    <Chart ChartId="despesasPorTipoChart"
+                           Type="ChartType.Bar"
+                           Labels="despesaTiposLabels"
+                           Datasets="datasetsGraficoPorTipo"
+                           Title="Despesas por Tipo (Mês Atual)" />
+                }
+                else if (dadosGraficoCarregados)
+                {
+                    <div class="text-center p-4"><p>Não há dados de despesa por tipo.</p></div>
+                }
+                else
+                {
+                    <div class="text-center p-4"><p><em>Carregando...</em></p></div>
+                }
             </div>
-        }
-        else
-        {
-            <div class="text-center p-4">
-                <p class="mb-0"><em>Carregando dados do gráfico...</em></p>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                @if (dadosGraficoCarregados && datasetsGraficoPorCategoria.Any() && datasetsGraficoPorCategoria.First().Data.Any())
+                {
+                    <Chart ChartId="despesasPorCategoriaChart"
+                           Type="ChartType.Pie"
+                           Labels="despesaCategoriasLabels"
+                           Datasets="datasetsGraficoPorCategoria"
+                           Title="Despesas por Categoria (Mês Atual)" />
+                }
+                else if (dadosGraficoCarregados)
+                {
+                    <div class="text-center p-4"><p>Não há dados de despesa por categoria.</p></div>
+                }
+                else
+                {
+                    <div class="text-center p-4"><p><em>Carregando...</em></p></div>
+                }
             </div>
-        }
+        </div>
     </div>
 </div>
 
 
 @code {
-    // ---- INÍCIO DA MUDANÇA ----
     [CascadingParameter]
     public Func<string, Task>? SetPageTitleAsync { get; set; }
-    // ---- FIM DA MUDANÇA ----
 
-    // Variáveis para os cards de resumo
+    // --- Variáveis para os cards de resumo ---
     private decimal totalReceitas;
     private decimal totalDespesas;
     private decimal saldoAtual;
 
-    // Variáveis para o gráfico de pizza
-    private List<string> despesaCategoriasLabels = new List<string>();
-    private List<decimal> despesaCategoriasValores = new List<decimal>();
-    private bool dadosGraficoCarregados = false; // Flag para controlar a renderização do gráfico
+    // --- Variáveis para os Gráficos ---
+    private List<string> despesaTiposLabels = new();
+    private List<ChartDataset> datasetsGraficoPorTipo = new();
+
+    private List<string> despesaCategoriasLabels = new();
+    private List<ChartDataset> datasetsGraficoPorCategoria = new();
+
+    private bool dadosGraficoCarregados = false;
 
     protected override async Task OnInitializedAsync()
     {
-        // ---- INÍCIO DA MUDANÇA ----
-        // Chamada agora é assíncrona
         if (SetPageTitleAsync != null)
         {
             await SetPageTitleAsync.Invoke("Dashboard");
         }
-        // ---- FIM DA MUDANÇA ----
-
         await LoadDashboardData();
     }
 
-    // TODO: Substituir pela chamada real aos seus serviços da camada de negócios/dados
     private async Task LoadDashboardData()
     {
-        // Simulação de carregamento de dados
-        dadosGraficoCarregados = false; // Reseta a flag antes de carregar
-        await Task.Delay(150); // Simula uma latência de rede/DB um pouco maior para ver o "Carregando..."
+        dadosGraficoCarregados = false;
+        await InvokeAsync(StateHasChanged);
 
-        totalReceitas = await GetTotalReceitasMesAtualAsync_Simulated();
-        totalDespesas = await GetTotalDespesasMesAtualAsync_Simulated();
-        saldoAtual = totalReceitas - totalDespesas;
+        await Task.Run(() =>
+        {
+            var mesAtual = DateTime.Now;
 
-        // Carregar dados para o gráfico de pizza
-        var despesasPorCategoria = await GetDespesasPorCategoriaMesAtualAsync_Simulated();
-        if (despesasPorCategoria != null)
-        {
-            despesaCategoriasLabels = despesasPorCategoria.Keys.ToList();
-            despesaCategoriasValores = despesasPorCategoria.Values.ToList();
-        }
-        else
-        {
-            despesaCategoriasLabels = new List<string>();
-            despesaCategoriasValores = new List<decimal>();
-        }
+            // --- CARREGA DADOS DOS CARDS ---
+            totalReceitas = Receita.GetTotalReceitasMes(mesAtual);
+            totalDespesas = Despesa.GetTotalDespesaMes(mesAtual);
+            saldoAtual = totalReceitas - totalDespesas;
+
+            // --- CARREGA DADOS PARA O GRÁFICO DE TIPO (BARRAS) ---
+            var despesasPorTipo = Despesa.GetDespesasAgrupadasPorTipo(mesAtual);
+            datasetsGraficoPorTipo.Clear();
+            if (despesasPorTipo.Any())
+            {
+                despesaTiposLabels = despesasPorTipo.Select(d => d.Tipo).ToList();
+                datasetsGraficoPorTipo.Add(new ChartDataset
+                {
+                    Label = "Total por Tipo",
+                    Data = despesasPorTipo.Select(d => d.ValorTotal).ToList(),
+                    BackgroundColor = new List<string> { "rgba(54, 162, 235, 0.7)", "rgba(255, 99, 132, 0.7)" }
+                });
+            }
+
+            // --- CARREGA DADOS PARA O GRÁFICO DE CATEGORIA (PIZZA) ---
+            var despesasPorCategoria = Despesa.GetDespesasAgrupadasPorCategoria(mesAtual);
+            datasetsGraficoPorCategoria.Clear();
+            if (despesasPorCategoria.Any())
+            {
+                despesaCategoriasLabels = despesasPorCategoria.Select(d => d.Categoria).ToList();
+                datasetsGraficoPorCategoria.Add(new ChartDataset
+                {
+                    Data = despesasPorCategoria.Select(d => d.ValorTotal).ToList()
+                });
+            }
+        });
+
         dadosGraficoCarregados = true;
-        StateHasChanged(); // Notifica o componente que os dados foram atualizados e precisa re-renderizar
-    }
-
-    private async Task<decimal> GetTotalReceitasMesAtualAsync_Simulated()
-    {
-        // Simulação: Em um cenário real, você chamaria seu serviço aqui.
-        // Ex: return await _meuServicoFinanceiro.GetTotalReceitasAsync(DateTime.Now.Month, DateTime.Now.Year);
-        await Task.Delay(10); // Simula trabalho
-        Random rnd = new Random();
-        return (decimal)(rnd.Next(5000, 15000) + rnd.NextDouble());
-    }
-
-    private async Task<decimal> GetTotalDespesasMesAtualAsync_Simulated()
-    {
-        // Simulação: Em um cenário real, você chamaria seu serviço aqui.
-        // Ex: return await _meuServicoFinanceiro.GetTotalDespesasAsync(DateTime.Now.Month, DateTime.Now.Year);
-        await Task.Delay(10); // Simula trabalho
-        Random rnd = new Random();
-        return (decimal)(rnd.Next(2000, 10000) + rnd.NextDouble());
-    }
-
-    private async Task<Dictionary<string, decimal>> GetDespesasPorCategoriaMesAtualAsync_Simulated()
-    {
-        await Task.Delay(20); // Simula trabalho
-        Random rnd = new Random();
-        // Simula chance de não haver despesas
-        if (rnd.Next(0, 5) == 0)
-        {
-            return new Dictionary<string, decimal>(); // Retorna vazio
-        }
-        return new Dictionary<string, decimal>
-        {
-            { "Alimentação", (decimal)(rnd.Next(200, 800) + rnd.NextDouble()) },
-            { "Transporte", (decimal)(rnd.Next(50, 300) + rnd.NextDouble()) },
-            { "Moradia", (decimal)(rnd.Next(300, 1200) + rnd.NextDouble()) },
-            { "Lazer", (decimal)(rnd.Next(30, 250) + rnd.NextDouble()) },
-            { "Saúde", (decimal)(rnd.Next(0, 150) + rnd.NextDouble()) },
-            { "Outros", (decimal)(rnd.Next(20, 200) + rnd.NextDouble()) }
-        };
+        await InvokeAsync(StateHasChanged);
     }
 }

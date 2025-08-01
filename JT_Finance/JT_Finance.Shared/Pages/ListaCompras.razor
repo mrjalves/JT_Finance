@@ -64,7 +64,7 @@
             }
         </td>
         <td class="text-end">
-            <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirModalEditarItem(item)" disabled="@item.Comprado">Editar</button>
+            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => AbrirModalEditarItem(item)" disabled="@item.Comprado">Editar</button>
             <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoItem(item.Id)">Remover</button>
         </td>
     </RowTemplate>

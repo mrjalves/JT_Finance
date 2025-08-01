@@ -1,7 +1,7 @@
 ﻿@page "/gerenciar-categorias"
-@inject IJSRuntime JSRuntime
-
 @using JT_Classes
+@using JT_Finance.Shared.Services
+@inject ToastService ToastService
 
 <div class="container mt-4">
     <div class="row">
@@ -57,10 +57,10 @@
                                             <td>@opt.Descricao</td>
                                             <td class="text-end">
                                                 <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => AbrirModalParaEditar(opt)">
-                                                    <i class="bi bi-pencil-square"></i>
+                                                    <i class="bi bi-pencil-fill"></i>
                                                 </button>
                                                 <button class="btn btn-sm btn-outline-danger" @onclick="() => ExcluirOpcao(opt)">
-                                                    <i class="bi bi-trash3-fill"></i>
+                                                    <i class="bi bi-trash-fill"></i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -106,12 +106,12 @@
     </div>
     <div class="modal-backdrop fade show"></div>
 }
-
+<ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoCategoria" />
 @code {
     [CascadingParameter]
     public Func<string, Task>? SetPageTitleAsync { get; set; }
     private Categoria categoriaRepository = new Categoria();
-
+    private ConfirmDialog confirmDeleteDialog = new();
     // ALTERAÇÃO: A estrutura agora guarda o Nome de Exibição e o Tipo de Entidade.
     private Dictionary<string, (string DisplayName, string EntityType)> papeisDeCategoria = new()
     {
@@ -139,7 +139,7 @@
     private bool isLoading = true;
     private bool showModal = false;
     private string modalTitle = string.Empty;
-    private Categoria opcaoEmEdicao = new();
+    private Categoria opcaoEmEdicao;
 
     protected override async Task OnInitializedAsync()
     {
@@ -178,10 +178,8 @@
         var (displayName, entityType) = papeisDeCategoria[selectedRole];
         modalTitle = $"Nova Opção para {displayName}";
 
-        opcaoEmEdicao = new Categoria()
+        opcaoEmEdicao = new Categoria(JT_Persistencia.Persistencia.StatusObjeto.Novo)
         {
-            Status = JT_Persistencia.Persistencia.StatusObjeto.Novo,
-            // ALTERAÇÃO: Preenche os valores dinamicamente
             TipoEntidade = entityType,
             Nome = selectedRole,
         };
@@ -206,28 +204,33 @@
 
     private async Task HandleSave()
     {
-        var categoriaExistente = categoriaRepository.CarregarPorId<Categoria>(opcaoEmEdicao.Id);
-        bool sucesso = categoriaRepository.Salvar();
-
-
-        if (sucesso)
+        if (opcaoEmEdicao.Salvar())
         {
             FecharModal();
             await CarregarOpcoes();
+            ToastService.ShowSuccess("Salvo!", "A Categoria foi salva com sucesso.");
         }
         else
         {
-            Console.WriteLine("Falha ao salvar a opção.");
+            ToastService.ShowError("Erro!", "Não foi possível salvar a Categoria.");
         }
     }
 
     private async Task ExcluirOpcao(Categoria opcaoParaExcluir)
     {
-        var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", $"Você tem certeza que deseja excluir a opção '{opcaoParaExcluir.Descricao}'?");
-
-        if (confirmado && categoriaRepository.Excluir(opcaoParaExcluir))
+        opcaoEmEdicao = opcaoParaExcluir;
+        confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover esta receita?");
+    }
+    private async Task EfetuarRemocaoCategoria()
+    {
+        if (opcaoEmEdicao.Excluir(opcaoEmEdicao))
         {
-            await CarregarOpcoes();
+            ToastService.ShowSuccess("Removida!", "A Categoria foi removida.");
+            await CarregarOpcoes(); 
+        }
+        else
+        {
+            ToastService.ShowError("Erro!", "Não foi possível remover a Categoria.");
         }
     }
 }

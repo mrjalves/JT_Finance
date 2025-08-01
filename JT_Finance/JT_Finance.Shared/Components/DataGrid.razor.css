@@ -13,7 +13,9 @@
         font-size: 0.75rem;
         letter-spacing: 0.5px;
     }
-
+    .table tr{
+        font-size:small;
+    }
     .table td {
         vertical-align: middle;
     }

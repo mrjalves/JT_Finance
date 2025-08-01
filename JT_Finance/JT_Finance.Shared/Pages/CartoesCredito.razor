@@ -36,11 +36,11 @@
             }
         </td>
             <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary" @onclick="() => AbrirModalParaEditarCartao(cartao.Id)" @onclick:stopPropagation="true">
-                    <i class="bi bi-pencil-fill me-1"></i>Editar
+                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => AbrirModalParaEditarCartao(cartao.Id)" @onclick:stopPropagation="true">
+                    <i class="bi bi-pencil-fill me-1"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoCartao(cartao.Id)" @onclick:stopPropagation="true">
-                    <i class="bi bi-trash-fill me-1"></i>Remover
+                    <i class="bi bi-trash-fill me-1"></i>
                 </button>
             </td>
     </RowTemplate>
