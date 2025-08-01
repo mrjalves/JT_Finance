@@ -10,4 +10,7 @@ builder.Services.AddSingleton<IFormFactor, FormFactor>();
 // Register ToastService
 builder.Services.AddScoped<ToastService>();
 
+// Register FiltroService
+builder.Services.AddScoped<FiltroService>();
+
 await builder.Build().RunAsync();

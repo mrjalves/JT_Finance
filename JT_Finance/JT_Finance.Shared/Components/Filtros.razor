@@ -1,5 +1,76 @@
-﻿<h3>Filtros</h3>
+@inject FiltroService FiltroService
+@implements IDisposable
+
+<div class="filtros-container @(FiltroService.FiltrosVisiveis ? "visible" : "")">
+    <div class="filtros-header">
+        <h3>Filtros</h3>
+        <button class="btn-close" @onclick="FiltroService.ToggleFiltros" aria-label="Fechar"></button>
+    </div>
+    <div class="filtros-body">
+        @if (FiltroService.Filtros != null && FiltroService.Filtros.Any())
+        {
+            foreach (var filtro in FiltroService.Filtros)
+            {
+                <div class="mb-3">
+                    <label class="form-label">@filtro.Label</label>
+                    @switch (filtro.Type)
+                    {
+                        case "text":
+                            <input type="text" class="form-control"
+                                   value="@(filtro.Value as string)"
+                                   @onchange="(e) => filtro.Value = e.Value.ToString()" />
+                            break;
+                        case "date":
+                            <input type="date" class="form-control"
+                                   value="@(((DateTime?)filtro.Value)?.ToString("yyyy-MM-dd"))"
+                                   @onchange="(e) => { if (DateTime.TryParse(e.Value.ToString(), out var dt)) filtro.Value = dt; else filtro.Value = null; }" />
+                            break;
+                        case "select":
+                            <select class="form-select" @onchange="(e) => filtro.Value = e.Value.ToString()">
+                                <option value="">Selecione...</option>
+                                @foreach (var option in filtro.Options)
+                                {
+                                    <option value="@option.Key" selected="@(filtro.Value?.ToString() == option.Key)">@option.Value</option>
+                                }
+                            </select>
+                            break;
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <p>Nenhum filtro disponível para esta página.</p>
+        }
+    </div>
+    <div class="filtros-footer">
+        <button class="btn btn-secondary" @onclick="LimparFiltros">Limpar</button>
+        <button class="btn btn-primary" @onclick="AplicarFiltros">Aplicar</button>
+    </div>
+</div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        FiltroService.OnChange += StateHasChanged;
+    }
 
+    private async Task AplicarFiltros()
+    {
+        await FiltroService.AplicarFiltros();
+    }
+
+    private async Task LimparFiltros()
+    {
+        foreach (var filtro in FiltroService.Filtros)
+        {
+            filtro.Value = null;
+        }
+        await FiltroService.AplicarFiltros();
+    }
+
+    public void Dispose()
+    {
+        FiltroService.OnChange -= StateHasChanged;
+    }
 }

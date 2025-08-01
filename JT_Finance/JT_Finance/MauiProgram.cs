@@ -21,6 +21,7 @@ namespace JT_Finance
 
             // Register ToastService
             builder.Services.AddSingleton<ToastService>();
+            builder.Services.AddSingleton<FiltroService>();
 
             builder.Services.AddMauiBlazorWebView();
 

@@ -1,5 +1,8 @@
 @using Microsoft.AspNetCore.Components.Routing
+@using JT_Finance.Shared.Services
+@using JT_Finance.Shared.Components
 @inject NavigationManager Navigation
+@inject FiltroService FiltroService
 
 <header class="header">
     <div class="header-start">
@@ -22,21 +25,8 @@
     </div>
     <div class="header-end">
         <div class="header-actions">
-
-            @if (isSearchVisible)
-            {
-                <input @ref="searchInputElement"
-                       type="text"
-                       class="search-input"
-                       placeholder="Pesquisar..."
-                       @onblur="HideSearchInput" />
-            }
-            else
-            {
-                <i class="bi bi-search action-icon" title="Pesquisar" @onclick="ShowSearchInput"></i>
-            }
-
-            <i class="bi bi-filter action-icon" title="Filtrar"></i>
+            <SearchFilter />
+            <i class="bi bi-filter action-icon" title="Filtrar" @onclick="FiltroService.ToggleFiltros"></i>
             <i class="bi bi-three-dots-vertical action-icon" title="Mais Opções"></i>
         </div>
     </div>
@@ -46,24 +36,8 @@
     [Parameter]
     public string PageTitle { get; set; } = "Dashboard";
 
-    private bool isSearchVisible = false;
-    private ElementReference searchInputElement;
-
     private bool IsHomePage()
     {
         return Navigation.Uri == Navigation.BaseUri;
-    }
-
-    private async Task ShowSearchInput()
-    {
-        isSearchVisible = true;
-        // Pequeno delay para garantir que o elemento exista no DOM antes de focar
-        await Task.Delay(50);
-        await searchInputElement.FocusAsync();
-    }
-
-    private void HideSearchInput()
-    {
-        isSearchVisible = false;
     }
 }

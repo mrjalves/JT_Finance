@@ -3,14 +3,18 @@
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Services
+@using JT_Finance.Shared.Models
 @using static JT_Finance.Shared.Components.Modal
+@using System.Text
 @inject ToastService ToastService
+@inject FiltroService FiltroService
+@implements IDisposable
 
 <button class="btn btn-primary mb-3 shadow-sm" @onclick="AbrirModalParaNovaDespesa">
     <i class="bi bi-plus-circle-fill me-2"></i>Nova Despesa
 </button>
 
-<DataGrid TItem="Despesa" Items="listaDespesas" IsLoading="isLoading">
+<DataGrid TItem="Despesa" Items="despesasFiltradas" IsLoading="isLoading">
     <HeaderTemplate>
         <th>Descrição</th>
         <th>Valor</th>
@@ -25,11 +29,8 @@
         <td>@despesa.Descricao</td>
         <td>@despesa.Valor.ToString("C")</td>
         <td>@despesa.DataDespesa.ToShortDateString()</td>
-
         <td>@despesa.CategoriaDespesa?.Descricao</td>
-
         <td>
-            @* Now checking despesa.EhDespesaCartaoCredito and accessing DetalhesCartaoCredito *@
             @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
             {
                 <span class="d-block">@despesa.DetalhesCartaoCredito.Cartao?.Nome</span>
@@ -40,7 +41,6 @@
                 <span class="text-muted">—</span>
             }
         </td>
-
         <td>
             @if (despesa.DespesaPaga)
             {
@@ -62,7 +62,7 @@
     </RowTemplate>
 
     <EmptyTemplate>
-        <p class="text-muted mb-0">Nenhuma despesa cadastrada ainda. Clique em "Nova Despesa" para começar.</p>
+        <p class="text-muted mb-0">Nenhuma despesa encontrada. Tente ajustar os filtros ou cadastre uma nova despesa.</p>
     </EmptyTemplate>
 </DataGrid>
 
@@ -73,7 +73,6 @@
             <EditForm Model="despesaAtual" OnValidSubmit="() => HandleSalvarDespesa(despesaAtual)">
                 <DataAnnotationsValidator />
                 <div class="form-check form-switch mb-3">
-                    @* Binding EhDespesaCartaoCredito now *@
                     <InputCheckbox id="isCardExpense" class="form-check-input" @bind-Value="despesaAtual.EhDespesaCartaoCredito" />
                     <label class="form-check-label" for="isCardExpense">É uma despesa de Cartão de Crédito?</label>
                 </div>
@@ -98,13 +97,11 @@
                         <ValidationMessage For="@(() => despesaAtual.DataDespesa)" />
                     </div>
                 </div>
-                @* Conditional rendering based on EhDespesaCartaoCredito *@
                 @if (despesaAtual.EhDespesaCartaoCredito && despesaAtual.DetalhesCartaoCredito != null)
                 {
                     <div class="row p-3 mb-3 bg-light border rounded animate__animated animate__fadeIn">
                         <div class="col-md-6 mb-3">
                             <label for="cartao" class="form-label">Cartão de Crédito</label>
-                            @* Binding to despesaAtual.DetalhesCartaoCredito.IdCartao *@
                             <InputSelect id="cartao" class="form-select" @bind-Value="despesaAtual.DetalhesCartaoCredito.IdCartao">
                                 <option value="0">Selecione um cartão...</option>
                                 @foreach (var cartao in listaCartoesCredito)
@@ -112,18 +109,15 @@
                                     <option value="@cartao.Id">@cartao.Nome</option>
                                 }
                             </InputSelect>
-                            @* Validation for the nested object's property *@
                             <ValidationMessage For="@(() => despesaAtual.DetalhesCartaoCredito.IdCartao)" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="parcelas" class="form-label">Quantidade de Parcelas</label>
-                            @* Binding to despesaAtual.DetalhesCartaoCredito.QuantidadeParcelas *@
                             <InputNumber id="parcelas" class="form-control" @bind-Value="despesaAtual.DetalhesCartaoCredito.QuantidadeParcelas" />
                             <ValidationMessage For="@(() => despesaAtual.DetalhesCartaoCredito.QuantidadeParcelas)" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="data_vencimento_fatura" class="form-label">Data Vencimento Fatura (Primeira Parcela)</label>
-                            @* Binding to despesaAtual.DetalhesCartaoCredito.DataVencimento *@
                             <InputDate id="data_vencimento_fatura" class="form-control" @bind-Value="despesaAtual.DetalhesCartaoCredito.DataVencimento" />
                             <ValidationMessage For="@(() => despesaAtual.DetalhesCartaoCredito.DataVencimento)" />
                         </div>
@@ -233,26 +227,23 @@
     [CascadingParameter]
     public Func<string, Task>? SetPageTitleAsync { get; set; }
 
-    // --- Variáveis de Estado da Página ---
     private bool isLoading = true;
-    // --- Referências de Componentes ---
     private Modal crudModal = new();
     private string modalTitle = "";
     private ConfirmDialog confirmDeleteDialog = new();
     private int? idDespesaParaRemover;
 
-    // --- Repositórios e Dados de Categoria ---
     private Despesa? despesaAtual;
-    private List<Despesa>? listaDespesas;
-    private List<Categoria> opcoesTipoDespesa;
-    private List<Categoria> opcoesCategoriaDespesa;
-    private List<CartaoCredito> listaCartoesCredito;
-    // --- Formulário Inline ---
+    private List<Despesa> listaTodasDespesas = new();
+    private List<Despesa> despesasFiltradas = new();
+    private List<Categoria> opcoesTipoDespesa = new();
+    private List<Categoria> opcoesCategoriaDespesa = new();
+    private List<CartaoCredito> listaCartoesCredito = new();
+
     private bool showNewTipoForm = false;
     private bool showNewCategoriaForm = false;
     private string newOptionDescription = "";
 
-    // --- Ciclo de Vida ---
     protected override async Task OnInitializedAsync()
     {
         if (SetPageTitleAsync != null)
@@ -260,6 +251,21 @@
             await SetPageTitleAsync.Invoke("Despesas");
         }
         await CarregarDependencias();
+        ConfigurarFiltros();
+        despesasFiltradas = new List<Despesa>(listaTodasDespesas);
+    }
+
+    private void ConfigurarFiltros()
+    {
+        var filtros = new List<FiltroItem>
+        {
+            new FiltroItem { Label = "Data Início", ColumnName = "DataDespesa", Type = "date" },
+            new FiltroItem { Label = "Data Fim", ColumnName = "DataDespesa", Type = "date" },
+            new FiltroItem { Label = "Categoria", ColumnName = "Categoria", Type = "select", Options = opcoesCategoriaDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
+            new FiltroItem { Label = "Tipo", ColumnName = "TipoDespesa", Type = "select", Options = opcoesTipoDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
+            new FiltroItem { Label = "Situação", ColumnName = "DespesaPaga", Type = "select", Options = new List<KeyValuePair<string, string>> { new("1", "Paga"), new("0", "Não Paga") } }
+        };
+        FiltroService.RegistrarFiltros(filtros, AplicarFiltros, AplicarPesquisa);
     }
 
     private async Task CarregarDependencias()
@@ -273,63 +279,68 @@
         isLoading = false;
     }
 
-    // --- Carregamento de Dados ---
-    private Task CarregarOpcoesDeCategoria()
-    {
-        try
-        {
-            opcoesTipoDespesa = Categoria.ListarPorPapel("Despesa", "TipoDespesa");
-            opcoesCategoriaDespesa = Categoria.ListarPorPapel("Despesa", "Categoria");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erro ao carregar opções de categoria: {ex.Message}");
-            opcoesTipoDespesa = new();
-            opcoesCategoriaDespesa = new();
-        }
-
-        return Task.CompletedTask;
-    }
-    private Task CarregarCartoesDeCredito()
-    {
-        try
-        {
-            listaCartoesCredito = new CartaoCredito().Consultar<CartaoCredito>("SELECT * FROM CartoesCredito WHERE Ativo = 1 ORDER BY Nome");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erro ao carregar cartões: {ex.Message}");
-            listaCartoesCredito = new List<CartaoCredito>();
-        }
-        return Task.CompletedTask;
-    }
-
-    // --- MODIFICAÇÃO CHAVE AQUI PARA CARREGAR DETALHES DO CARTÃO ---
-    private async Task CarregarDespesas()
+    private async Task CarregarDespesas(string whereClause = "")
     {
         isLoading = true;
-        listaDespesas = new Despesa().Consultar<Despesa>("SELECT * FROM Despesas ORDER BY DataDespesa DESC");
+        string query = $"SELECT * FROM Despesas {whereClause} ORDER BY DataDespesa DESC";
+        listaTodasDespesas = new Despesa().Consultar<Despesa>(query);
 
-        // Para cada despesa, se for de cartão, carregar os detalhes
-        foreach (var despesa in listaDespesas)
+        foreach (var despesa in listaTodasDespesas)
         {
             if (despesa.EhDespesaCartaoCredito)
             {
-                // Instancia DespesaCartaoCredito com o Id da Despesa para carregar os detalhes
                 despesa.DetalhesCartaoCredito = new DespesaCartaoCredito(despesa.Id);
-
-                // Carrega o objeto CartaoCredito se o DetalhesCartaoCredito foi carregado com sucesso
                 if (despesa.DetalhesCartaoCredito.IdCartao > 0)
                 {
                     despesa.DetalhesCartaoCredito.Cartao = new CartaoCredito(despesa.DetalhesCartaoCredito.IdCartao);
                 }
             }
         }
+        despesasFiltradas = new List<Despesa>(listaTodasDespesas);
         isLoading = false;
     }
 
+    private Task AplicarPesquisa(string searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            despesasFiltradas = new List<Despesa>(listaTodasDespesas);
+        }
+        else
+        {
+            despesasFiltradas = listaTodasDespesas
+                .Where(d => d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
 
-    // --- Ações do Modal ---
+    private async Task AplicarFiltros(List<FiltroItem> filtros)
+    {
+        var whereConditions = new List<string>();
+        var dataInicio = filtros.FirstOrDefault(f => f.Label == "Data Início")?.Value as DateTime?;
+        var dataFim = filtros.FirstOrDefault(f => f.Label == "Data Fim")?.Value as DateTime?;
+
+        if (dataInicio.HasValue) whereConditions.Add($"DataDespesa >= '{dataInicio.Value:yyyy-MM-dd}'");
+        if (dataFim.HasValue) whereConditions.Add($"DataDespesa <= '{dataFim.Value:yyyy-MM-dd}'");
+
+        foreach (var filtro in filtros.Where(f => f.Value != null && !string.IsNullOrEmpty(f.Value.ToString()) && f.Label != "Data Início" && f.Label != "Data Fim"))
+        {
+            whereConditions.Add($"{filtro.ColumnName} = {filtro.Value}");
+        }
+
+        string whereClause = whereConditions.Any() ? "WHERE " + string.Join(" AND ", whereConditions) : "";
+        await CarregarDespesas(whereClause);
+    }
+
+    public void Dispose()
+    {
+        FiltroService.OnFiltroAplicado -= AplicarFiltros;
+        FiltroService.OnSearchApplied -= AplicarPesquisa;
+    }
+
+    // --- Métodos de CRUD (permanecem majoritariamente os mesmos, mas operam em `listaTodasDespesas` e recarregam com `CarregarDespesas()`) ---
     private void AbrirModalParaNovaDespesa()
     {
         despesaAtual = new Despesa(JT_Persistencia.Persistencia.StatusObjeto.Novo);
@@ -339,7 +350,7 @@
 
     private void AbrirModalParaEditarDespesa(int id)
     {
-        despesaAtual = new Despesa(id); // O construtor de Despesa já deve carregar DetalhesCartaoCredito se for o caso
+        despesaAtual = new Despesa(id);
         modalTitle = "Editar Despesa";
         crudModal.Open();
     }
@@ -347,12 +358,11 @@
     private async Task HandleSalvarDespesa(Despesa despesa)
     {
         bool sucesso = despesa.Salvar();
-
         if (sucesso)
         {
             ToastService.ShowSuccess("Sucesso!", "Nova despesa salva.");
             await crudModal.Close();
-            await CarregarDespesas(); // Recarrega todas as despesas (agora com detalhes de cartão)
+            await CarregarDespesas();
         }
         else
         {
@@ -365,14 +375,11 @@
         if (idDespesaParaRemover.HasValue)
         {
             var despesaParaRemover = new Despesa(idDespesaParaRemover.Value);
-            // A exclusão da Despesa automaticamente excluirá os DetalhesCartaoCredito devido ao ON DELETE CASCADE no banco.
             var sucesso = despesaParaRemover.Excluir(despesaParaRemover);
-
             if (sucesso)
                 ToastService.ShowSuccess("Removida!", "A despesa foi removida.");
             else
                 ToastService.ShowError("Erro!", "Não foi possível remover a despesa.");
-
             idDespesaParaRemover = null;
             await CarregarDespesas();
         }
@@ -380,7 +387,8 @@
 
     private async Task HandleCancelarFormularioModal()
     {
-        despesaAtual.LimparReservaDeId(); // Limpa o ID reservado para evitar conflitos
+        if(despesaAtual?.Status == JT_Persistencia.Persistencia.StatusObjeto.Novo)
+            despesaAtual.LimparReservaDeId();
         despesaAtual = null;
         await crudModal.Close();
     }
@@ -391,20 +399,18 @@
         modalTitle = "";
         showNewTipoForm = false;
         showNewCategoriaForm = false;
-        newOptionDescription = ""; // Limpa a descrição para nova opção
+        newOptionDescription = "";
     }
 
-    private async Task ConfirmarRemocaoDespesa(int id)
+    private void ConfirmarRemocaoDespesa(int id)
     {
         idDespesaParaRemover = id;
         confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover esta despesa?");
     }
 
-    // --- Formulário Inline de Categorias ---
     private void ToggleInlineForm(string papel)
     {
         newOptionDescription = "";
-
         if (papel == "TipoDespesa")
         {
             showNewTipoForm = !showNewTipoForm;
@@ -424,39 +430,55 @@
             ToastService.ShowWarning("Atenção", "A descrição não pode estar vazia.");
             return;
         }
-
         var novaOpcao = new Categoria(JT_Persistencia.Persistencia.StatusObjeto.Novo)
         {
             TipoEntidade = "Despesa",
             Nome = papel,
             Descricao = newOptionDescription
         };
-
         bool sucesso = novaOpcao.Salvar();
-
         if (sucesso)
         {
             ToastService.ShowSuccess("Sucesso!", "Nova opção de categoria salva.");
-            await CarregarOpcoesDeCategoria(); // Recarrega as listas de categorias
+            await CarregarOpcoesDeCategoria();
+            if (papel == "TipoDespesa" && despesaAtual != null) despesaAtual.TipoDespesa = novaOpcao.Id;
+            else if (papel == "Categoria" && despesaAtual != null) despesaAtual.Categoria = novaOpcao.Id;
 
-            // Seleciona a nova opção no dropdown
-            if (papel == "TipoDespesa")
-            {
-                if (despesaAtual != null) despesaAtual.TipoDespesa = novaOpcao.Id;
-                showNewTipoForm = false;
-            }
-            else if (papel == "Categoria")
-            {
-                if (despesaAtual != null) despesaAtual.Categoria = novaOpcao.Id;
-                showNewCategoriaForm = false;
-            }
-
+            ToggleInlineForm(papel);
             newOptionDescription = "";
-            StateHasChanged(); // Força a UI a renderizar
+            StateHasChanged();
         }
         else
         {
             ToastService.ShowError("Erro!", "Não foi possível salvar a nova opção.");
         }
+    }
+    private Task CarregarOpcoesDeCategoria()
+    {
+        try
+        {
+            opcoesTipoDespesa = Categoria.ListarPorPapel("Despesa", "TipoDespesa");
+            opcoesCategoriaDespesa = Categoria.ListarPorPapel("Despesa", "Categoria");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar opções de categoria: {ex.Message}");
+            opcoesTipoDespesa = new();
+            opcoesCategoriaDespesa = new();
+        }
+        return Task.CompletedTask;
+    }
+    private Task CarregarCartoesDeCredito()
+    {
+        try
+        {
+            listaCartoesCredito = new CartaoCredito().Consultar<CartaoCredito>("SELECT * FROM CartoesCredito WHERE Ativo = 1 ORDER BY Nome");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar cartões: {ex.Message}");
+            listaCartoesCredito = new List<CartaoCredito>();
+        }
+        return Task.CompletedTask;
     }
 }

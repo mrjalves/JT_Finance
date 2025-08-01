@@ -1,0 +1,36 @@
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    border: none;
+    border-bottom: 2px solid var(--primary-color);
+    outline: none;
+    font-size: 1rem;
+    padding: 0.25rem 0.5rem;
+    background-color: transparent;
+    width: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    transition-delay: 0.1s;
+}
+
+.search-input.visible {
+    width: 250px;
+    opacity: 1;
+    visibility: visible;
+}
+
+.action-icon {
+    font-size: 1.4rem;
+    color: var(--text-color-light);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+    .action-icon:hover {
+        color: var(--text-color);
+    }

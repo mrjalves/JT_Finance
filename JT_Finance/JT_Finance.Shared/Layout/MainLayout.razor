@@ -1,4 +1,7 @@
-﻿@using JT_Finance.Shared.Components.Toasts
+@using JT_Finance.Shared.Components.Toasts
+@using JT_Finance.Shared.Components
+@using JT_Finance.Shared.Services
+@inject FiltroService FiltroService
 @inherits LayoutComponentBase
 
 @{
@@ -19,7 +22,8 @@
         <Footer/>
     </div>
 </div>
-<ToastContainer /> 
+<ToastContainer />
+<Filtros />
 
 @code {
     private bool _isSidebarExpanded = false;

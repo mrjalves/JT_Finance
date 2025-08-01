@@ -7,6 +7,9 @@
     background-color: var(--card-bg);
     height: 70px;
     flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1020; /* Below modals, but above other content */
 }
 
 /* Estilos do Breadcrumb */
@@ -59,20 +62,4 @@
 
     .action-icon:hover {
         color: var(--text-color);
-    }
-
-
-.search-input {
-    border: none;
-    border-bottom: 2px solid var(--primary-color);
-    outline: none;
-    font-size: 1rem;
-    padding: 0.25rem 0.5rem;
-    background-color: transparent;
-    width: 200px; /* Ou o tamanho que preferir */
-    transition: width 0.3s ease-in-out;
-}
-
-    .search-input:focus {
-        width: 250px;
     }

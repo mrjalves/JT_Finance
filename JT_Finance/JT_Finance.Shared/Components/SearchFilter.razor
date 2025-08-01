@@ -1,0 +1,47 @@
+@inject FiltroService FiltroService
+
+<div class="search-container">
+    <input @ref="searchInputElement"
+           type="text"
+           class="search-input @(isSearchVisible ? "visible" : "")"
+           placeholder="Pesquisar e pressionar Enter..."
+           @bind="searchTerm"
+           @onkeyup="HandleSearchKeyUp"
+           @onblur="HideSearchInput" />
+
+    @if (!isSearchVisible)
+    {
+        <i class="bi bi-search action-icon" title="Pesquisar" @onclick="ShowSearchInput"></i>
+    }
+</div>
+
+@code {
+    private bool isSearchVisible = false;
+    private string searchTerm = "";
+    private ElementReference searchInputElement;
+
+    private async Task ShowSearchInput()
+    {
+        isSearchVisible = true;
+        await Task.Delay(50);
+        await searchInputElement.FocusAsync();
+    }
+
+    private void HideSearchInput()
+    {
+        isSearchVisible = false;
+    }
+
+    private async Task HandleSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await FiltroService.AplicarPesquisa(searchTerm);
+            HideSearchInput();
+        }
+        else if (e.Key == "Escape")
+        {
+            HideSearchInput();
+        }
+    }
+}
