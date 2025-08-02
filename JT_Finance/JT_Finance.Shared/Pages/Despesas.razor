@@ -261,8 +261,8 @@
         {
             new FiltroItem { Label = "Data Início", ColumnName = "DataDespesa", Type = "date" },
             new FiltroItem { Label = "Data Fim", ColumnName = "DataDespesa", Type = "date" },
-            new FiltroItem { Label = "Categoria", ColumnName = "Categoria", Type = "select", Options = opcoesCategoriaDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
-            new FiltroItem { Label = "Tipo", ColumnName = "TipoDespesa", Type = "select", Options = opcoesTipoDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
+            new FiltroItem { Label = "Categoria", ColumnName = "ID_CATEGORIA_TIPO", Type = "select", Options = opcoesCategoriaDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
+            new FiltroItem { Label = "Tipo", ColumnName = "ID_CATEGORIA_SUB", Type = "select", Options = opcoesTipoDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
             new FiltroItem { Label = "Situação", ColumnName = "DespesaPaga", Type = "select", Options = new List<KeyValuePair<string, string>> { new("1", "Paga"), new("0", "Não Paga") } }
         };
         FiltroService.RegistrarFiltros(filtros, AplicarFiltros, AplicarPesquisa);
@@ -283,7 +283,7 @@
     {
         isLoading = true;
         string query = $"SELECT * FROM Despesas {whereClause} ORDER BY DataDespesa DESC";
-        listaTodasDespesas = new Despesa().Consultar<Despesa>(query);
+        listaTodasDespesas = new Despesa(JT_Persistencia.Persistencia.StatusObjeto.Carregando).Consultar<Despesa>(query);
 
         foreach (var despesa in listaTodasDespesas)
         {
@@ -332,6 +332,7 @@
 
         string whereClause = whereConditions.Any() ? "WHERE " + string.Join(" AND ", whereConditions) : "";
         await CarregarDespesas(whereClause);
+        StateHasChanged();
     }
 
     public void Dispose()
