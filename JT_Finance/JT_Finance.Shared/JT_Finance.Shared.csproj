@@ -17,22 +17,22 @@
 
   <ItemGroup>
     <Reference Include="JT_Aplicacao">
-      <HintPath>..\..\..\JT_BusinessLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_Aplicacao.dll</HintPath>
+      <HintPath>..\..\..\JT_ApplicationLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_Aplicacao.dll</HintPath>
     </Reference>
     <Reference Include="JT_Atributos">
-      <HintPath>..\..\..\JT_ApplicationLayer\JT_Peristencia\bin\Debug\net9.0\JT_Atributos.dll</HintPath>
+      <HintPath>..\..\..\JT_ApplicationLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_Atributos.dll</HintPath>
     </Reference>
     <Reference Include="JT_Classes">
-      <HintPath>..\..\..\JT_BusinessLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_Classes.dll</HintPath>
+      <HintPath>..\..\..\JT_ApplicationLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_Classes.dll</HintPath>
     </Reference>
     <Reference Include="JT_Dados">
-      <HintPath>..\..\..\JT_ApplicationLayer\JT_Peristencia\bin\Debug\net9.0\JT_Dados.dll</HintPath>
+      <HintPath>..\..\..\JT_ApplicationLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_Dados.dll</HintPath>
     </Reference>
     <Reference Include="JT_Persistencia">
-      <HintPath>..\..\..\JT_ApplicationLayer\JT_Peristencia\bin\Debug\net9.0\JT_Persistencia.dll</HintPath>
+      <HintPath>..\..\..\JT_ApplicationLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_Persistencia.dll</HintPath>
     </Reference>
     <Reference Include="JT_RegrasNegocios">
-      <HintPath>..\..\..\JT_BusinessLayer\RegraNegocios\bin\Debug\net9.0\JT_RegrasNegocios.dll</HintPath>
+      <HintPath>..\..\..\JT_ApplicationLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_RegrasNegocios.dll</HintPath>
     </Reference>
   </ItemGroup>
 
