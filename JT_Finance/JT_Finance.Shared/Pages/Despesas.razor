@@ -19,6 +19,8 @@
         <th>Descrição</th>
         <th>Valor</th>
         <th>Data</th>
+        <th>Data Vencimento</th>
+        <th>Tipo</th>
         <th>Categoria</th>
         <th>Cartão / Parcela</th>
         <th>Paga</th>
@@ -29,6 +31,17 @@
         <td>@despesa.Descricao</td>
         <td>@despesa.Valor.ToString("C")</td>
         <td>@despesa.DataDespesa.ToShortDateString()</td>
+        <td>
+            @if(despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
+            {
+                @despesa.DetalhesCartaoCredito.DataVencimento.ToShortDateString()
+            }
+            else
+            {
+                <span class= "text-muted" >—</span>
+            }
+        </td>
+        <td>@despesa.CategoriaTipoDespesa?.Descricao</td>
         <td>@despesa.CategoriaDespesa?.Descricao</td>
         <td>
             @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
