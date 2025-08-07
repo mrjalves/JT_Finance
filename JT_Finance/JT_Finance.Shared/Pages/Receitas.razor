@@ -37,6 +37,10 @@
             }
         </td>
         <td class="text-end">
+            <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Receita" @onclick="() => DuplicarReceita(receita)">
+                <i class="bi bi-copy"></i>
+            </button>
+
             <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => AbrirModalParaEditarReceita(receita)">
                 <i class="bi bi-pencil-fill me-1"></i>
             </button>
@@ -257,7 +261,7 @@
     {
         idReceitaParaRemover = id;
         confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover esta receita?");
-       
+
     }
 
     private async Task EfetuarRemocaoReceita()
@@ -277,7 +281,19 @@
             idReceitaParaRemover = null;
         }
     }
-
+    private async Task DuplicarReceita(Receita receita)
+    {
+        var result = receita.Duplicar();
+        if (result)
+        {
+            ToastService.ShowSuccess("Duplicada!", "A receita foi duplicada.");
+            await CarregarDependencias();
+        }
+        else
+        {
+            ToastService.ShowError("Erro!", "Não foi possível duplicar a receita.");
+        }
+    }
     private void ToggleInlineForm(string papel)
     {
         newOptionDescription = "";

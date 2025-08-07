@@ -1,10 +1,16 @@
 ﻿@page "/fatura/{CartaoId:int}"
+@using System.Linq
 @using JT_Classes.Financeiro
 @inject NavigationManager NavigationManager
 
 @if (isLoading)
 {
-    <p><em>Carregando fatura...</em></p>
+    <div class="text-center p-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2"><em>Carregando faturas...</em></p>
+    </div>
 }
 else if (cartao == null)
 {
@@ -19,137 +25,185 @@ else if (cartao == null)
 }
 else
 {
+    <!-- CABEÇALHO DA PÁGINA -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3>Despesas do Cartão: @cartao.Nome</h3>
+        <h3>Faturas do Cartão: @cartao.Nome</h3>
         <button class="btn btn-outline-secondary" @onclick="@(() => NavigationManager.NavigateTo("cartoes-credito"))">
             <i class="bi bi-arrow-left-circle me-2"></i>Voltar
         </button>
     </div>
 
+    <!-- RESUMO GERAL -->
     <div class="card shadow-sm mb-4">
-        <div class="card-header">
-            Resumo da Fatura
+        <div class="card-header bg-light">
+            Resumo Geral
         </div>
         <div class="card-body">
-            <h5 class="card-title">Total das Despesas: @totalFatura.ToString("C")</h5>
-            <p class="card-text">Exibindo @listaDespesas?.Count despesa(s) para este cartão.</p>
+            <h5 class="card-title">Total em Aberto: @totalGeral.ToString("C")</h5>
+            <p class="card-text text-muted">Exibindo @faturas.Count fatura(s) com um total de @faturas.SelectMany(f => f.Lancamentos).Count() lançamento(s).</p>
         </div>
     </div>
 
-    <DataGrid TItem="Despesa" Items="listaDespesas" IsLoading="isLoading">
-        <HeaderTemplate>
-            <th>Descrição</th>
-            <th>Data Despesa</th>
-            <th>Valor</th>
-            <th>Parcela</th>
-            <th>Vencimento Parcela</th> @* Adicionando Data de Vencimento da Parcela *@
-            <th>Paga</th>
-        </HeaderTemplate>
-        <RowTemplate Context="despesa">
-            <td>@despesa.Descricao</td>
-            <td>@despesa.DataDespesa.ToShortDateString()</td>
-            <td>@despesa.Valor.ToString("C")</td>
-            <td>
-                @* Acessando NumeroParcela via DetalhesCartaoCredito *@
-                @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
-                {
-                    @despesa.DetalhesCartaoCredito.NumeroParcela
-                }
-                else
-                {
-                    <span class="text-muted">—</span> @* Caso não tenha detalhes de cartão (improvável aqui, mas bom para robustez) *@
-                }
-            </td>
-            <td>
-                @* Acessando DataVencimento via DetalhesCartaoCredito *@
-                @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
-                {
-                    @despesa.DetalhesCartaoCredito.DataVencimento.ToShortDateString()
-                }
-                else
-                {
-                    <span class="text-muted">—</span>
-                }
-            </td>
-            <td>
-                @* Acessando ParcelaPaga via DetalhesCartaoCredito *@
-                @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null && despesa.DetalhesCartaoCredito.ParcelaPaga)
-                {
-                    <span class="badge bg-success">Sim</span>
-                }
-                else if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null && !despesa.DetalhesCartaoCredito.ParcelaPaga)
-                {
-                    <span class="badge bg-danger">Não</span>
-                }
-                else
-                {
-                    @* Se por algum motivo não for despesa de cartão ou não tiver detalhes,
-                       você pode decidir como exibir. Talvez despesa.DespesaPaga ainda seja relevante aqui?
-                       Pelo contexto, todas as despesas nessa página serão de cartão. *@
-                    <span class="text-muted">N/A</span>
-                }
-            </td>
-        </RowTemplate>
-        <EmptyTemplate>
-            <p class="text-muted fst-italic">Nenhuma despesa encontrada para este cartão.</p>
-        </EmptyTemplate>
-    </DataGrid>
+    <!-- TABELA DE FATURAS EXPANSÍVEIS -->
+    @if (faturas.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 5%;"></th> <!-- Coluna para o botão de expandir -->
+                        <th>Vencimento</th>
+                        <th>Valor da Fatura</th>
+                        <th class="text-center">Lançamentos</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var fatura in faturas)
+                    {
+                        <!-- LINHA PRINCIPAL DA FATURA (SEMPRE VISÍVEL) -->
+                        <tr @onclick="() => AlternarVisibilidadeFatura(fatura)" style="cursor: pointer;">
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary border-0">
+                                    <i class="bi @(fatura.EstaExpandida ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                                </button>
+                            </td>
+                            <td><strong>@fatura.DataVencimento.ToString("MMMM yyyy")</strong></td>
+                            <td><strong>@fatura.ValorTotal.ToString("C")</strong></td>
+                            <td class="text-center"><span class="badge bg-info rounded-pill">@fatura.QuantidadeLancamentos</span></td>
+                            <td class="text-center">
+                                @if(fatura.DataVencimento < DateTime.Today && !fatura.EstaPaga) {
+                                    <span class="badge bg-danger">Vencida</span>
+                                } else if (fatura.EstaPaga) {
+                                    <span class="badge bg-success">Paga</span>
+                                } else {
+                                    <span class="badge bg-warning text-dark">Em Aberto</span>
+                                }
+                            </td>
+                        </tr>
+
+                        <!-- LINHA DE DETALHES (EXPANSÍVEL) -->
+                        @if (fatura.EstaExpandida)
+                        {
+                            <tr>
+                                <td colspan="5" class="p-0">
+                                    <div class="p-3 bg-light">
+                                        <table class="table table-sm table-bordered mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Descrição</th>
+                                                    <th>Data da Compra</th>
+                                                    <th>Valor</th>
+                                                    <th class="text-center">Parcela</th>
+                                                    <th class="text-center">Paga</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var despesa in fatura.Lancamentos)
+                                                {
+                                                    <tr>
+                                                        <td>@despesa.Descricao</td>
+                                                        <td>@despesa.DataDespesa.ToShortDateString()</td>
+                                                        <td>@despesa.Valor.ToString("C")</td>
+                                                        <td class="text-center">@despesa.DetalhesCartaoCredito?.NumeroParcela</td>
+                                                        <td class="text-center">
+                                                            @if (despesa.DetalhesCartaoCredito?.ParcelaPaga == true)
+                                                            {
+                                                                <span class="badge bg-success">Sim</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="badge bg-danger">Não</span>
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Nenhuma despesa encontrada para este cartão.
+        </div>
+    }
 }
 
 @code {
     [Parameter]
     public int CartaoId { get; set; }
+
     [CascadingParameter]
     public Func<string, Task>? SetPageTitleAsync { get; set; }
+
     private CartaoCredito? cartao;
-    private List<Despesa>? listaDespesas; // Continua sendo lista de Despesa, mas com DetalhesCartaoCredito populado
-    private decimal totalFatura = 0;
+    private List<FaturaViewModel> faturas = new();
+    private decimal totalGeral = 0;
     private bool isLoading = true;
+
+    /// <summary>
+    /// Modelo de visualização para agrupar despesas em uma única fatura.
+    /// </summary>
+    public class FaturaViewModel
+    {
+        public DateTime DataVencimento { get; set; }
+        public decimal ValorTotal => Lancamentos.Sum(l => l.Valor);
+        public int QuantidadeLancamentos => Lancamentos.Count;
+        public List<Despesa> Lancamentos { get; set; } = new();
+        public bool EstaExpandida { get; set; } = false; // Começa recolhida por padrão
+        public bool EstaPaga => Lancamentos.All(l => l.DetalhesCartaoCredito?.ParcelaPaga == true);
+    }
 
     protected override async Task OnInitializedAsync()
     {
         isLoading = true;
-        await Task.Yield(); // Permite a UI renderizar o "Carregando..."
         if (SetPageTitleAsync != null)
         {
-            await SetPageTitleAsync.Invoke("Fatura");
+            await SetPageTitleAsync.Invoke("Faturas do Cartão");
         }
 
-        // 1. Carrega os detalhes do cartão
+        // Simula o carregamento para a UI renderizar o spinner
+        await Task.Yield(); 
+
         cartao = new CartaoCredito(CartaoId);
 
         if (cartao != null && cartao.Id > 0)
         {
-            // 2. Obtém as despesas de cartão (agora elas virão com DetalhesCartaoCredito populados)
-            listaDespesas = cartao.ObterDespesas();
+            var todasDespesas = cartao.ObterDespesas() ?? new List<Despesa>();
 
-            // 3. Pós-processamento para garantir que DetalhesCartaoCredito e Cartao sejam corretamente setados
-            //    Este passo é crucial se sua camada de persistência não popula objetos aninhados automaticamente.
-            //    Se CartaoCredito.ObterDespesas() já faz isso perfeitamente, este loop pode ser simplificado.
-            foreach (var despesa in listaDespesas)
-            {
-                if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito == null)
+            // Agrupa as despesas por data de vencimento para formar as faturas
+            faturas = todasDespesas
+                .Where(d => d.DetalhesCartaoCredito != null) // Garante que só peguemos despesas de cartão
+                .GroupBy(d => d.DetalhesCartaoCredito.DataVencimento.Date) // Agrupa pela data de vencimento
+                .Select(grupo => new FaturaViewModel
                 {
-                    // Se o ORM não populou, faça manualmente aqui (assumindo que o construtor carrega)
-                    despesa.DetalhesCartaoCredito = new DespesaCartaoCredito(despesa.Id);
-                }
-                // Garante que o objeto Cartao dentro de DetalhesCartaoCredito seja o objeto 'cartao' atual
-                if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
-                {
-                    despesa.DetalhesCartaoCredito.Cartao = cartao; // Vincula ao objeto CartaoCredito já carregado
-                    // Opcional: Se 'ParcelaPaga' da despesa geral for para despesas não-cartão,
-                    // mas queremos a do cartão aqui, podemos sobrescrever.
-                    // No seu código original da tabela, você tinha 'DespesaPaga' na tabela Despesas
-                    // e 'ParcelaPaga' na DespesaCartaoCredito. É importante usar a correta.
-                    // Na UI, estamos usando despesa.DespesaPaga para a coluna "Paga" na tabela.
-                    // Você pode querer mudar para despesa.DetalhesCartaoCredito.ParcelaPaga para despesas de cartão.
-                }
-            }
-
-            // 4. Calcula o total da fatura
-            totalFatura = listaDespesas?.Sum(d => d.Valor) ?? 0;
+                    DataVencimento = grupo.Key,
+                    Lancamentos = grupo.ToList()
+                })
+                .OrderByDescending(f => f.DataVencimento) // Faturas mais recentes primeiro
+                .ToList();
+            
+            // Calcula o total de todas as faturas em aberto
+            totalGeral = faturas.Where(f => !f.EstaPaga).Sum(f => f.ValorTotal);
         }
 
         isLoading = false;
+    }
+
+    /// <summary>
+    /// Alterna a visibilidade dos detalhes de uma fatura específica.
+    /// </summary>
+    private void AlternarVisibilidadeFatura(FaturaViewModel fatura)
+    {
+        fatura.EstaExpandida = !fatura.EstaExpandida;
     }
 }

@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using System.Globalization
 @using JT_Classes
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
@@ -8,81 +9,123 @@
 
 <PageTitle>Dashboard</PageTitle>
 
-<h1>Painel Financeiro</h1>
-<p>Resumo das suas finanças.</p>
+<!-- SELETOR DE MÊS -->
+<div class="d-flex justify-content-center align-items-center my-4">
+    <button class="btn btn-outline-primary" @onclick="MudarMesAnterior">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+    <h2 class="mx-4 mb-0" style="min-width: 200px; text-align: center;">
+        @mesReferencia.ToString("MMMM yyyy", new CultureInfo("pt-BR"))
+    </h2>
+    <button class="btn btn-outline-primary" @onclick="MudarMesProximo">
+        <i class="bi bi-chevron-right"></i>
+    </button>
+</div>
 
-<div class="row mb-3">
+
+<!-- CARDS DE RESUMO -->
+<div class="row mb-4">
     <div class="col-md-4 mb-3">
-        <div class="card text-white bg-success h-100">
-            <div class="card-header">Saldo Atual (Mês)</div>
+        <div class="card border-left-success shadow h-100 py-2">
             <div class="card-body">
-                <h4 class="card-title">@saldoAtual.ToString("C")</h4>
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Receitas (Mês)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@totalReceitas.ToString("C")</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-cash-coin fs-2 text-gray-300"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-4 mb-3">
-        <div class="card text-white bg-primary h-100">
-            <div class="card-header">Total Receitas (Mês)</div>
+        <div class="card border-left-danger shadow h-100 py-2">
             <div class="card-body">
-                <h4 class="card-title">@totalReceitas.ToString("C")</h4>
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Despesas (Mês)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@totalDespesas.ToString("C")</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-receipt fs-2 text-gray-300"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-4 mb-3">
-        <div class="card text-white bg-danger h-100">
-            <div class="card-header">Total Despesas (Mês)</div>
+        <div class="card border-left-primary shadow h-100 py-2">
             <div class="card-body">
-                <h4 class="card-title">@totalDespesas.ToString("C")</h4>
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Saldo (Mês)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@saldoAtual.ToString("C")</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-piggy-bank-fill fs-2 text-gray-300"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<hr />
 
-
+<!-- GRÁFICOS -->
 <div class="row mt-4">
     <div class="col-lg-6 mb-4">
-        <div class="card h-100">
+        <div class="card shadow h-100">
             <div class="card-body">
-                @if (dadosGraficoCarregados && datasetsGraficoPorTipo.Any() && datasetsGraficoPorTipo.First().Data.Any())
+                @if (isLoading)
                 {
-                    <Chart ChartId="despesasPorTipoChart"
-                           Type="ChartType.Bar"
-                           Labels="despesaTiposLabels"
-                           Datasets="datasetsGraficoPorTipo"
-                           Title="Despesas por Tipo (Mês Atual)" />
+                    <div class="text-center p-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
                 }
-                else if (dadosGraficoCarregados)
+                else if (datasetsGraficoPorCategoria.Any() && datasetsGraficoPorCategoria.First().Data.Any())
                 {
-                    <div class="text-center p-4"><p>Não há dados de despesa por tipo.</p></div>
+                    <Chart ChartId="despesasPorCategoriaChart"
+                           Type="ChartType.Doughnut"
+                           Labels="despesaCategoriasLabels"
+                           Datasets="datasetsGraficoPorCategoria"
+                           Title="Despesas por Categoria" />
                 }
                 else
                 {
-                    <div class="text-center p-4"><p><em>Carregando...</em></p></div>
+                    <div class="text-center p-4 d-flex flex-column justify-content-center align-items-center h-100">
+                        <i class="bi bi-pie-chart fs-1 text-muted"></i>
+                        <p class="mt-2">Não há dados de despesa por categoria para este mês.</p>
+                    </div>
                 }
             </div>
         </div>
     </div>
 
     <div class="col-lg-6 mb-4">
-        <div class="card h-100">
+        <div class="card shadow h-100">
             <div class="card-body">
-                @if (dadosGraficoCarregados && datasetsGraficoPorCategoria.Any() && datasetsGraficoPorCategoria.First().Data.Any())
+                @if (isLoading)
                 {
-                    <Chart ChartId="despesasPorCategoriaChart"
-                           Type="ChartType.Pie"
-                           Labels="despesaCategoriasLabels"
-                           Datasets="datasetsGraficoPorCategoria"
-                           Title="Despesas por Categoria (Mês Atual)" />
+                    <div class="text-center p-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
                 }
-                else if (dadosGraficoCarregados)
+                else if (datasetsGraficoPorTipo.Any() && datasetsGraficoPorTipo.First().Data.Any())
                 {
-                    <div class="text-center p-4"><p>Não há dados de despesa por categoria.</p></div>
+                    <Chart ChartId="despesasPorTipoChart"
+                           Type="ChartType.Bar"
+                           Labels="despesaTiposLabels"
+                           Datasets="datasetsGraficoPorTipo"
+                           Title="Despesas por Tipo" />
                 }
                 else
                 {
-                    <div class="text-center p-4"><p><em>Carregando...</em></p></div>
+                    <div class="text-center p-4 d-flex flex-column justify-content-center align-items-center h-100">
+                        <i class="bi bi-bar-chart-line fs-1 text-muted"></i>
+                        <p class="mt-2">Não há dados de despesa por tipo para este mês.</p>
+                    </div>
                 }
             </div>
         </div>
@@ -94,19 +137,20 @@
     [CascadingParameter]
     public Func<string, Task>? SetPageTitleAsync { get; set; }
 
-    // --- Variáveis para os cards de resumo ---
+    // --- Estado da Página ---
+    private DateTime mesReferencia = DateTime.Now;
+    private bool isLoading = true;
+
+    // --- Dados para os Cards ---
     private decimal totalReceitas;
     private decimal totalDespesas;
     private decimal saldoAtual;
 
-    // --- Variáveis para os Gráficos ---
+    // --- Dados para os Gráficos ---
     private List<string> despesaTiposLabels = new();
     private List<ChartDataset> datasetsGraficoPorTipo = new();
-
     private List<string> despesaCategoriasLabels = new();
     private List<ChartDataset> datasetsGraficoPorCategoria = new();
-
-    private bool dadosGraficoCarregados = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -119,46 +163,49 @@
 
     private async Task LoadDashboardData()
     {
-        dadosGraficoCarregados = false;
+        isLoading = true;
         await InvokeAsync(StateHasChanged);
 
+        // Usar Task.Run para não bloquear a UI enquanto os dados são buscados
         await Task.Run(() =>
         {
-            var mesAtual = DateTime.Now;
-
             // --- CARREGA DADOS DOS CARDS ---
-            totalReceitas = Receita.GetTotalReceitasMes(mesAtual);
-            totalDespesas = Despesa.GetTotalDespesaMes(mesAtual);
+            totalReceitas = Receita.GetTotalReceitasMes(mesReferencia);
+            totalDespesas = Despesa.GetTotalDespesaMes(mesReferencia);
             saldoAtual = totalReceitas - totalDespesas;
 
-            // --- CARREGA DADOS PARA O GRÁFICO DE TIPO (BARRAS) ---
-            var despesasPorTipo = Despesa.GetDespesasAgrupadasPorTipo(mesAtual);
-            datasetsGraficoPorTipo.Clear();
-            if (despesasPorTipo.Any())
+            // --- GRÁFICO DE TIPO (BARRAS) ---
+            var despesasPorTipo = Despesa.GetDespesasAgrupadasPorTipo(mesReferencia);
+            despesaTiposLabels = despesasPorTipo.Select(d => d.Tipo).ToList();
+            datasetsGraficoPorTipo = new List<ChartDataset>
             {
-                despesaTiposLabels = despesasPorTipo.Select(d => d.Tipo).ToList();
-                datasetsGraficoPorTipo.Add(new ChartDataset
-                {
+                new() {
                     Label = "Total por Tipo",
-                    Data = despesasPorTipo.Select(d => d.ValorTotal).ToList(),
-                    BackgroundColor = new List<string> { "rgba(54, 162, 235, 0.7)", "rgba(255, 99, 132, 0.7)" }
-                });
-            }
+                    Data = despesasPorTipo.Select(d => d.ValorTotal).ToList()
+                }
+            };
 
-            // --- CARREGA DADOS PARA O GRÁFICO DE CATEGORIA (PIZZA) ---
-            var despesasPorCategoria = Despesa.GetDespesasAgrupadasPorCategoria(mesAtual);
-            datasetsGraficoPorCategoria.Clear();
-            if (despesasPorCategoria.Any())
+            // --- GRÁFICO DE CATEGORIA (ROSCA) ---
+            var despesasPorCategoria = Despesa.GetDespesasAgrupadasPorCategoria(mesReferencia);
+            despesaCategoriasLabels = despesasPorCategoria.Select(d => d.Categoria).ToList();
+            datasetsGraficoPorCategoria = new List<ChartDataset>
             {
-                despesaCategoriasLabels = despesasPorCategoria.Select(d => d.Categoria).ToList();
-                datasetsGraficoPorCategoria.Add(new ChartDataset
-                {
+                new() {
                     Data = despesasPorCategoria.Select(d => d.ValorTotal).ToList()
-                });
-            }
+                }
+            };
         });
 
-        dadosGraficoCarregados = true;
+        isLoading = false;
         await InvokeAsync(StateHasChanged);
     }
+
+    private async Task MudarMes(int mesesParaAdicionar)
+    {
+        mesReferencia = mesReferencia.AddMonths(mesesParaAdicionar);
+        await LoadDashboardData();
+    }
+
+    private async Task MudarMesAnterior() => await MudarMes(-1);
+    private async Task MudarMesProximo() => await MudarMes(1);
 }

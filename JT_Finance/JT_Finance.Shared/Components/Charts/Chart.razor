@@ -1,6 +1,6 @@
 ﻿@inject IJSRuntime JSRuntime
 
-<div class="chart-container" style="position: relative; height:40vh; width:80vw; max-width: 600px; margin: auto;">
+<div class="chart-container" style="position: relative; min-height: 350px; width: 100%;">
     <canvas id="@ChartId"></canvas>
 </div>
 
@@ -20,23 +20,33 @@
     [Parameter]
     public string Title { get; set; } = "Meu Gráfico";
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    // Usado para evitar re-renderização desnecessária
+    private int _dataHash; 
+
+    protected override async Task OnParametersSetAsync()
     {
-        // Renderiza o gráfico apenas na primeira vez ou se os dados forem válidos.
-        if (firstRender && Datasets.Any() && Datasets.First().Data.Any())
+        // Só renderiza se os dados existirem e tiverem mudado
+        if (Datasets.Any() && Datasets.First().Data.Any())
         {
-            await RenderChart();
+            var newDataHash = System.Text.Json.JsonSerializer.Serialize(Datasets).GetHashCode();
+            if (newDataHash != _dataHash)
+            {
+                _dataHash = newDataHash;
+                await RenderChart();
+            }
         }
     }
 
     public async Task RenderChart()
     {
-        await JSRuntime.InvokeVoidAsync("blazorCharts.createChart",
-            ChartId,
-            Type.ToString().ToLower(),
-            Labels,
-            Datasets,
-            Title);
+        if (JSRuntime != null)
+        {
+            await JSRuntime.InvokeVoidAsync("blazorCharts.createChart",
+                ChartId,
+                Type.ToString().ToLower(),
+                Labels,
+                Datasets,
+                Title);
+        }
     }
-  
 }
