@@ -65,6 +65,12 @@
             }
         </td>
         <td>
+            @if (!despesa.EhDespesaCartaoCredito)
+            {
+                <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Despesa" @onclick="() => DuplicarDespesa(despesa)">
+                    <i class="bi bi-copy"></i>
+                </button>
+            }
             <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => AbrirModalParaEditarDespesa(despesa.Id)">
                 <i class="bi bi-pencil-fill"></i>
             </button>
@@ -312,7 +318,19 @@
         despesasFiltradas = new List<Despesa>(listaTodasDespesas);
         isLoading = false;
     }
-
+    private async Task DuplicarDespesa(Despesa Despesa)
+    {
+        var result = Despesa.Duplicar();
+        if (result)
+        {
+            ToastService.ShowSuccess("Duplicada!", "A Despesa foi duplicada.");
+            await CarregarDespesas();
+        }
+        else
+        {
+            ToastService.ShowError("Erro!", "Não foi possível duplicar a Despesa.");
+        }
+    }
     private Task AplicarPesquisa(string searchTerm)
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
@@ -401,8 +419,6 @@
 
     private async Task HandleCancelarFormularioModal()
     {
-        if(despesaAtual?.Status == JT_Persistencia.Persistencia.StatusObjeto.Novo)
-            despesaAtual.LimparReservaDeId();
         despesaAtual = null;
         await crudModal.Close();
     }
@@ -467,6 +483,7 @@
             ToastService.ShowError("Erro!", "Não foi possível salvar a nova opção.");
         }
     }
+  
     private Task CarregarOpcoesDeCategoria()
     {
         try

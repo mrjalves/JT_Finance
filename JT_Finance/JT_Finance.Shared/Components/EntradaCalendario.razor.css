@@ -1,0 +1,88 @@
+/* ... (código anterior para .calendar-container, .calendar-header, etc.) ... */
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: 600;
+    padding: 0.75rem 0.25rem;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+/* REFAZER: Estilo da Célula do Dia com Flexbox */
+.calendar-day-cell {
+    border-right: 1px solid #e9ecef;
+    border-top: 1px solid #e9ecef;
+    min-height: 140px; /* Aumenta um pouco a altura mínima */
+    /* MUDANÇA CRÍTICA: Ativa o layout Flexbox vertical */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Garante que nada transborde */
+}
+
+    .calendar-day-cell:nth-child(7n) {
+        border-right: none;
+    }
+
+/* NOVO: Estilo para o cabeçalho do dia (número) */
+.day-header {
+    padding: 5px;
+    flex-shrink: 0; /* Impede que o cabeçalho encolha */
+}
+
+.day-number {
+    font-size: 0.85em;
+    font-weight: 500;
+    margin-bottom: 0; /* Remove a margem, o espaçamento será no padding do header */
+}
+
+/* REFAZER: Container das transações agora é flexível e com scroll */
+.entries-container {
+    flex-grow: 1; /* Faz este container ocupar todo o espaço vertical disponível */
+    overflow-y: auto; /* Adiciona scroll APENAS AQUI quando necessário */
+    padding: 0 5px;
+}
+
+/* REFAZER: Rodapé com o resumo agora é um item flex */
+.day-summary {
+    flex-shrink: 0; /* Impede que o rodapé encolha */
+    padding: 4px 8px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    font-weight: 600;
+    /* position: absolute; <-- REMOVER ESTA LINHA */
+}
+
+.summary-receita {
+    color: #1a7431;
+}
+
+.summary-despesa {
+    color: #a11d27;
+}
+
+.calendar-day-cell.other-month {
+    background-color: #f8f9fa;
+}
+
+/* ... (resto do seu CSS para .today, .clickable, etc.) ... */
+
+.entry-value {
+    font-weight: 500;
+}
+
+/* Cores para Receita */
+.calendar-entry.receita {
+    background-color: #e6f7ff;
+    border-left: 3px solid #1890ff;
+    color: #0050b3;
+}
+
+/* Cores para Despesa */
+.calendar-entry.despesa {
+    background-color: #fff1f0;
+    border-left: 3px solid #f5222d;
+    color: #cf1322;
+}

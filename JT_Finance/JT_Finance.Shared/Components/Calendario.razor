@@ -1,0 +1,191 @@
+@using JT_Classes
+@using JT_Classes.Financeiro
+@using JT_Finance.Shared
+@using System.Globalization
+@using JT_Finance.Shared.Models
+
+<div class="calendar-container card shadow-sm">
+    <div class="calendar-header">
+        <button class="btn btn-outline-primary" @onclick="MesAnterior"><i class="bi bi-chevron-left"></i></button>
+        <span class="current-month">@dataReferencia.ToString("MMMM yyyy", new CultureInfo("pt-BR"))</span>
+        <button class="btn btn-outline-primary" @onclick="MesSeguinte"><i class="bi bi-chevron-right"></i></button>
+    </div>
+
+    <div class="calendar-grid">
+        @foreach (var dia in DiasDaSemana)
+        {
+            <div class="calendar-weekday">@dia</div>
+        }
+
+        @foreach (var dia in diasDoMesParaExibir)
+        {
+            <div class="calendar-day-cell @GetDayCellClass(dia)" @onclick="() => AbrirDetalhesDoDia(dia)">
+
+                <div class="day-header">
+                    <div class="day-number">@dia.Day</div>
+                </div>
+
+                <div class="entries-container">
+                    @foreach (var evento in GetEventosDoDia(dia))
+                    {
+                        <EntradaCalendario Evento="evento" />
+                    }
+                </div>
+
+                <div class="day-summary">
+                    @{
+                        var eventosDoDia = GetEventosDoDia(dia);
+                        var totalReceitas = eventosDoDia.Where(e => e.Tipo == TipoEvento.Receita).Sum(e => e.Valor);
+                        var totalDespesas = eventosDoDia.Where(e => e.Tipo == TipoEvento.Despesa).Sum(e => e.Valor);
+                    }
+                    @if (totalReceitas > 0)
+                    {
+                        <span class="summary-receita" title="Total de Receitas">+@totalReceitas.ToString("C2")</span>
+                    }
+                    @if (totalDespesas > 0)
+                    {
+                        <span class="summary-despesa" title="Total de Despesas">-@totalDespesas.ToString("C2")</span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<Modal @ref="modalDetalhesDia" Title="@modalTitle" Size="Modal.ModalSize.Large">
+    <BodyContent>
+        @if (diaSelecionado.HasValue)
+        {
+            <ul class="list-group list-group-flush">
+                @if (!eventosDoDiaSelecionado.Any())
+                {
+                    <li class="list-group-item">Nenhuma transação registrada para este dia.</li>
+                }
+                @foreach (var evento in eventosDoDiaSelecionado)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="@(evento.Tipo == TipoEvento.Receita ? "bi bi-arrow-up-circle-fill text-success" : "bi bi-arrow-down-circle-fill text-danger") me-2"></i>
+                            @evento.Descricao
+                        </div>
+                        <span class="badge @(evento.Tipo == TipoEvento.Receita ? "bg-success-subtle text-success-emphasis" : "bg-danger-subtle text-danger-emphasis") rounded-pill">
+                            @( (evento.Tipo == TipoEvento.Receita ? "+" : "-") + evento.Valor.ToString("C2") )
+                        </span>
+                    </li>
+                }
+            </ul>
+        }
+    </BodyContent>
+    <FooterContent>
+        <button type="button" class="btn btn-secondary" @onclick="() => modalDetalhesDia.Close()">Fechar</button>
+    </FooterContent>
+</Modal>
+
+
+@code {
+    private DateTime dataReferencia = DateTime.Today;
+    private List<DateTime> diasDoMesParaExibir = new();
+    private List<EventoCalendario> eventosDoMes = new();
+    private readonly string[] DiasDaSemana = { "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb" };
+
+    // NOVO: Variáveis para controlar o modal
+    private Modal modalDetalhesDia = new();
+    private DateTime? diaSelecionado;
+    private List<EventoCalendario> eventosDoDiaSelecionado = new();
+    private string modalTitle = "Detalhes do Dia";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDadosDoMes();
+    }
+
+    private void ConstruirCalendario()
+    {
+        diasDoMesParaExibir.Clear();
+        var primeiroDiaDoMes = new DateTime(dataReferencia.Year, dataReferencia.Month, 1);
+        int diasDePreenchimento = (int)primeiroDiaDoMes.DayOfWeek;
+
+        for (int i = 0; i < diasDePreenchimento; i++)
+        {
+            diasDoMesParaExibir.Add(primeiroDiaDoMes.AddDays(-diasDePreenchimento + i));
+        }
+
+        int diasNoMes = DateTime.DaysInMonth(dataReferencia.Year, dataReferencia.Month);
+        for (int i = 1; i <= diasNoMes; i++)
+        {
+            diasDoMesParaExibir.Add(new DateTime(dataReferencia.Year, dataReferencia.Month, i));
+        }
+
+        int totalCelulas = diasDoMesParaExibir.Count;
+        int diasRestantes = (7 - (totalCelulas % 7)) % 7;
+        var primeiroDiaProximoMes = primeiroDiaDoMes.AddMonths(1);
+        for (int i = 0; i < diasRestantes; i++)
+        {
+            diasDoMesParaExibir.Add(primeiroDiaProximoMes.AddDays(i));
+        }
+    }
+
+    private async Task CarregarDadosDoMes()
+    {
+        // ... (sua lógica de carregamento de dados permanece a mesma)
+        // Lembre-se de adaptar para usar parâmetros SQL para maior segurança!
+        await Task.Delay(50);
+        var despesas = new Despesa().Consultar<Despesa>($"SELECT * FROM Despesas WHERE MONTH(DataDespesa) = {dataReferencia.Month} AND YEAR(DataDespesa) = {dataReferencia.Year}");
+        var receitas = new Receita().Consultar<Receita>($"SELECT * FROM Receitas WHERE MONTH(DataReceita) = {dataReferencia.Month} AND YEAR(DataReceita) = {dataReferencia.Year}");
+
+        eventosDoMes = new List<EventoCalendario>();
+        eventosDoMes.AddRange(despesas.Select(d => new EventoCalendario { Data = d.DataDespesa, Descricao = d.Descricao, Valor = d.Valor, Tipo = TipoEvento.Despesa }));
+        eventosDoMes.AddRange(receitas.Select(r => new EventoCalendario { Data = r.DataReceita, Descricao = r.Descricao, Valor = r.Valor, Tipo = TipoEvento.Receita }));
+
+        ConstruirCalendario();
+        StateHasChanged();
+    }
+
+    private IEnumerable<EventoCalendario> GetEventosDoDia(DateTime dia)
+    {
+        return eventosDoMes.Where(e => e.Data.Date == dia.Date).OrderBy(e => e.Tipo);
+    }
+
+    private string GetDayCellClass(DateTime dia)
+    {
+        var classes = new List<string>();
+        if (dia.Month != dataReferencia.Month)
+        {
+            classes.Add("other-month");
+        }
+        else
+        {
+            // NOVO: Adiciona a classe 'clickable' apenas para dias do mês atual
+            classes.Add("clickable");
+        }
+
+        if (dia.Date == DateTime.Today)
+            classes.Add("today");
+
+        return string.Join(" ", classes);
+    }
+
+    // NOVO: Método para abrir o modal com os detalhes do dia clicado
+    private void AbrirDetalhesDoDia(DateTime dia)
+    {
+        // Não faz nada se o dia não pertencer ao mês atual
+        if (dia.Month != dataReferencia.Month) return;
+
+        diaSelecionado = dia;
+        eventosDoDiaSelecionado = GetEventosDoDia(dia).ToList();
+        modalTitle = $"Transações de {dia:dd 'de' MMMM 'de' yyyy}";
+        modalDetalhesDia.Open();
+    }
+
+    private async Task MesAnterior()
+    {
+        dataReferencia = dataReferencia.AddMonths(-1);
+        await CarregarDadosDoMes();
+    }
+
+    private async Task MesSeguinte()
+    {
+        dataReferencia = dataReferencia.AddMonths(1);
+        await CarregarDadosDoMes();
+    }
+}

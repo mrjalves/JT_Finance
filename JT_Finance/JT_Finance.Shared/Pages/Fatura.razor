@@ -1,7 +1,10 @@
 ﻿@page "/fatura/{CartaoId:int}"
 @using System.Linq
 @using JT_Classes.Financeiro
+@using JT_Persistencia
+@using static JT_Finance.Shared.Components.Modal
 @inject NavigationManager NavigationManager
+@inject ToastService ToastService
 
 @if (isLoading)
 {
@@ -56,6 +59,7 @@ else
                         <th>Valor da Fatura</th>
                         <th class="text-center">Lançamentos</th>
                         <th class="text-center">Status</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -78,6 +82,20 @@ else
                                     <span class="badge bg-success">Paga</span>
                                 } else {
                                     <span class="badge bg-warning text-dark">Em Aberto</span>
+                                }
+                            </td>
+                            <td>
+                                @if (fatura.EstaPaga)
+                                {
+                                    <button class="btn btn-outline-success btn-sm disabled" title="Esta fatura já foi paga.">
+                                        <i class="bi bi-check-all"></i> Pago
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-success btn-sm" @onclick="() => AbrirModalPagamento(fatura)" disabled="@isProcessing">
+                                        <i class="bi bi-check-circle-fill"></i> Pagar Fatura
+                                    </button>
                                 }
                             </td>
                         </tr>
@@ -138,6 +156,25 @@ else
     }
 }
 
+<Modal @ref="pagamentoModal" Title="Confirmar Data de Pagamento" Size="ModalSize.Large" CloseOnBackdropClick="false">
+    <BodyContent>
+        @if (faturaParaPagar != null)
+        {
+            <p>Selecione a data em que o pagamento da fatura de <strong>@faturaParaPagar.ValorTotal.ToString("C")</strong> foi efetuado.</p>
+            <div class="mb-3">
+                <label for="dataPagamento" class="form-label">Data do Pagamento</label>
+                <input type="date" id="dataPagamento" class="form-control" @bind="dataPagamento" />
+            </div>
+        }
+    </BodyContent>
+    <FooterContent>
+        <button type="button" class="btn btn-secondary" @onclick="HandleCancelarFormularioModal">Cancelar</button>
+        <button type="button" class="btn btn-success" @onclick="ConfirmarPagamento">
+            <i class="bi bi-check-circle-fill me-2"></i>Confirmar Pagamento
+        </button>
+    </FooterContent>
+</Modal>
+
 @code {
     [Parameter]
     public int CartaoId { get; set; }
@@ -161,6 +198,73 @@ else
         public List<Despesa> Lancamentos { get; set; } = new();
         public bool EstaExpandida { get; set; } = false; // Começa recolhida por padrão
         public bool EstaPaga => Lancamentos.All(l => l.DetalhesCartaoCredito?.ParcelaPaga == true);
+    }
+    private bool isProcessing = false; // Controla o estado de "carregando" do botão
+    // --- CÓDIGO NOVO ABAIXO ---
+
+    // Variáveis para controlar o modal e os dados do pagamento
+    private Modal? pagamentoModal;
+    private FaturaViewModel? faturaParaPagar;
+    private DateTime dataPagamento = DateTime.Today;
+
+    /// <summary>
+    /// Prepara os dados e abre o modal para o utilizador confirmar a data do pagamento.
+    /// </summary>
+    private void AbrirModalPagamento(FaturaViewModel fatura)
+    {
+        faturaParaPagar = fatura;    // Guarda a fatura que estamos a processar
+        dataPagamento = DateTime.Today; // Reinicia a data para o dia atual
+        pagamentoModal.Open();      // Abre o modal
+    }
+
+    /// <summary>
+    /// Método chamado pelo botão 'Confirmar' do modal. Executa a lógica de negócio.
+    /// </summary>
+    /// <summary>
+    /// Método chamado pelo botão 'Confirmar' do modal. Executa a lógica de negócio.
+    /// </summary>
+    private async Task ConfirmarPagamento()
+    {
+        if (isProcessing || faturaParaPagar == null)
+        {
+            return; // Segurança para evitar processamento duplo
+        }
+
+        isProcessing = true;
+        await InvokeAsync(StateHasChanged); // Atualiza a UI para mostrar o botão desativado
+
+        try
+        {
+            // --- ESTA É A CHAMADA CORRETA ---
+            // Agora passamos a data de pagamento que o utilizador selecionou no modal.
+            bool sucesso = Despesa.PagarFatura(faturaParaPagar.Lancamentos, dataPagamento);
+
+            if (sucesso)
+            {
+                // Recalcula o total geral em aberto para o cabeçalho
+                totalGeral = faturas.Where(f => !f.EstaPaga).Sum(f => f.ValorTotal);
+                ToastService.ShowSuccess("Sucesso!", "Fatura paga com a data selecionada.");
+            }
+            else
+            {
+                ToastService.ShowError("Erro!", "Não foi possível pagar a fatura. Verifique os logs.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("Erro Inesperado!", "Ocorreu uma falha ao processar o pagamento.");
+            Log.RegistrarErro(ex); // Boa prática
+        }
+        finally
+        {
+            isProcessing = false;
+            // Usa o método correto para fechar o modal, conforme o seu código
+            if (pagamentoModal != null)
+            {
+                await pagamentoModal.Close();
+            }
+            await InvokeAsync(StateHasChanged); // Notifica o Blazor para re-renderizar a página
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -191,7 +295,7 @@ else
                 })
                 .OrderByDescending(f => f.DataVencimento) // Faturas mais recentes primeiro
                 .ToList();
-            
+
             // Calcula o total de todas as faturas em aberto
             totalGeral = faturas.Where(f => !f.EstaPaga).Sum(f => f.ValorTotal);
         }
@@ -205,5 +309,9 @@ else
     private void AlternarVisibilidadeFatura(FaturaViewModel fatura)
     {
         fatura.EstaExpandida = !fatura.EstaExpandida;
+    }
+    private async Task HandleCancelarFormularioModal(MouseEventArgs args)
+    {
+        await pagamentoModal.Close();
     }
 }

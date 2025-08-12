@@ -46,6 +46,7 @@
         <th style="width: 120px;">Nível</th>
         <th>Mensagem</th>
         <th style="width: 150px;">Executor</th>
+        <th>Ações</th>
     </HeaderTemplate>
     <RowTemplate Context="log">
         <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
@@ -62,11 +63,34 @@
             }
         </td>
         <td>@log.Executor</td>
+        <td>
+            <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalConfirmacaoExclusao(log)">
+                <i class="bi bi-trash-fill"></i> Excluir
+            </button>
+        </td>
     </RowTemplate>
     <EmptyTemplate>
         <p class="text-muted mb-0">Nenhum log encontrado com os filtros atuais.</p>
     </EmptyTemplate>
 </DataGrid>
+
+<Modal @ref="confirmacaoExclusaoModal" Title="Confirmar Exclusão">
+    <BodyContent>
+        @if (logParaExcluir != null)
+        {
+            <p>Tem a certeza que deseja excluir permanentemente o seguinte log?</p>
+            <div class="alert alert-warning">
+                <strong>@logParaExcluir.Level:</strong> @logParaExcluir.Message
+                <br />
+                <small class="text-muted">Em @logParaExcluir.Timestamp.ToString("g") por @logParaExcluir.Executor</small>
+            </div>
+        }
+    </BodyContent>
+    <FooterContent>
+        <button type="button" class="btn btn-secondary" @onclick="() => confirmacaoExclusaoModal.Close()">Cancelar</button>
+        <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusaoAsync">Sim, Excluir</button>
+    </FooterContent>
+</Modal>
 
 <!-- Modal para StackTrace -->
 <Modal @ref="stackTraceModal" Title="Detalhes do Erro">
@@ -89,7 +113,8 @@
 @code {
     private List<LogEntry>? listaLogs;
     private bool isLoading = true;
-
+    private Modal confirmacaoExclusaoModal = new();
+    private LogEntry? logParaExcluir; // NOVO: Armazena o log a ser excluído
     // Filtros
     private string filtroNivel = "";
     private DateTime? filtroDataInicio;
@@ -107,6 +132,32 @@
     private async Task AplicarFiltros()
     {
         await CarregarLogs();
+    }
+    // NOVO: Abre o modal de confirmação
+    private void AbrirModalConfirmacaoExclusao(LogEntry log)
+    {
+        logParaExcluir = log;
+        confirmacaoExclusaoModal.Open();
+    }
+
+    // NOVO: Executa a exclusão após a confirmação
+    private async Task ConfirmarExclusaoAsync()
+    {
+        if (logParaExcluir == null) return;
+
+        // Assumindo que a sua classe LogEntry tem um método Excluir()
+        bool sucesso = logParaExcluir.Excluir(logParaExcluir);
+
+        if (sucesso)
+        {
+            confirmacaoExclusaoModal.Close();
+            await CarregarLogs(); // Recarrega a lista para remover o item excluído
+        }
+        else
+        {
+            // Opcional: Mostrar uma mensagem de erro ao utilizador
+            // Por exemplo, usando um componente de Toast/Notification.
+        }
     }
 
     private async Task CarregarLogs()

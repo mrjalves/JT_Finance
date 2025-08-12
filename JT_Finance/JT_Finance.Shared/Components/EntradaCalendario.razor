@@ -1,0 +1,27 @@
+@using JT_Finance.Shared
+@using JT_Finance.Shared.Models
+
+<div class="calendar-entry @GetEntryClass()">
+    <i class="bi @GetIconClass()"></i>
+    <span class="entry-description" title="@Evento.Descricao">@Evento.Descricao</span>
+    <span class="entry-value">@Evento.Valor.ToString("C2")</span>
+</div>
+
+@code {
+    [Parameter]
+    public EventoCalendario Evento { get; set; } = new();
+
+    private string GetEntryClass() => Evento.Tipo switch
+    {
+        TipoEvento.Receita => "receita",
+        TipoEvento.Despesa => "despesa",
+        _ => ""
+    };
+
+    private string GetIconClass() => Evento.Tipo switch
+    {
+        TipoEvento.Receita => "bi-arrow-up-circle-fill",
+        TipoEvento.Despesa => "bi-arrow-down-circle-fill",
+        _ => ""
+    };
+}

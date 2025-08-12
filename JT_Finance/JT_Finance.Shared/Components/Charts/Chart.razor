@@ -21,17 +21,24 @@
     public string Title { get; set; } = "Meu Gráfico";
 
     // Usado para evitar re-renderização desnecessária
-    private int _dataHash; 
+    private int _dataHash;
 
-    protected override async Task OnParametersSetAsync()
+    // ----- CÓDIGO CORRIGIDO ABAIXO -----
+
+    // OnAfterRenderAsync é o lugar correto para interações com JavaScript que manipulam o DOM.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Só renderiza se os dados existirem e tiverem mudado
+        // Garante que existem dados para renderizar.
         if (Datasets.Any() && Datasets.First().Data.Any())
         {
+            // Calcula um hash para verificar se os dados foram alterados.
             var newDataHash = System.Text.Json.JsonSerializer.Serialize(Datasets).GetHashCode();
-            if (newDataHash != _dataHash)
+
+            // Renderiza o gráfico na primeira vez ou sempre que os dados mudarem.
+            // Esta é a condição mais robusta.
+            if (firstRender || newDataHash != _dataHash)
             {
-                _dataHash = newDataHash;
+                _dataHash = newDataHash; // Atualiza o hash com os novos dados.
                 await RenderChart();
             }
         }
