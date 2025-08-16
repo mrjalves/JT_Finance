@@ -1,4 +1,5 @@
 using JT_Finance.Shared.Services;
+using JT_Finance.Shared.Services.Interfaces;
 using JT_Finance.Web.Components;
 using JT_Finance.Web.Services;
 
@@ -18,7 +19,9 @@ builder.Services.AddScoped<ToastService>();
 
 // Register FiltroService
 builder.Services.AddScoped<FiltroService>();
-
+builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
+builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+builder.Services.AddScoped<IReceitaService, ReceitaService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

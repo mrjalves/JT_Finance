@@ -1,0 +1,249 @@
+﻿@using JT_Classes
+@using JT_Classes.Financeiro
+@using JT_Finance.Shared.Services.Interfaces
+@using static JT_Finance.Shared.Components.Modal
+@inject IReceitaService ReceitaService
+@inject ICategoriaService CategoriaService
+@inject ToastService ToastService
+
+<Modal @ref="ModalRef" Title="@Title" OnClose="OnClose" Size="ModalSize.Large">
+    <BodyContent>
+        @if (Receita != null)
+        {
+            <EditForm Model="Receita" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <InputText id="descricao" class="form-control" @bind-Value="Receita.Descricao" />
+                        <ValidationMessage For="@(() => Receita.Descricao)" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="valor" class="form-label">Valor</label>
+                        <InputNumber id="valor" class="form-control" step="0.01" @bind-Value="Receita.Valor" />
+                        <ValidationMessage For="@(() => Receita.Valor)" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="data" class="form-label">Data da Receita</label>
+                        <InputDate id="data" class="form-control" @bind-Value="Receita.DataReceita" />
+                        <ValidationMessage For="@(() => Receita.DataReceita)" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="tipo_receita" class="form-label">Tipo de Receita</label>
+                        <div class="input-group">
+                            <InputSelect id="tipo_receita" class="form-select" @bind-Value="Receita.TipoReceita">
+                                <option value="0">Selecione um tipo...</option>
+                                @foreach (var tipo in TiposReceita)
+                                {
+                                    <option value="@tipo.Id">@tipo.Descricao</option>
+                                }
+                            </InputSelect>
+                            <button class="btn btn-outline-secondary" type="button"
+                                    @onclick='() => ToggleInlineForm("TipoReceita")'>
+                                +
+                            </button>
+                        </div>
+                        @if (showNewTipoForm)
+                        {
+                            <div class="input-group mt-2">
+                                <InputText @bind-Value="novaCategoriaDescricao" class="form-control" placeholder="Novo tipo..." />
+                                <button type="button" class="btn btn-success"
+                                        @onclick='() => SalvarNovaCategoria("TipoReceita")'>
+                                    Salvar
+                                </button>
+                                <button type="button" class="btn btn-secondary" @onclick='() => ToggleInlineForm("TipoDespesa")'>Cancelar</button>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="categoria_receita" class="form-label">Categoria</label>
+                        <div class="input-group">
+                            <InputSelect id="categoria_receita" class="form-select" @bind-Value="Receita.Categoria">
+                                <option value="0">Selecione uma categoria...</option>
+                                @foreach (var cat in CategoriasReceita)
+                                {
+                                    <option value="@cat.Id">@cat.Descricao</option>
+                                }
+                            </InputSelect>
+                            <button class="btn btn-outline-secondary" type="button"
+                                    @onclick='() => ToggleInlineForm("CategoriaReceita")'>
+                                +
+                            </button>
+                        </div>
+                        @if (showNewCategoriaForm)
+                        {
+                            <div class="input-group mt-2">
+                                <InputText @bind-Value="novaCategoriaDescricao" class="form-control" placeholder="Nova categoria..." />
+                                <button type="button" class="btn btn-success"
+                                        @onclick='() => SalvarNovaCategoria("CategoriaReceita")'>
+                                    Salvar
+                                </button>
+                                <button type="button" class="btn btn-secondary" @onclick='() => ToggleInlineForm("CategoriaReceita")'>Cancelar</button>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="observacao" class="form-label">Observação</label>
+                    <InputTextArea id="observacao" class="form-control" @bind-Value="Receita.Observacao" rows="3" />
+                </div>
+
+                <div class="row align-items-center">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check form-switch">
+                            <InputCheckbox id="recebida" class="form-check-input" @bind-Value="Receita.ReceitaRecebida" />
+                            <label class="form-check-label" for="recebida">Já foi recebida?</label>
+                        </div>
+                    </div>
+                    @if (Receita.ReceitaRecebida)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <label for="data_recebimento" class="form-label">Data de Recebimento</label>
+                            <InputDate id="data_recebimento" class="form-control" @bind-Value="Receita.DataRecebimento" />
+                        </div>
+                    }
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" @onclick="HandleCancel">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </EditForm>
+        }
+    </BodyContent>
+</Modal>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public Receita? Receita { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private List<Categoria> TiposReceita = new();
+    private List<Categoria> CategoriasReceita = new();
+    private bool showNewTipoForm = false;
+    private bool showNewCategoriaForm = false;
+    private string novaCategoriaDescricao = string.Empty;
+    private Modal ModalRef = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarOpcoes();
+        CategoriaService.OnDataChanged += AtualizarOpcoes;
+    }
+
+    public void Dispose()
+    {
+        CategoriaService.OnDataChanged -= AtualizarOpcoes;
+    }
+
+    private async void AtualizarOpcoes()
+    {
+        await CarregarOpcoes();
+        StateHasChanged();
+    }
+
+    private async Task CarregarOpcoes()
+{
+    try 
+    {
+        TiposReceita = await CategoriaService.GetCategorias("Receita", "TipoReceita") ?? new List<Categoria>();
+        CategoriasReceita = await CategoriaService.GetCategorias("Receita", "CategoriaReceita") ?? new List<Categoria>();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erro ao carregar opções: {ex.Message}");
+        TiposReceita = new List<Categoria>();
+        CategoriasReceita = new List<Categoria>();
+    }
+}
+
+    private async Task HandleSubmit()
+    {
+        if (Receita != null)
+        {
+            bool sucesso = await ReceitaService.SalvarReceitaAsync(Receita);
+            if (sucesso)
+            {
+                await Close();
+            }
+        }
+    }
+
+    public async Task Open()
+    {
+        await ModalRef.Open();
+        StateHasChanged();
+    }
+
+    public async Task Close()
+    {
+        await ModalRef.Close();
+        StateHasChanged();
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+        await Close();
+    }
+
+    private void ToggleInlineForm(string tipo)
+    {
+        novaCategoriaDescricao = string.Empty;
+        if (tipo == "TipoReceita")
+        {
+            showNewTipoForm = !showNewTipoForm;
+            showNewCategoriaForm = false;
+        }
+        else
+        {
+            showNewCategoriaForm = !showNewCategoriaForm;
+            showNewTipoForm = false;
+        }
+    }
+
+    private async Task SalvarNovaCategoria(string tipo)
+    {
+        if (string.IsNullOrWhiteSpace(novaCategoriaDescricao)) return;
+
+        var novaCategoria = new Categoria
+        {
+            TipoEntidade = "Receita",
+            Nome = tipo,
+            Descricao = novaCategoriaDescricao,
+            Status = JT_Persistencia.Persistencia.StatusObjeto.Novo
+        };
+
+        var categoriaSalva = await CategoriaService.CriarCategoriaAsync(novaCategoria);
+        if (categoriaSalva != null)
+        {
+            if (tipo == "TipoReceita")
+            {
+                Receita.TipoReceita = categoriaSalva.Id;
+                showNewTipoForm = false;
+            }
+            else
+            {
+                Receita.Categoria = categoriaSalva.Id;
+                showNewCategoriaForm = false;
+            }
+            novaCategoriaDescricao = string.Empty;
+        }
+        else
+        {
+            ToastService.ShowError("Erro", "Não foi possível salvar a nova categoria");
+        }
+    }
+}

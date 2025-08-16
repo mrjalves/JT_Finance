@@ -1,0 +1,80 @@
+﻿@using JT_Classes.Financeiro
+@using JT_Finance.Shared.Services.Interfaces
+@using static JT_Finance.Shared.Components.Modal
+@inject ICartaoCreditoService CartaoService
+
+<Modal @ref="ModalRef" Title="@Title" OnClose="OnClose" Size="ModalSize.Large" CloseOnBackdropClick="false">
+    <BodyContent>
+        @if (Cartao != null)
+        {
+            <EditForm Model="Cartao" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="nome" class="form-label">Nome do Cartão (Ex: Nubank, Inter Gold)</label>
+                        <InputText id="nome" class="form-control" @bind-Value="Cartao.Nome" />
+                        <ValidationMessage For="@(() => Cartao.Nome)" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="limite" class="form-label">Limite de Crédito</label>
+                        <InputNumber id="limite" class="form-control" @bind-Value="Cartao.Limite" />
+                        <ValidationMessage For="@(() => Cartao.Limite)" />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="dia_fechamento" class="form-label">Dia do Fechamento</label>
+                        <InputNumber id="dia_fechamento" class="form-control" @bind-Value="Cartao.DiaFechamento" />
+                        <ValidationMessage For="@(() => Cartao.DiaFechamento)" />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="dia_vencimento" class="form-label">Dia do Vencimento</label>
+                        <InputNumber id="dia_vencimento" class="form-control" @bind-Value="Cartao.DiaVencimento" />
+                        <ValidationMessage For="@(() => Cartao.DiaVencimento)" />
+                    </div>
+                </div>
+
+                <div class="form-check form-switch mb-3">
+                    <InputCheckbox id="ativo" class="form-check-input" @bind-Value="Cartao.Ativo" />
+                    <label class="form-check-label" for="ativo">Cartão Ativo</label>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" @onclick="HandleCancel">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </EditForm>
+        }
+    </BodyContent>
+</Modal>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public CartaoCredito? Cartao { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private Modal ModalRef = new();
+
+    private async Task HandleSubmit()
+    {
+        if (Cartao != null)
+        {
+            await CartaoService.SalvarCartaoAsync(Cartao);
+            await Close();
+        }
+    }
+
+    public void Open() => ModalRef.Open();
+    public Task Close() => ModalRef.Close();
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+        await Close();
+    }
+}

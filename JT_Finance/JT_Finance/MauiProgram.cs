@@ -1,5 +1,7 @@
 ﻿using JT_Finance.Services;
 using JT_Finance.Shared.Services;
+using JT_Finance.Shared.Services.Interfaces;
+
 using Microsoft.Extensions.Logging;
 
 namespace JT_Finance
@@ -22,7 +24,9 @@ namespace JT_Finance
             // Register ToastService
             builder.Services.AddSingleton<ToastService>();
             builder.Services.AddSingleton<FiltroService>();
-
+            builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
+            builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+            builder.Services.AddScoped<IReceitaService, ReceitaService>();
             builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG

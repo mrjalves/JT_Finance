@@ -1,139 +1,68 @@
 ﻿@page "/cartoes-credito"
 @using JT_Classes.Financeiro
-@using JT_Finance.Shared.Components
+@using JT_Finance.Shared.Components.Grids
+@using JT_Finance.Shared.Components.Modais
 @using JT_Finance.Shared.Services
-@using static JT_Finance.Shared.Components.Modal
+@inject ICartaoCreditoService CartaoService
 @inject ToastService ToastService
 @inject NavigationManager NavigationManager
+
 <h3 class="mb-3">Gerenciador de Cartões de Crédito</h3>
 
 <button class="btn btn-primary mb-3 shadow-sm" @onclick="AbrirModalParaNovoCartao">
     <i class="bi bi-plus-circle-fill me-2"></i>Novo Cartão
 </button>
 
-<DataGrid TItem="CartaoCredito" Items="listaCartoes" IsLoading="isLoading">
-    <HeaderTemplate>
-        <th>Nome</th>
-        <th>Limite</th>
-        <th>Vencimento</th>
-        <th>Fechamento</th>
-        <th>Status</th>
-        <th class="text-end">Ações</th>
-    </HeaderTemplate>
-    <RowTemplate Context="cartao" >
-        <td @ondblclick="() => VerFatura(cartao.Id)" style="cursor: pointer;" title="Dê um duplo clique para ver as despesas">@cartao.Nome</td>
-        <td @ondblclick="() => VerFatura(cartao.Id)" style="cursor: pointer;" title="Dê um duplo clique para ver as despesas">@cartao.Limite.ToString("C")</td>
-        <td @ondblclick="() => VerFatura(cartao.Id)" style="cursor: pointer;" title="Dê um duplo clique para ver as despesas">Dia @cartao.DiaVencimento</td>
-        <td @ondblclick="() => VerFatura(cartao.Id)" style="cursor: pointer;" title="Dê um duplo clique para ver as despesas">Dia @cartao.DiaFechamento</td>
-        <td @ondblclick="() => VerFatura(cartao.Id)" style="cursor: pointer;" title="Dê um duplo clique para ver as despesas">
-            @if (cartao.Ativo)
-            {
-                <span class="badge bg-success">Ativo</span>
-            }
-            else
-            {
-                <span class="badge bg-secondary">Inativo</span>
-            }
-        </td>
-            <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => AbrirModalParaEditarCartao(cartao.Id)" @onclick:stopPropagation="true">
-                    <i class="bi bi-pencil-fill me-1"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoCartao(cartao.Id)" @onclick:stopPropagation="true">
-                    <i class="bi bi-trash-fill me-1"></i>
-                </button>
-            </td>
-    </RowTemplate>
-    <EmptyTemplate>
-        <p class="text-muted mb-0">Nenhuma despesa cadastrada ainda. Clique em "Nova Despesa" para começar.</p>
-    </EmptyTemplate>
-</DataGrid>
+<GridCartoesCredito
+    Cartoes="listaCartoes" 
+    IsLoading="isLoading"
+    OnEditar="AbrirModalParaEditarCartao"
+    OnRemover="ConfirmarRemocaoCartao" />
 
-
-<Modal @ref="crudModal" Title="@modalTitle" OnClose="ResetarEstadoAposModal" Size="ModalSize.Large" CloseOnBackdropClick="false">
-    <BodyContent>
-        @if (cartaoAtual != null)
-        {
-            <EditForm Model="cartaoAtual" OnValidSubmit="() => HandleSalvarCartao(cartaoAtual)">
-                <DataAnnotationsValidator />
-
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label for="nome" class="form-label">Nome do Cartão (Ex: Nubank, Inter Gold)</label>
-                        <InputText id="nome" class="form-control" @bind-Value="cartaoAtual.Nome" />
-                        <ValidationMessage For="@(() => cartaoAtual.Nome)" />
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="limite" class="form-label">Limite de Crédito</label>
-                        <InputNumber id="limite" class="form-control" @bind-Value="cartaoAtual.Limite" />
-                        <ValidationMessage For="@(() => cartaoAtual.Limite)" />
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="dia_fechamento" class="form-label">Dia do Fechamento</label>
-                        <InputNumber id="dia_fechamento" class="form-control" @bind-Value="cartaoAtual.DiaFechamento" />
-                        <ValidationMessage For="@(() => cartaoAtual.DiaFechamento)" />
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="dia_vencimento" class="form-label">Dia do Vencimento</label>
-                        <InputNumber id="dia_vencimento" class="form-control" @bind-Value="cartaoAtual.DiaVencimento" />
-                        <ValidationMessage For="@(() => cartaoAtual.DiaVencimento)" />
-                    </div>
-                </div>
-
-                <div class="form-check form-switch mb-3">
-                    <InputCheckbox id="ativo" class="form-check-input" @bind-Value="cartaoAtual.Ativo" />
-                    <label class="form-check-label" for="ativo">Cartão Ativo</label>
-                </div>
-
-                <hr />
-
-                <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-secondary" @onclick="HandleCancelarFormularioModal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </div>
-            </EditForm>
-        }
-    </BodyContent>
-</Modal>
+<ModalCartaoCredito @ref="crudModal" 
+                   Title="@modalTitle" 
+                   Cartao="cartaoAtual"
+                   OnClose="ResetarEstadoAposModal"
+                   OnCancel="HandleCancelarFormularioModal" />
 
 <ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoCartao" />
 
 @code {
     [CascadingParameter]
     public Func<string, Task>? SetPageTitleAsync { get; set; }
-    private List<CartaoCredito>? listaCartoes;
-    private CartaoCredito? cartaoAtual;
+    private List<CartaoCredito> listaCartoes;
+    private CartaoCredito cartaoAtual;
     private bool isLoading = true;
-
-    private Modal crudModal = new();
+    private ModalCartaoCredito crudModal;
     private string modalTitle = "";
-
-    private ConfirmDialog confirmDeleteDialog = new();
+    private ConfirmDialog confirmDeleteDialog;
     private int? idCartaoParaRemover;
-    private void VerFatura(int cartaoId)
-    {
-        NavigationManager.NavigateTo($"/fatura/{cartaoId}");
-    }
+
     protected override async Task OnInitializedAsync()
     {
         if (SetPageTitleAsync != null)
         {
             await SetPageTitleAsync.Invoke("Cartões Crédito");
         }
+        CartaoService.OnDataChanged += RecarregarDadosEAtualizarUI;
         await CarregarCartoes();
+    }
+
+    public void Dispose()
+    {
+        CartaoService.OnDataChanged -= RecarregarDadosEAtualizarUI;
+    }
+
+    private async void RecarregarDadosEAtualizarUI()
+    {
+        await CarregarCartoes();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task CarregarCartoes()
     {
         isLoading = true;
-        await Task.Yield();
-
-        // Sua lógica de acesso a dados
-        listaCartoes = new CartaoCredito().Consultar<CartaoCredito>("SELECT * FROM CartoesCredito ORDER BY Nome");
-
+        listaCartoes = (await CartaoService.ObterTodosCartoesAsync()).ToList();
         isLoading = false;
     }
 
@@ -144,46 +73,23 @@
         crudModal.Open();
     }
 
-    private void AbrirModalParaEditarCartao(int id)
+    private async Task AbrirModalParaEditarCartao(int id)
     {
-        cartaoAtual = listaCartoes?.FirstOrDefault(c => c.Id == id);
-        cartaoAtual.Status = JT_Persistencia.Persistencia.StatusObjeto.EmEdicao;
+        cartaoAtual = await CartaoService.ObterCartaoPorIdAsync(id);
         if (cartaoAtual != null)
         {
+            cartaoAtual.Status = JT_Persistencia.Persistencia.StatusObjeto.EmEdicao;
             modalTitle = "Editar Cartão de Crédito";
             crudModal.Open();
         }
-    }
-
-    private async Task HandleSalvarCartao(CartaoCredito cartao)
-    {
-        bool sucesso = cartao.Salvar();
-
-        if (!sucesso)
-        {
-            ToastService.ShowError("Erro!", "Ocorreu um problema ao salvar o cartão.");
-        }
-
-        await crudModal.Close();
-        await CarregarCartoes();
     }
 
     private async Task EfetuarRemocaoCartao()
     {
         if (idCartaoParaRemover.HasValue)
         {
-            var cartaoParaRemover = new CartaoCredito { Id = idCartaoParaRemover.Value };
-            var sucesso = cartaoParaRemover.Excluir(cartaoParaRemover);
-            if (sucesso)
-            {
-                ToastService.ShowSuccess("Removido!", "O cartão foi removido.");
-            }
-            else
-            {
-                ToastService.ShowError("Erro!", "Não foi possível remover o cartão. Verifique se ele não está em uso.");
-            }
+            await CartaoService.RemoverCartaoAsync(idCartaoParaRemover.Value);
             idCartaoParaRemover = null;
-            await CarregarCartoes();
         }
     }
 

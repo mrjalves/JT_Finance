@@ -1,10 +1,12 @@
 @page "/receitas"
 @using JT_Classes
 @using JT_Classes.Financeiro
-@using JT_Finance.Shared.Components
+@using JT_Finance.Shared.Components.Grids
+@using JT_Finance.Shared.Components.Modais
 @using JT_Finance.Shared.Services
-@using static JT_Finance.Shared.Components.Modal
-@inject ToastService ToastService
+@inject IReceitaService ReceitaService
+@inject ICategoriaService CategoriaService
+@implements IDisposable // Passo 1: Implementar IDisposable
 
 <h3 class="mb-3">Gerenciador de Receitas</h3>
 
@@ -12,214 +14,76 @@
     <i class="bi bi-plus-circle-fill me-2"></i>Nova Receita
 </button>
 
-<DataGrid TItem="Receita" Items="listaReceitas" IsLoading="isLoading">
-    <HeaderTemplate>
-        <th>Descrição</th>
-        <th>Valor</th>
-        <th>Data</th>
-        <th>Categoria</th>
-        <th>Recebida</th>
-        <th class="text-end">Ações</th>
-    </HeaderTemplate>
-    <RowTemplate Context="receita">
-        <td>@receita.Descricao</td>
-        <td>@receita.Valor.ToString("C")</td>
-        <td>@receita.DataReceita.ToShortDateString()</td>
-        <td>@(opcoesCategoriaReceita.FirstOrDefault(c => c.Id == receita.Categoria)?.Descricao)</td>
-        <td>
-            @if (receita.ReceitaRecebida)
-            {
-                <span class="badge bg-success">Sim</span>
-            }
-            else
-            {
-                <span class="badge bg-secondary">Não</span>
-            }
-        </td>
-        <td class="text-end">
-            <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Receita" @onclick="() => DuplicarReceita(receita)">
-                <i class="bi bi-copy"></i>
-            </button>
+<GridReceitas
+    Receitas="listaReceitas"
+    opcoesCategoriaReceita="opcoesCategoriaReceita"
+              opcoesTipoReceita=" opcoesTipoReceita"
+    IsLoading="isLoading"
+    OnEditar="AbrirModalParaEditarReceita"
+    OnRemover="ConfirmarRemocaoReceita"
+    OnDuplicar="DuplicarReceita" />
 
-            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => AbrirModalParaEditarReceita(receita)">
-                <i class="bi bi-pencil-fill me-1"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoReceita(receita.Id)">
-                <i class="bi bi-trash-fill me-1"></i>
-            </button>
-        </td>
-    </RowTemplate>
-    <EmptyTemplate>
-        <p class="text-muted mb-0">Nenhuma receita cadastrada ainda. Clique em "Nova Receita" para começar.</p>
-    </EmptyTemplate>
-</DataGrid>
-
-<Modal @ref="crudModal" Title="@modalTitle" OnClose="ResetarEstadoAposModal" Size="ModalSize.Large">
-    <BodyContent>
-        @if (receitaAtual != null)
-        {
-            <EditForm Model="receitaAtual" OnValidSubmit="() => HandleSalvarReceita(receitaAtual)">
-                <DataAnnotationsValidator />
-
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label for="descricao" class="form-label">Descrição</label>
-                        <InputText id="descricao" class="form-control" @bind-Value="receitaAtual.Descricao" />
-                        <ValidationMessage For="@(() => receitaAtual.Descricao)" />
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="valor" class="form-label">Valor</label>
-                        <InputNumber id="valor" class="form-control" step="0.01" @bind-Value="receitaAtual.Valor" />
-                        <ValidationMessage For="@(() => receitaAtual.Valor)" />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="data" class="form-label">Data da Receita</label>
-                        <InputDate id="data" class="form-control" @bind-Value="receitaAtual.DataReceita" />
-                        <ValidationMessage For="@(() => receitaAtual.DataReceita)" />
-                    </div>
-                </div>
-
-                <div class="row">
-                    <!-- Dropdown para TIPO DE RECEITA -->
-                    <div class="col-md-6 mb-3">
-                        <label for="tipo_receita" class="form-label">Tipo de Receita</label>
-                        <div class="input-group">
-                            <InputSelect id="tipo_receita" class="form-select" @bind-Value="receitaAtual.TipoReceita">
-                                <option value="0">Selecione um tipo...</option>
-                                @foreach (var tipo in opcoesTipoReceita)
-                                {
-                                    <option value="@tipo.Id">@tipo.Descricao</option>
-                                }
-                            </InputSelect>
-                            <button class="btn btn-outline-secondary" type="button" @onclick='() => ToggleInlineForm("TipoReceita")'>+</button>
-                        </div>
-                        @if (showNewTipoForm)
-                        {
-                            <div class="input-group mt-2">
-                                <InputText @bind-Value="newOptionDescription" class="form-control" placeholder="Novo tipo..." />
-                                <button type="button" class="btn btn-success" @onclick='() => SalvarNovaOpcaoInline("TipoReceita")'>Salvar</button>
-                            </div>
-                        }
-                    </div>
-
-                    <!-- Dropdown para CATEGORIA DE RECEITA -->
-                    <div class="col-md-6 mb-3">
-                        <label for="categoria_receita" class="form-label">Categoria da Receita</label>
-                        <div class="input-group">
-                            <InputSelect id="categoria_receita" class="form-select" @bind-Value="receitaAtual.Categoria">
-                                <option value="0">Selecione uma categoria...</option>
-                                @foreach (var cat in opcoesCategoriaReceita)
-                                {
-                                    <option value="@cat.Id">@cat.Descricao</option>
-                                }
-                            </InputSelect>
-                            <button class="btn btn-outline-secondary" type="button" @onclick='() => ToggleInlineForm("CategoriaReceita")'>+</button>
-                        </div>
-                        @if (showNewCategoriaForm)
-                        {
-                            <div class="input-group mt-2">
-                                <InputText @bind-Value="newOptionDescription" class="form-control" placeholder="Nova categoria..." />
-                                <button type="button" class="btn btn-success" @onclick='() => SalvarNovaOpcaoInline("CategoriaReceita")'>Salvar</button>
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label for="observacao" class="form-label">Observação</label>
-                    <InputTextArea id="observacao" class="form-control" @bind-Value="receitaAtual.Observacao" rows="3" />
-                </div>
-
-                <div class="row align-items-center">
-                    <div class="col-md-6 mb-3">
-                        <div class="form-check form-switch">
-                            <InputCheckbox id="recebida" class="form-check-input" @bind-Value="receitaAtual.ReceitaRecebida" />
-                            <label class="form-check-label" for="recebida">Já foi recebida?</label>
-                        </div>
-                    </div>
-                    @if (receitaAtual.ReceitaRecebida)
-                    {
-                        <div class="col-md-6 mb-3">
-                            <label for="data_recebimento" class="form-label">Data de Recebimento</label>
-                            <InputDate id="data_recebimento" class="form-control" @bind-Value="receitaAtual.DataRecebimento" />
-                        </div>
-                    }
-                </div>
-
-                <hr />
-
-                <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-secondary" @onclick="HandleCancelarFormularioModal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </div>
-            </EditForm>
-        }
-    </BodyContent>
-</Modal>
+<ModalReceita @ref="modalReceita"
+              Receita="receitaAtual"
+              Title="modalTitle"
+              OnClose="ResetarEstadoAposModal"
+              OnCancel="HandleCancelarFormularioModal" />
 
 <ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoReceita" />
 
 @code {
-    [CascadingParameter]
-    public Func<string, Task>? SetPageTitleAsync { get; set; }
-    private List<Receita>? listaReceitas;
-    private Receita? receitaAtual;
-    private bool isLoading = true;
-
-    private Modal crudModal = new();
-    private string modalTitle = "";
-
-    private ConfirmDialog confirmDeleteDialog = new();
-    private int? idReceitaParaRemover;
-
-    private Categoria categoriaRepository;
-    private List<Categoria> opcoesTipoReceita;
+    private List<Receita> listaReceitas;
     private List<Categoria> opcoesCategoriaReceita;
-
-    private bool showNewTipoForm = false;
-    private bool showNewCategoriaForm = false;
-    private string newOptionDescription = "";
+    private List<Categoria> opcoesTipoReceita;
+    private Receita receitaAtual;
+    private bool isLoading = true;
+    private ModalReceita modalReceita;
+    private string modalTitle = "";
+    private ConfirmDialog confirmDeleteDialog;
+    private int? idReceitaParaRemover;
 
     protected override async Task OnInitializedAsync()
     {
-        if (SetPageTitleAsync != null)
-        {
-            await SetPageTitleAsync.Invoke("Receitas");
-        }
+        // Passo 2: Inscrever-se nos eventos dos serviços
+        ReceitaService.OnDataChanged += AtualizarDadosDaPagina;
+        CategoriaService.OnDataChanged += AtualizarDadosDaPagina;
+        
         await CarregarDependencias();
+    }
+
+    // Passo 3: Criar um método manipulador para reagir às mudanças
+    private async void AtualizarDadosDaPagina()
+    {
+        await InvokeAsync(async () =>
+        {
+            await CarregarDependencias();
+            StateHasChanged();
+        });
     }
 
     private async Task CarregarDependencias()
     {
         isLoading = true;
-        await Task.WhenAll(
-            CarregarReceitas(),
-            CarregarOpcoesDeCategoria()
-        );
+        await Task.WhenAll(CarregarReceitas(), CarregarOpcoesDeCategoria());
         isLoading = false;
     }
 
     private async Task CarregarReceitas()
     {
-        await Task.Yield();
-        listaReceitas = new Receita().Consultar<Receita>("SELECT * FROM Receitas ORDER BY DataReceita DESC");
+        listaReceitas = await ReceitaService.ObterTodasReceitasAsync();
     }
 
-    private Task CarregarOpcoesDeCategoria()
+    private async Task CarregarOpcoesDeCategoria()
     {
-        opcoesTipoReceita = Categoria.ListarPorPapel("Receita", "TipoReceita");
-        opcoesCategoriaReceita = Categoria.ListarPorPapel("Receita", "CategoriaReceita");
-        return Task.CompletedTask;
+        opcoesCategoriaReceita = await CategoriaService.GetCategorias("Receita", "CategoriaReceita");
+        opcoesTipoReceita = await CategoriaService.GetCategorias("Receita", "TipoReceita");
     }
 
     private void AbrirModalParaNovaReceita()
     {
         receitaAtual = new Receita(JT_Persistencia.Persistencia.StatusObjeto.Novo);
         modalTitle = "Adicionar Nova Receita";
-        crudModal.Open();
+        modalReceita.Open();
     }
 
     private void AbrirModalParaEditarReceita(Receita receitaParaEditar)
@@ -227,27 +91,36 @@
         receitaAtual = receitaParaEditar;
         receitaAtual.Status = JT_Persistencia.Persistencia.StatusObjeto.EmEdicao;
         modalTitle = "Editar Receita";
-        crudModal.Open();
+        modalReceita.Open();
     }
 
-    private async Task HandleSalvarReceita(Receita receita)
+    private async Task EfetuarRemocaoReceita()
     {
-        bool sucesso = receita.Salvar();
-
-        if (sucesso)
+        if (idReceitaParaRemover.HasValue)
         {
-            await crudModal.Close();
-            await CarregarDependencias();
-        }
-        else
-        {
-            ToastService.ShowError("Erro!", "Não foi possível salvar a receita.");
+            await ReceitaService.RemoverReceitaAsync(idReceitaParaRemover.Value);
+            idReceitaParaRemover = null;
+            // A chamada para CarregarDependencias foi removida daqui. O evento cuidará disso.
         }
     }
 
+    private async Task DuplicarReceita(Receita receita)
+    {
+        await ReceitaService.DuplicarReceitaAsync(receita.Id);
+        // A chamada para CarregarDependencias foi removida daqui.
+    }
+    
+    // Passo 4: Desinscrever-se dos eventos para evitar vazamentos de memória
+    public void Dispose()
+    {
+        ReceitaService.OnDataChanged -= AtualizarDadosDaPagina;
+        CategoriaService.OnDataChanged -= AtualizarDadosDaPagina;
+    }
+
+    // --- Métodos de UI sem alterações na lógica principal ---
     private async Task HandleCancelarFormularioModal()
     {
-        await crudModal.Close();
+        await modalReceita.Close();
     }
 
     private void ResetarEstadoAposModal()
@@ -256,83 +129,9 @@
         modalTitle = "";
     }
 
-    private async Task ConfirmarRemocaoReceita(int id)
+    private void ConfirmarRemocaoReceita(int id)
     {
         idReceitaParaRemover = id;
         confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover esta receita?");
-
-    }
-
-    private async Task EfetuarRemocaoReceita()
-    {
-        if (idReceitaParaRemover.HasValue)
-        {
-            var receitaParaRemover = new Receita { Id = idReceitaParaRemover.Value };
-            if (receitaParaRemover.Excluir(receitaParaRemover))
-            {
-                ToastService.ShowSuccess("Removida!", "A receita foi removida.");
-                await CarregarDependencias();
-            }
-            else
-            {
-                ToastService.ShowError("Erro!", "Não foi possível remover a receita.");
-            }
-            idReceitaParaRemover = null;
-        }
-    }
-    private async Task DuplicarReceita(Receita receita)
-    {
-        var result = receita.Duplicar();
-        if (result)
-        {
-            ToastService.ShowSuccess("Duplicada!", "A receita foi duplicada.");
-            await CarregarDependencias();
-        }
-        else
-        {
-            ToastService.ShowError("Erro!", "Não foi possível duplicar a receita.");
-        }
-    }
-    private void ToggleInlineForm(string papel)
-    {
-        newOptionDescription = "";
-        if (papel == "TipoReceita")
-        {
-            showNewTipoForm = !showNewTipoForm;
-            showNewCategoriaForm = false;
-        }
-        else
-        {
-            showNewCategoriaForm = !showNewCategoriaForm;
-            showNewTipoForm = false;
-        }
-    }
-
-    private async Task SalvarNovaOpcaoInline(string papel)
-    {
-        if (string.IsNullOrWhiteSpace(newOptionDescription)) return;
-
-        var novaOpcao = new Categoria
-        {
-            TipoEntidade = "Receita",
-            Nome = papel,
-            Descricao = newOptionDescription
-        };
-
-        if (categoriaRepository.Salvar())
-        {
-            await CarregarOpcoesDeCategoria();
-            if (papel == "TipoReceita")
-            {
-                receitaAtual.TipoReceita = novaOpcao.Id;
-                showNewTipoForm = false;
-            }
-            else
-            {
-                receitaAtual.Categoria = novaOpcao.Id;
-                showNewCategoriaForm = false;
-            }
-            newOptionDescription = "";
-        }
     }
 }

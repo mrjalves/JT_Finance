@@ -1,4 +1,5 @@
 using JT_Finance.Shared.Services;
+using JT_Finance.Shared.Services.Interfaces;
 using JT_Finance.Web.Client.Services;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -12,5 +13,7 @@ builder.Services.AddScoped<ToastService>();
 
 // Register FiltroService
 builder.Services.AddScoped<FiltroService>();
-
+builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
+builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+builder.Services.AddScoped<IReceitaService, ReceitaService>();
 await builder.Build().RunAsync();
