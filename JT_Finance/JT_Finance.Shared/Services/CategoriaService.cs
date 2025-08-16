@@ -15,10 +15,18 @@ namespace JT_Finance.Shared.Services
     {
         private readonly ToastService _toastService;
         private List<Categoria> _categorias;
+        private List<Categoria> _categoriasDespesas;
+        private List<Categoria> _categoriasTipoDespesas;
+        private List<Categoria> _categoriasReceitas;
+        private List<Categoria> _categoriasTipoReceitas;
 
         public CategoriaService(ToastService toastService)
         {
             _categorias = new();
+            _categoriasDespesas = new();
+            _categoriasReceitas = new();
+            _categoriasTipoDespesas = new();
+            _categoriasTipoReceitas = new();
             _toastService = toastService;
         }
 
@@ -36,12 +44,39 @@ namespace JT_Finance.Shared.Services
             return null;
         }
 
-        public async Task<List<Categoria>> GetCategorias(string Classe, string Propriedade)
+        public Task<List<Categoria>> GetCategorias()
         {
-            if(!_categorias.Any())
-                _categorias = Categoria.ListarPorPapel(Classe, Propriedade);
-            return await Task.FromResult(_categorias);
+            throw new NotImplementedException();
         }
+
+        public async Task<List<Categoria>> GetCategoriasDespesa()
+        {
+            if (!_categorias.Any())
+                _categoriasDespesas = Categoria.ListarPorPapel("Despesa", "Categoria");
+            return await Task.FromResult(_categoriasDespesas);
+        }
+
+        public async Task<List<Categoria>> GetCategoriasReceitas()
+        {
+            if (!_categorias.Any())
+                _categoriasReceitas = Categoria.ListarPorPapel("Receita", "CategoriaReceita");
+            return await Task.FromResult(_categoriasReceitas);
+        }
+
+        public async Task<List<Categoria>> GetTipoCategoriasDespesa()
+        {
+            if (!_categorias.Any())
+                _categoriasTipoDespesas = Categoria.ListarPorPapel("Despesa", "TipoDespesa");
+            return await Task.FromResult(_categoriasTipoDespesas);
+        }
+
+        public async Task<List<Categoria>> GetTipoCategoriasReceitas()
+        {
+            if (!_categorias.Any())
+                _categoriasTipoReceitas = Categoria.ListarPorPapel("Receita", "TipoReceita");
+            return await Task.FromResult(_categoriasTipoReceitas);
+        }
+
         public void NotificarErro(string titulo, string mensagem)
         {
             _toastService.ShowError(titulo, mensagem);

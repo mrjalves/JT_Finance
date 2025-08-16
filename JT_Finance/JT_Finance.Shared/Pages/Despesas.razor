@@ -2,243 +2,32 @@
 @using JT_Classes
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
+@using JT_Finance.Shared.Components.Grids
+@using JT_Finance.Shared.Components.Modais
 @using JT_Finance.Shared.Services
-@using JT_Finance.Shared.Models
-@using static JT_Finance.Shared.Components.Modal
 @using System.Text
-@inject ToastService ToastService
-@inject FiltroService FiltroService
+@using JT_Finance.Shared.Services.Interfaces
+@inject IDespesaService DespesaService
 @implements IDisposable
 
 <button class="btn btn-primary mb-3 shadow-sm" @onclick="AbrirModalParaNovaDespesa">
     <i class="bi bi-plus-circle-fill me-2"></i>Nova Despesa
 </button>
 
-<DataGrid TItem="Despesa" Items="despesasFiltradas" IsLoading="isLoading">
-    <HeaderTemplate>
-        <th>Descrição</th>
-        <th>Valor</th>
-        <th>Data</th>
-        <th>Data Vencimento</th>
-        <th>Tipo</th>
-        <th>Categoria</th>
-        <th>Cartão / Parcela</th>
-        <th>Paga</th>
-        <th>Ações</th>
-    </HeaderTemplate>
+<GridDespesas 
+    Despesas="despesasFiltradas"
+    IsLoading="isLoading"
+              OnEditar="AbrirModalParaEditarDespesa"
+              OnRemover="ConfirmarRemocaoDespesa"
+              OnDuplicar="DuplicarDespesa"
+/> 
 
-    <RowTemplate Context="despesa">
-        <td>@despesa.Descricao</td>
-        <td>@despesa.Valor.ToString("C")</td>
-        <td>@despesa.DataDespesa.ToShortDateString()</td>
-        <td>
-            @if(despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
-            {
-                @despesa.DetalhesCartaoCredito.DataVencimento.ToShortDateString()
-            }
-            else
-            {
-                <span class= "text-muted" >—</span>
-            }
-        </td>
-        <td>@despesa.CategoriaTipoDespesa?.Descricao</td>
-         <td>@despesa.CategoriaDespesa?.Descricao</td>
-        <td>
-            @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
-            {
-                <span class="d-block">@despesa.DetalhesCartaoCredito.Cartao?.Nome</span>
-                <small class="text-muted">@despesa.DetalhesCartaoCredito.NumeroParcela</small>
-            }
-            else
-            {
-                <span class="text-muted">—</span>
-            }
-        </td>
-        <td>
-            @if (despesa.DespesaPaga)
-            {
-                <span class="badge bg-success">Sim</span>
-            }
-            else
-            {
-                <span class="badge bg-danger">Não</span>
-            }
-        </td>
-        <td>
-            @if (!despesa.EhDespesaCartaoCredito)
-            {
-                <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Despesa" @onclick="() => DuplicarDespesa(despesa)">
-                    <i class="bi bi-copy"></i>
-                </button>
-            }
-            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => AbrirModalParaEditarDespesa(despesa.Id)">
-                <i class="bi bi-pencil-fill"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoDespesa(despesa.Id)">
-                <i class="bi bi-trash-fill"></i>
-            </button>
-        </td>
-    </RowTemplate>
+<JT_Finance.Shared.Components.Modais.ModalDespesa
+    @ref="modalDespesa"
+    Despesa="despesaAtual"
+    OnClose="ResetarEstadoAposModal"
+    OnCancel="HandleCancelarFormularioModal" />
 
-    <EmptyTemplate>
-        <p class="text-muted mb-0">Nenhuma despesa encontrada. Tente ajustar os filtros ou cadastre uma nova despesa.</p>
-    </EmptyTemplate>
-</DataGrid>
-
-<Modal @ref="crudModal" Title="@modalTitle" OnClose="ResetarEstadoAposModal" Size="ModalSize.Large" CloseOnBackdropClick="false">
-    <BodyContent>
-        @if (despesaAtual != null)
-        {
-            <EditForm Model="despesaAtual" OnValidSubmit="() => HandleSalvarDespesa(despesaAtual)">
-                <DataAnnotationsValidator />
-                <div class="form-check form-switch mb-3">
-                    <InputCheckbox id="isCardExpense" class="form-check-input" @bind-Value="despesaAtual.EhDespesaCartaoCredito" />
-                    <label class="form-check-label" for="isCardExpense">É uma despesa de Cartão de Crédito?</label>
-                </div>
-                <hr />
-
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label for="descricao" class="form-label">Descrição</label>
-                        <InputText id="descricao" class="form-control" @bind-Value="despesaAtual.Descricao" />
-                        <ValidationMessage For="@(() => despesaAtual.Descricao)" />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="valor" class="form-label">Valor</label>
-                        <InputNumber id="valor" step="0.01" class="form-control" @bind-Value="despesaAtual.Valor" />
-                        <ValidationMessage For="@(() => despesaAtual.Valor)" />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="data_despesa" class="form-label">Data da Despesa</label>
-                        <InputDate id="data_despesa" class="form-control" @bind-Value="despesaAtual.DataDespesa" />
-                        <ValidationMessage For="@(() => despesaAtual.DataDespesa)" />
-                    </div>
-                </div>
-                @if (despesaAtual.EhDespesaCartaoCredito && despesaAtual.DetalhesCartaoCredito != null)
-                {
-                    <div class="row p-3 mb-3 bg-light border rounded animate__animated animate__fadeIn">
-                        <div class="col-md-6 mb-3">
-                            <label for="cartao" class="form-label">Cartão de Crédito</label>
-                            <InputSelect id="cartao" class="form-select" @bind-Value="despesaAtual.DetalhesCartaoCredito.IdCartao">
-                                <option value="0">Selecione um cartão...</option>
-                                @foreach (var cartao in listaCartoesCredito)
-                                {
-                                    <option value="@cartao.Id">@cartao.Nome</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => despesaAtual.DetalhesCartaoCredito.IdCartao)" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="parcelas" class="form-label">Quantidade de Parcelas</label>
-                            <InputNumber id="parcelas" class="form-control" @bind-Value="despesaAtual.DetalhesCartaoCredito.QuantidadeParcelas" />
-                            <ValidationMessage For="@(() => despesaAtual.DetalhesCartaoCredito.QuantidadeParcelas)" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="data_vencimento_fatura" class="form-label">Data Vencimento Fatura (Primeira Parcela)</label>
-                            <InputDate id="data_vencimento_fatura" class="form-control" @bind-Value="despesaAtual.DetalhesCartaoCredito.DataVencimento" />
-                            <ValidationMessage For="@(() => despesaAtual.DetalhesCartaoCredito.DataVencimento)" />
-                        </div>
-                    </div>
-                }
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="tipo_despesa" class="form-label">Tipo de Despesa</label>
-                        <div class="input-group">
-                            <InputSelect id="tipo_despesa" class="form-select" @bind-Value="despesaAtual.TipoDespesa" disabled="@showNewTipoForm">
-                                <option value="0">Selecione um tipo...</option>
-                                @if (opcoesTipoDespesa != null)
-                                {
-                                    @foreach (var tipo in opcoesTipoDespesa)
-                                    {
-                                        <option value="@tipo.Id">@tipo.Descricao</option>
-                                    }
-                                }
-                            </InputSelect>
-                            <button class="btn btn-outline-secondary" type="button" @onclick='() => ToggleInlineForm("TipoDespesa")' title="Adicionar Novo Tipo">
-                                <i class="bi bi-plus-lg"></i>
-                            </button>
-                        </div>
-                        <ValidationMessage For="@(() => despesaAtual.TipoDespesa)" />
-
-                        @if (showNewTipoForm)
-                        {
-                            <div class="input-group mt-2 animate__animated animate__fadeIn">
-                                <InputText @bind-Value="newOptionDescription" class="form-control" placeholder="Nova descrição para Tipo..." />
-                                <button type="button" class="btn btn-success" @onclick='() => SalvarNovaOpcaoInline("TipoDespesa")'>Salvar</button>
-                                <button type="button" class="btn btn-secondary" @onclick='() => ToggleInlineForm("TipoDespesa")'>Cancelar</button>
-                            </div>
-                        }
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label for="categoria" class="form-label">Categoria</label>
-                        <div class="input-group">
-                            <InputSelect id="categoria" class="form-select" @bind-Value="despesaAtual.Categoria" disabled="@showNewCategoriaForm">
-                                <option value="0">Selecione uma categoria...</option>
-                                @if (opcoesCategoriaDespesa != null)
-                                {
-                                    @foreach (var cat in opcoesCategoriaDespesa)
-                                    {
-                                        <option value="@cat.Id">@cat.Descricao</option>
-                                    }
-                                }
-                            </InputSelect>
-                            <button class="btn btn-outline-secondary" type="button" @onclick='() => ToggleInlineForm("Categoria")' title="Adicionar Nova Categoria">
-                                <i class="bi bi-plus-lg"></i>
-                            </button>
-                        </div>
-                        <ValidationMessage For="@(() => despesaAtual.Categoria)" />
-
-                        @if (showNewCategoriaForm)
-                        {
-                            <div class="input-group mt-2 animate__animated animate__fadeIn">
-                                <InputText @bind-Value="newOptionDescription" class="form-control" placeholder="Nova descrição para Categoria..." />
-                                <button type="button" class="btn btn-success" @onclick='() => SalvarNovaOpcaoInline("Categoria")'>Salvar</button>
-                                <button type="button" class="btn btn-secondary" @onclick='() => ToggleInlineForm("Categoria")'>Cancelar</button>
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label for="observacao" class="form-label">Observação</label>
-                    <InputTextArea id="observacao" class="form-control" @bind-Value="despesaAtual.Observacao" rows="3" />
-                    <ValidationMessage For="@(() => despesaAtual.Observacao)" />
-                </div>
-
-                <div class="row align-items-center">
-                    <div class="col-md-6 mb-3">
-                        <div class="form-check form-switch">
-                            <InputCheckbox id="paga" class="form-check-input" @bind-Value="despesaAtual.DespesaPaga" />
-                            <label class="form-check-label" for="paga">Despesa já foi paga?</label>
-                        </div>
-                    </div>
-                    @if (despesaAtual.DespesaPaga)
-                    {
-                        <div class="col-md-6 mb-3">
-                            <label for="data_pagamento" class="form-label">Data de Pagamento</label>
-                            <InputDate id="data_pagamento" class="form-control" @bind-Value="despesaAtual.DataPagamento" />
-                            <ValidationMessage For="@(() => despesaAtual.DataPagamento)" />
-                        </div>
-                    }
-                </div>
-
-                <hr />
-
-                <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-secondary" @onclick="HandleCancelarFormularioModal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </div>
-            </EditForm>
-        }
-        else
-        {
-            <p>Carregando formulário...</p>
-        }
-    </BodyContent>
-</Modal>
 
 <ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoDespesa" />
 
@@ -247,21 +36,12 @@
     public Func<string, Task>? SetPageTitleAsync { get; set; }
 
     private bool isLoading = true;
-    private Modal crudModal = new();
-    private string modalTitle = "";
-    private ConfirmDialog confirmDeleteDialog = new();
+    private ModalDespesa modalDespesa = new();
     private int? idDespesaParaRemover;
-
+    private ConfirmDialog confirmDeleteDialog = new();
     private Despesa? despesaAtual;
-    private List<Despesa> listaTodasDespesas = new();
+   
     private List<Despesa> despesasFiltradas = new();
-    private List<Categoria> opcoesTipoDespesa = new();
-    private List<Categoria> opcoesCategoriaDespesa = new();
-    private List<CartaoCredito> listaCartoesCredito = new();
-
-    private bool showNewTipoForm = false;
-    private bool showNewCategoriaForm = false;
-    private string newOptionDescription = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -269,167 +49,70 @@
         {
             await SetPageTitleAsync.Invoke("Despesas");
         }
+        DespesaService.OnDataChanged += AtualizarDadosDaPagina;
         await CarregarDependencias();
-        ConfigurarFiltros();
-        despesasFiltradas = new List<Despesa>(listaTodasDespesas);
     }
 
-    private void ConfigurarFiltros()
+    private async void AtualizarDadosDaPagina()
     {
-        var filtros = new List<FiltroItem>
+        await InvokeAsync(async () =>
         {
-            new FiltroItem { Label = "Data Início", ColumnName = "DataDespesa", Type = "date" },
-            new FiltroItem { Label = "Data Fim", ColumnName = "DataDespesa", Type = "date" },
-            new FiltroItem { Label = "Categoria", ColumnName = "ID_CATEGORIA_TIPO", Type = "select", Options = opcoesCategoriaDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
-            new FiltroItem { Label = "Tipo", ColumnName = "ID_CATEGORIA_SUB", Type = "select", Options = opcoesTipoDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
-            new FiltroItem { Label = "Situação", ColumnName = "DespesaPaga", Type = "select", Options = new List<KeyValuePair<string, string>> { new("1", "Paga"), new("0", "Não Paga") } }
-        };
-        FiltroService.RegistrarFiltros(filtros, AplicarFiltros, AplicarPesquisa);
+            await CarregarDependencias();
+            StateHasChanged();
+        });
     }
 
     private async Task CarregarDependencias()
     {
         isLoading = true;
         await Task.WhenAll(
-            CarregarDespesas(),
-            CarregarOpcoesDeCategoria(),
-            CarregarCartoesDeCredito()
+            CarregarDespesas()
         );
         isLoading = false;
     }
 
     private async Task CarregarDespesas(string whereClause = "")
     {
-        isLoading = true;
-        string query = $"SELECT * FROM Despesas {whereClause} ORDER BY DataDespesa DESC";
-        listaTodasDespesas = new Despesa(JT_Persistencia.Persistencia.StatusObjeto.Carregando).Consultar<Despesa>(query);
-
-        foreach (var despesa in listaTodasDespesas)
-        {
-            if (despesa.EhDespesaCartaoCredito)
-            {
-                despesa.DetalhesCartaoCredito = new DespesaCartaoCredito(despesa.Id);
-                if (despesa.DetalhesCartaoCredito.IdCartao > 0)
-                {
-                    despesa.DetalhesCartaoCredito.Cartao = new CartaoCredito(despesa.DetalhesCartaoCredito.IdCartao);
-                }
-            }
-        }
-        despesasFiltradas = new List<Despesa>(listaTodasDespesas);
-        isLoading = false;
+        despesasFiltradas = await DespesaService.ObterTodasDespesasAsync();
     }
+
     private async Task DuplicarDespesa(Despesa Despesa)
     {
-        var result = Despesa.Duplicar();
-        if (result)
-        {
-            ToastService.ShowSuccess("Duplicada!", "A Despesa foi duplicada.");
-            await CarregarDespesas();
-        }
-        else
-        {
-            ToastService.ShowError("Erro!", "Não foi possível duplicar a Despesa.");
-        }
-    }
-    private Task AplicarPesquisa(string searchTerm)
-    {
-        if (string.IsNullOrWhiteSpace(searchTerm))
-        {
-            despesasFiltradas = new List<Despesa>(listaTodasDespesas);
-        }
-        else
-        {
-            despesasFiltradas = listaTodasDespesas
-                .Where(d => d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
-
-    private async Task AplicarFiltros(List<FiltroItem> filtros)
-    {
-        var whereConditions = new List<string>();
-        var dataInicio = filtros.FirstOrDefault(f => f.Label == "Data Início")?.Value as DateTime?;
-        var dataFim = filtros.FirstOrDefault(f => f.Label == "Data Fim")?.Value as DateTime?;
-
-        if (dataInicio.HasValue) whereConditions.Add($"DataDespesa >= '{dataInicio.Value:yyyy-MM-dd}'");
-        if (dataFim.HasValue) whereConditions.Add($"DataDespesa <= '{dataFim.Value:yyyy-MM-dd}'");
-
-        foreach (var filtro in filtros.Where(f => f.Value != null && !string.IsNullOrEmpty(f.Value.ToString()) && f.Label != "Data Início" && f.Label != "Data Fim"))
-        {
-            whereConditions.Add($"{filtro.ColumnName} = {filtro.Value}");
-        }
-
-        string whereClause = whereConditions.Any() ? "WHERE " + string.Join(" AND ", whereConditions) : "";
-        await CarregarDespesas(whereClause);
-        StateHasChanged();
-    }
-
-    public void Dispose()
-    {
-        FiltroService.OnFiltroAplicado -= AplicarFiltros;
-        FiltroService.OnSearchApplied -= AplicarPesquisa;
-    }
-
-    // --- Métodos de CRUD (permanecem majoritariamente os mesmos, mas operam em `listaTodasDespesas` e recarregam com `CarregarDespesas()`) ---
-    private void AbrirModalParaNovaDespesa()
-    {
-        despesaAtual = new Despesa(JT_Persistencia.Persistencia.StatusObjeto.Novo);
-        modalTitle = "Nova Despesa";
-        crudModal.Open();
-    }
-
-    private void AbrirModalParaEditarDespesa(int id)
-    {
-        despesaAtual = new Despesa(id);
-        modalTitle = "Editar Despesa";
-        crudModal.Open();
-    }
-
-    private async Task HandleSalvarDespesa(Despesa despesa)
-    {
-        bool sucesso = despesa.Salvar();
-        if (sucesso)
-        {
-            ToastService.ShowSuccess("Sucesso!", "Nova despesa salva.");
-            await crudModal.Close();
-            await CarregarDespesas();
-        }
-        else
-        {
-            ToastService.ShowError("Erro!", "Ocorreu um problema ao salvar a despesa.");
-        }
+        await DespesaService.DuplicarDespesaAsync(Despesa);
     }
 
     private async Task EfetuarRemocaoDespesa()
     {
         if (idDespesaParaRemover.HasValue)
         {
-            var despesaParaRemover = new Despesa(idDespesaParaRemover.Value);
-            var sucesso = despesaParaRemover.Excluir(despesaParaRemover);
-            if (sucesso)
-                ToastService.ShowSuccess("Removida!", "A despesa foi removida.");
-            else
-                ToastService.ShowError("Erro!", "Não foi possível remover a despesa.");
+            await DespesaService.RemoverDespesaAsync(idDespesaParaRemover.Value);
             idDespesaParaRemover = null;
-            await CarregarDespesas();
         }
+    }
+
+    private void AbrirModalParaNovaDespesa()
+    {
+        despesaAtual = new Despesa(JT_Persistencia.Persistencia.StatusObjeto.Novo);
+        modalDespesa.Title = "Nova Despesa";
+        modalDespesa.Open();
+    }
+
+    private void AbrirModalParaEditarDespesa(int id)
+    {
+        despesaAtual = new Despesa(id);
+        modalDespesa.Title = "Editar Despesa";
+        modalDespesa.Open();
     }
 
     private async Task HandleCancelarFormularioModal()
     {
         despesaAtual = null;
-        await crudModal.Close();
+        await modalDespesa.Close();
     }
 
     private void ResetarEstadoAposModal()
     {
         despesaAtual = null;
-        modalTitle = "";
-        showNewTipoForm = false;
-        showNewCategoriaForm = false;
-        newOptionDescription = "";
     }
 
     private void ConfirmarRemocaoDespesa(int id)
@@ -438,78 +121,9 @@
         confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover esta despesa?");
     }
 
-    private void ToggleInlineForm(string papel)
+    public void Dispose()
     {
-        newOptionDescription = "";
-        if (papel == "TipoDespesa")
-        {
-            showNewTipoForm = !showNewTipoForm;
-            showNewCategoriaForm = false;
-        }
-        else if (papel == "Categoria")
-        {
-            showNewCategoriaForm = !showNewCategoriaForm;
-            showNewTipoForm = false;
-        }
+        DespesaService.OnDataChanged -= AtualizarDadosDaPagina;
     }
-
-    private async Task SalvarNovaOpcaoInline(string papel)
-    {
-        if (string.IsNullOrWhiteSpace(newOptionDescription))
-        {
-            ToastService.ShowWarning("Atenção", "A descrição não pode estar vazia.");
-            return;
-        }
-        var novaOpcao = new Categoria(JT_Persistencia.Persistencia.StatusObjeto.Novo)
-        {
-            TipoEntidade = "Despesa",
-            Nome = papel,
-            Descricao = newOptionDescription
-        };
-        bool sucesso = novaOpcao.Salvar();
-        if (sucesso)
-        {
-            ToastService.ShowSuccess("Sucesso!", "Nova opção de categoria salva.");
-            await CarregarOpcoesDeCategoria();
-            if (papel == "TipoDespesa" && despesaAtual != null) despesaAtual.TipoDespesa = novaOpcao.Id;
-            else if (papel == "Categoria" && despesaAtual != null) despesaAtual.Categoria = novaOpcao.Id;
-
-            ToggleInlineForm(papel);
-            newOptionDescription = "";
-            StateHasChanged();
-        }
-        else
-        {
-            ToastService.ShowError("Erro!", "Não foi possível salvar a nova opção.");
-        }
-    }
-  
-    private Task CarregarOpcoesDeCategoria()
-    {
-        try
-        {
-            opcoesTipoDespesa = Categoria.ListarPorPapel("Despesa", "TipoDespesa");
-            opcoesCategoriaDespesa = Categoria.ListarPorPapel("Despesa", "Categoria");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erro ao carregar opções de categoria: {ex.Message}");
-            opcoesTipoDespesa = new();
-            opcoesCategoriaDespesa = new();
-        }
-        return Task.CompletedTask;
-    }
-    private Task CarregarCartoesDeCredito()
-    {
-        try
-        {
-            listaCartoesCredito = new CartaoCredito().Consultar<CartaoCredito>("SELECT * FROM CartoesCredito WHERE Ativo = 1 ORDER BY Nome");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erro ao carregar cartões: {ex.Message}");
-            listaCartoesCredito = new List<CartaoCredito>();
-        }
-        return Task.CompletedTask;
-    }
+   
 }

@@ -4,7 +4,7 @@ namespace JT_Finance.Shared.Services.Interfaces
 {
     public interface ICartaoCreditoService
     {
-        Task<IEnumerable<CartaoCredito>> ObterTodosCartoesAsync();
+        Task<List<CartaoCredito>> ObterTodosCartoesAsync();
         Task<CartaoCredito> ObterCartaoPorIdAsync(int id);
         Task<bool> SalvarCartaoAsync(CartaoCredito cartao);
         Task<bool> RemoverCartaoAsync(int id);

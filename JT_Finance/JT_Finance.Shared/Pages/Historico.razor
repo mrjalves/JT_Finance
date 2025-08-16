@@ -3,6 +3,17 @@
 
 <PageTitle>Histórico Financeiro</PageTitle>
 
-<h3 class="mb-4">Histórico Financeiro</h3>
-
 <Calendario />
+
+@code {
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (SetPageTitleAsync != null)
+        {
+            await SetPageTitleAsync.Invoke("Hitórico");
+        }
+    }
+}

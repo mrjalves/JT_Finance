@@ -1,0 +1,198 @@
+﻿@using JT_Classes.Financeiro
+@using JT_Finance.Shared.Models
+@using JT_Finance.Shared.Services.Interfaces
+@inject IDespesaService DespesaService
+@inject FiltroService FiltroService
+
+<DataGrid TItem="Despesa" Items="Despesas" IsLoading="IsLoading">
+    <HeaderTemplate>
+        <th>Descrição</th>
+        <th>Valor</th>
+        <th>Data</th>
+        <th>Data Vencimento</th>
+        <th>Tipo</th>
+        <th>Categoria</th>
+        <th>Cartão / Parcela</th>
+        <th>Paga</th>
+        <th>Ações</th>
+    </HeaderTemplate>
+
+    <RowTemplate Context="despesa">
+        <td>@despesa.Descricao</td>
+        <td>@despesa.Valor.ToString("C")</td>
+        <td>@despesa.DataDespesa.ToShortDateString()</td>
+        <td>
+            @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
+            {
+                @despesa.DetalhesCartaoCredito.DataVencimento.ToShortDateString()
+            }
+            else
+            {
+                <span class="text-muted">—</span>
+            }
+        </td>
+        <td>@despesa.CategoriaTipoDespesa?.Descricao</td>
+        <td>@despesa.CategoriaDespesa?.Descricao</td>
+        <td>
+            @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
+            {
+                <span class="d-block">@despesa.DetalhesCartaoCredito.Cartao?.Nome</span>
+                <small class="text-muted">@despesa.DetalhesCartaoCredito.NumeroParcela</small>
+            }
+            else
+            {
+                <span class="text-muted">—</span>
+            }
+        </td>
+        <td>
+            @if (despesa.DespesaPaga)
+            {
+                <span class="badge bg-success">Sim</span>
+            }
+            else
+            {
+                <span class="badge bg-danger">Não</span>
+            }
+        </td>
+        <td>
+            @if (!despesa.EhDespesaCartaoCredito)
+            {
+                <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Despesa" @onclick="() => OnDuplicar.InvokeAsync(despesa)">
+                    <i class="bi bi-copy"></i>
+                </button>
+            }
+            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(despesa.Id)">
+                <i class="bi bi-pencil-fill"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(despesa.Id)">
+                <i class="bi bi-trash-fill"></i>
+            </button>
+        </td>
+    </RowTemplate>
+
+    <EmptyTemplate>
+        <p class="text-muted mb-0">Nenhuma despesa encontrada. Tente ajustar os filtros ou cadastre uma nova despesa.</p>
+    </EmptyTemplate>
+</DataGrid>
+
+@code {
+    [Parameter]
+    public bool IsLoading { get; set; }
+    [Parameter]
+    public EventCallback<Despesa> OnDuplicar { get; set; }
+    [Parameter]
+    public EventCallback<int> OnEditar { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRemover { get; set; }
+
+    [Parameter] 
+    public List<Despesa>? Despesas { get; set; }
+    private List<Despesa> listaTodasDespesas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        DespesaService.OnDataChanged += AtualizarDadosDaPagina;
+        await CarregarDependencias();
+        ConfigurarFiltros();
+    }
+
+    private async void AtualizarDadosDaPagina()
+    {
+        await InvokeAsync(async () =>
+        {
+            await CarregarDependencias();
+            StateHasChanged();
+        });
+    }
+
+    private async Task CarregarDependencias()
+    {
+        IsLoading = true;
+        await Task.WhenAll(
+            CarregarDespesas()
+        );
+        IsLoading = false;
+    }
+    private async Task CarregarDespesas(string whereClause = "")
+    {
+        listaTodasDespesas = await DespesaService.ObterTodasDespesasAsync();
+    }
+
+    private void ConfigurarFiltros()
+    {
+        var filtros = new List<FiltroItem>
+        {
+            new FiltroItem { Label = "Data Início", ColumnName = "DataDespesa", Type = "date" },
+            new FiltroItem { Label = "Data Fim", ColumnName = "DataDespesa", Type = "date" },
+            new FiltroItem { Label = "Situação", ColumnName = "DespesaPaga", Type = "select", Options = new List<KeyValuePair<string, string>> { new("1", "Paga"), new("0", "Não Paga") } }
+        };
+        FiltroService.RegistrarFiltros(filtros, AplicarFiltros, AplicarPesquisa);
+    }
+
+    private Task AplicarPesquisa(string searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            Despesas = new List<Despesa>(listaTodasDespesas);
+        }
+        else
+        {
+            Despesas = listaTodasDespesas
+               .Where(d => LevenshteinDistance(d.Descricao.ToLower(), searchTerm.ToLower()) <= 2 || d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+               .ToList();
+        }
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+    private int LevenshteinDistance(string s, string t)
+    {
+        if (string.IsNullOrEmpty(s))
+        {
+            return string.IsNullOrEmpty(t) ? 0 : t.Length;
+        }
+
+        if (string.IsNullOrEmpty(t))
+        {
+            return s.Length;
+        }
+
+        int n = s.Length;
+        int m = t.Length;
+        int[,] d = new int[n + 1, m + 1];
+
+        for (int i = 0; i <= n; d[i, 0] = i++) ;
+        for (int j = 0; j <= m; d[0, j] = j++) ;
+
+        for (int i = 1; i <= n; i++)
+        {
+            for (int j = 1; j <= m; j++)
+            {
+                int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+                d[i, j] = Math.Min(
+                    Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                    d[i - 1, j - 1] + cost);
+            }
+        }
+        return d[n, m];
+    }
+    private async Task AplicarFiltros(List<FiltroItem> filtros)
+    {
+        var whereConditions = new List<string>();
+        var dataInicio = filtros.FirstOrDefault(f => f.Label == "Data Início")?.Value as DateTime?;
+        var dataFim = filtros.FirstOrDefault(f => f.Label == "Data Fim")?.Value as DateTime?;
+
+        if (dataInicio.HasValue) whereConditions.Add($"DataDespesa >= '{dataInicio.Value:yyyy-MM-dd}'");
+        if (dataFim.HasValue) whereConditions.Add($"DataDespesa <= '{dataFim.Value:yyyy-MM-dd}'");
+
+        foreach (var filtro in filtros.Where(f => f.Value != null && !string.IsNullOrEmpty(f.Value.ToString()) && f.Label != "Data Início" && f.Label != "Data Fim"))
+        {
+            whereConditions.Add($"{filtro.ColumnName} = {filtro.Value}");
+        }
+
+        string whereClause = whereConditions.Any() ? "WHERE " + string.Join(" AND ", whereConditions) : "";
+        await CarregarDespesas(whereClause);
+        StateHasChanged();
+    }
+
+}

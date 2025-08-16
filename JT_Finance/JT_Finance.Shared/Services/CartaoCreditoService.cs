@@ -27,7 +27,7 @@ namespace JT_Finance.Shared.Services
             NotifyDataChanged();
         }
 
-        public async Task<IEnumerable<CartaoCredito>> ObterTodosCartoesAsync()
+        public async Task<List<CartaoCredito>> ObterTodosCartoesAsync()
         {
             if (!_cartoes.Any())
                 await CarregarDadosAsync();

@@ -10,7 +10,11 @@ namespace JT_Finance.Shared.Services.Interfaces
 {
     public interface ICategoriaService
     {
-        Task<List<Categoria>> GetCategorias(string Classe, string Propriedade);
+        Task<List<Categoria>> GetCategorias();
+        Task<List<Categoria>> GetCategoriasDespesa();
+        Task<List<Categoria>> GetTipoCategoriasDespesa();
+        Task<List<Categoria>> GetTipoCategoriasReceitas();
+        Task<List<Categoria>> GetCategoriasReceitas();
         Task<Categoria> CriarCategoriaAsync(Categoria categoria);
         Task<bool> SalvarCategoriaAsync(Categoria categoria);
         void NotificarErro(string titulo, string mensagem);

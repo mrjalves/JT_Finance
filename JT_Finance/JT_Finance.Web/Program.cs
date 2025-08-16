@@ -3,8 +3,6 @@ using JT_Finance.Shared.Services.Interfaces;
 using JT_Finance.Web.Components;
 using JT_Finance.Web.Services;
 
-using System;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -22,6 +20,7 @@ builder.Services.AddScoped<FiltroService>();
 builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IReceitaService, ReceitaService>();
+builder.Services.AddScoped<IDespesaService, DespesaService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -4,11 +4,10 @@
 @using JT_Finance.Shared.Components.Grids
 @using JT_Finance.Shared.Components.Modais
 @using JT_Finance.Shared.Services
+@using JT_Finance.Shared.Services.Interfaces
 @inject IReceitaService ReceitaService
 @inject ICategoriaService CategoriaService
 @implements IDisposable // Passo 1: Implementar IDisposable
-
-<h3 class="mb-3">Gerenciador de Receitas</h3>
 
 <button class="btn btn-primary mb-3 shadow-sm" @onclick="AbrirModalParaNovaReceita">
     <i class="bi bi-plus-circle-fill me-2"></i>Nova Receita
@@ -25,33 +24,35 @@
 
 <ModalReceita @ref="modalReceita"
               Receita="receitaAtual"
-              Title="modalTitle"
               OnClose="ResetarEstadoAposModal"
               OnCancel="HandleCancelarFormularioModal" />
 
 <ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoReceita" />
 
 @code {
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
     private List<Receita> listaReceitas;
     private List<Categoria> opcoesCategoriaReceita;
     private List<Categoria> opcoesTipoReceita;
     private Receita receitaAtual;
     private bool isLoading = true;
     private ModalReceita modalReceita;
-    private string modalTitle = "";
     private ConfirmDialog confirmDeleteDialog;
     private int? idReceitaParaRemover;
 
     protected override async Task OnInitializedAsync()
     {
-        // Passo 2: Inscrever-se nos eventos dos serviços
+        if (SetPageTitleAsync != null)
+        {
+            await SetPageTitleAsync.Invoke("Receitas");
+        }
         ReceitaService.OnDataChanged += AtualizarDadosDaPagina;
         CategoriaService.OnDataChanged += AtualizarDadosDaPagina;
         
         await CarregarDependencias();
     }
 
-    // Passo 3: Criar um método manipulador para reagir às mudanças
     private async void AtualizarDadosDaPagina()
     {
         await InvokeAsync(async () =>
@@ -75,14 +76,14 @@
 
     private async Task CarregarOpcoesDeCategoria()
     {
-        opcoesCategoriaReceita = await CategoriaService.GetCategorias("Receita", "CategoriaReceita");
-        opcoesTipoReceita = await CategoriaService.GetCategorias("Receita", "TipoReceita");
+        opcoesCategoriaReceita = await CategoriaService.GetCategoriasReceitas();
+        opcoesTipoReceita = await CategoriaService.GetTipoCategoriasReceitas();
     }
 
     private void AbrirModalParaNovaReceita()
     {
         receitaAtual = new Receita(JT_Persistencia.Persistencia.StatusObjeto.Novo);
-        modalTitle = "Adicionar Nova Receita";
+        modalReceita.Title = "Adicionar Nova Receita";
         modalReceita.Open();
     }
 
@@ -90,7 +91,7 @@
     {
         receitaAtual = receitaParaEditar;
         receitaAtual.Status = JT_Persistencia.Persistencia.StatusObjeto.EmEdicao;
-        modalTitle = "Editar Receita";
+        modalReceita.Title = "Editar Receita";
         modalReceita.Open();
     }
 
@@ -100,24 +101,20 @@
         {
             await ReceitaService.RemoverReceitaAsync(idReceitaParaRemover.Value);
             idReceitaParaRemover = null;
-            // A chamada para CarregarDependencias foi removida daqui. O evento cuidará disso.
         }
     }
 
     private async Task DuplicarReceita(Receita receita)
     {
         await ReceitaService.DuplicarReceitaAsync(receita.Id);
-        // A chamada para CarregarDependencias foi removida daqui.
     }
     
-    // Passo 4: Desinscrever-se dos eventos para evitar vazamentos de memória
     public void Dispose()
     {
         ReceitaService.OnDataChanged -= AtualizarDadosDaPagina;
         CategoriaService.OnDataChanged -= AtualizarDadosDaPagina;
     }
 
-    // --- Métodos de UI sem alterações na lógica principal ---
     private async Task HandleCancelarFormularioModal()
     {
         await modalReceita.Close();
@@ -126,7 +123,6 @@
     private void ResetarEstadoAposModal()
     {
         receitaAtual = null;
-        modalTitle = "";
     }
 
     private void ConfirmarRemocaoReceita(int id)

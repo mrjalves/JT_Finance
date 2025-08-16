@@ -1,9 +1,8 @@
 ﻿@page "/configuracoes"
 @using JT_Classes.Comum
 @using JT_Finance.Shared.Services
+@using JT_Finance.Shared.Components
 @inject ToastService ToastService
-
-<h3 class="mb-3">Configurações do Utilizador</h3>
 
 @if (configuracaoAtual == null)
 {
@@ -11,41 +10,44 @@
 }
 else
 {
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <EditForm Model="configuracaoAtual" OnValidSubmit="HandleSalvarConfiguracoes">
-                <DataAnnotationsValidator />
-
-                <h5 class="card-title">Aparência</h5>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="tema" class="form-label">Tema Visual</label>
-                        <InputSelect id="tema" class="form-select" @bind-Value="configuracaoAtual.Tema">
-                            <option value="Claro">Claro</option>
-                            <option value="Escuro">Escuro</option>
-                        </InputSelect>
-                    </div>
-                </div>
-                <hr />
-
-                <h5 class="card-title">Preferências de Exibição</h5>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="itensPorPagina" class="form-label">Itens por Página nos Grids</label>
-                        <InputNumber id="itensPorPagina" class="form-control" @bind-Value="configuracaoAtual.ItensPorPagina" />
-                    </div>
-                </div>
-                <hr />
-
-                <h5 class="card-title">Notificações</h5>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <div class="form-check form-switch">
-                            <InputCheckbox id="notificacoes" class="form-check-input" @bind-Value="configuracaoAtual.NotificacoesEmail" />
-                            <label class="form-check-label" for="notificacoes">Receber notificações por e-mail</label>
+    <EditForm Model="configuracaoAtual" OnValidSubmit="HandleSalvarConfiguracoes">
+        <DataAnnotationsValidator />
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <TabControl>
+                    <TabPage Title="Aparência">
+                        <h5 class="card-title">Aparência</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="tema" class="form-label">Tema Visual</label>
+                                <InputSelect id="tema" class="form-select" @bind-Value="configuracaoAtual.Tema">
+                                    <option value="Claro">Claro</option>
+                                    <option value="Escuro">Escuro</option>
+                                </InputSelect>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    </TabPage>
+                    <TabPage Title="Preferências de Exibição">
+                        <h5 class="card-title">Preferências de Exibição</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="itensPorPagina" class="form-label">Itens por Página nos Grids</label>
+                                <InputNumber id="itensPorPagina" class="form-control" @bind-Value="configuracaoAtual.ItensPorPagina" />
+                            </div>
+                        </div>
+                    </TabPage>
+                    <TabPage Title="Notificações">
+                        <h5 class="card-title">Notificações</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <InputCheckbox id="notificacoes" class="form-check-input" @bind-Value="configuracaoAtual.NotificacoesEmail" />
+                                    <label class="form-check-label" for="notificacoes">Receber notificações por e-mail</label>
+                                </div>
+                            </div>
+                        </div>
+                    </TabPage>
+                </TabControl>
                 <hr />
 
                 <div class="d-flex justify-content-end">
@@ -53,18 +55,22 @@ else
                         <i class="bi bi-save-fill me-2"></i>Salvar Alterações
                     </button>
                 </div>
-
-            </EditForm>
+            </div>
         </div>
-    </div>
+    </EditForm>
 }
 
 
+
 @code {
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
     private Configuracao? configuracaoAtual;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        if (SetPageTitleAsync != null)
+           await SetPageTitleAsync.Invoke("Configurações");
         CarregarConfiguracoes();
     }
 

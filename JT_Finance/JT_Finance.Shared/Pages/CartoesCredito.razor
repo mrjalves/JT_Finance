@@ -1,41 +1,44 @@
 ﻿@page "/cartoes-credito"
 @using JT_Classes.Financeiro
-@using JT_Finance.Shared.Components.Grids
+@using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Components.Modais
 @using JT_Finance.Shared.Services
+@using JT_Finance.Shared.Services.Interfaces
+@using static JT_Finance.Shared.Components.Modal
 @inject ICartaoCreditoService CartaoService
-@inject ToastService ToastService
-@inject NavigationManager NavigationManager
-
-<h3 class="mb-3">Gerenciador de Cartões de Crédito</h3>
 
 <button class="btn btn-primary mb-3 shadow-sm" @onclick="AbrirModalParaNovoCartao">
     <i class="bi bi-plus-circle-fill me-2"></i>Novo Cartão
 </button>
 
-<GridCartoesCredito
-    Cartoes="listaCartoes" 
+<JT_Finance.Shared.Components.Grids.GridCartoesCredito
+    Cartoes="listaCartoes"
     IsLoading="isLoading"
     OnEditar="AbrirModalParaEditarCartao"
-    OnRemover="ConfirmarRemocaoCartao" />
+    OnRemover="ConfirmarRemocaoCartao"
+/>
 
-<ModalCartaoCredito @ref="crudModal" 
-                   Title="@modalTitle" 
-                   Cartao="cartaoAtual"
-                   OnClose="ResetarEstadoAposModal"
-                   OnCancel="HandleCancelarFormularioModal" />
+
+<JT_Finance.Shared.Components.Modais.ModalCartaoCredito
+    @ref="modalCartao"
+    Cartao="cartaoAtual"
+    OnClose="ResetarEstadoAposModal" 
+    OnCancel="HandleCancelarFormularioModal"
+    />
 
 <ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoCartao" />
 
 @code {
     [CascadingParameter]
     public Func<string, Task>? SetPageTitleAsync { get; set; }
-    private List<CartaoCredito> listaCartoes;
-    private CartaoCredito cartaoAtual;
+
+    private List<CartaoCredito> listaCartoes = new();
+    private CartaoCredito? cartaoAtual;
     private bool isLoading = true;
-    private ModalCartaoCredito crudModal;
-    private string modalTitle = "";
-    private ConfirmDialog confirmDeleteDialog;
+
+    private ModalCartaoCredito modalCartao = new();
+
+    private ConfirmDialog confirmDeleteDialog = new();
     private int? idCartaoParaRemover;
 
     protected override async Task OnInitializedAsync()
@@ -44,44 +47,37 @@
         {
             await SetPageTitleAsync.Invoke("Cartões Crédito");
         }
-        CartaoService.OnDataChanged += RecarregarDadosEAtualizarUI;
+        CartaoService.OnDataChanged += AtualizarDadosDaPagina;
         await CarregarCartoes();
     }
-
-    public void Dispose()
+    private async void AtualizarDadosDaPagina()
     {
-        CartaoService.OnDataChanged -= RecarregarDadosEAtualizarUI;
+        await InvokeAsync(async () =>
+        {
+            await CarregarCartoes();
+            StateHasChanged();
+        });
     }
-
-    private async void RecarregarDadosEAtualizarUI()
-    {
-        await CarregarCartoes();
-        await InvokeAsync(StateHasChanged);
-    }
-
     private async Task CarregarCartoes()
     {
         isLoading = true;
-        listaCartoes = (await CartaoService.ObterTodosCartoesAsync()).ToList();
+        listaCartoes = await CartaoService.ObterTodosCartoesAsync();
         isLoading = false;
     }
 
     private void AbrirModalParaNovoCartao()
     {
         cartaoAtual = new CartaoCredito(JT_Persistencia.Persistencia.StatusObjeto.Novo);
-        modalTitle = "Novo Cartão de Crédito";
-        crudModal.Open();
+        modalCartao.Title = "Novo Cartão de Crédito";
+        modalCartao.Open();
     }
 
-    private async Task AbrirModalParaEditarCartao(int id)
+    private void AbrirModalParaEditarCartao(int id)
     {
-        cartaoAtual = await CartaoService.ObterCartaoPorIdAsync(id);
-        if (cartaoAtual != null)
-        {
-            cartaoAtual.Status = JT_Persistencia.Persistencia.StatusObjeto.EmEdicao;
-            modalTitle = "Editar Cartão de Crédito";
-            crudModal.Open();
-        }
+        cartaoAtual = listaCartoes?.FirstOrDefault(c => c.Id == id);
+        cartaoAtual.Status = JT_Persistencia.Persistencia.StatusObjeto.EmEdicao;
+        modalCartao.Title = "Editar Cartão de Crédito";
+        modalCartao.Open();
     }
 
     private async Task EfetuarRemocaoCartao()
@@ -92,21 +88,23 @@
             idCartaoParaRemover = null;
         }
     }
+    private async Task ConfirmarRemocaoCartao(int id)
+    {
+        idCartaoParaRemover = id;
+        confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover este cartão?");
+    }
 
     private async Task HandleCancelarFormularioModal()
     {
-        await crudModal.Close();
+        await modalCartao.Close();
     }
 
     private void ResetarEstadoAposModal()
     {
         cartaoAtual = null;
-        modalTitle = "";
     }
-
-    private async Task ConfirmarRemocaoCartao(int id)
+    public void Dispose()
     {
-        idCartaoParaRemover = id;
-        confirmDeleteDialog.Show("Confirmar Remoção", "Deseja realmente remover este cartão?");
+        CartaoService.OnDataChanged -= AtualizarDadosDaPagina;
     }
 }

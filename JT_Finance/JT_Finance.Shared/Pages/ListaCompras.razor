@@ -6,7 +6,6 @@
 @using static JT_Finance.Shared.Components.Modal
 @inject ToastService ToastService
 
-<h3 class="mb-3">Listas de Compras</h3>
 
 <!-- Seletor de Listas e Botões de Ação -->
 <div class="card shadow-sm mb-3">
@@ -147,6 +146,8 @@
 <ConfirmDialog @ref="confirmDialog" OnConfirm="OnConfirmDelete" />
 
 @code {
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
     private List<ListaCompra>? listasDeCompra;
     private List<ListaCompraItem>? itensDaListaSelecionada;
     private bool isLoading = true;
@@ -179,6 +180,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (SetPageTitleAsync != null)
+           await SetPageTitleAsync.Invoke("Lista Compras");
+        
         await CarregarListas();
     }
 

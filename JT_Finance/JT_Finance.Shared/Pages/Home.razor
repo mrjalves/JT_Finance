@@ -72,7 +72,6 @@
     </div>
 </div>
 
-
 <!-- GRÁFICOS -->
 <div class="row mt-4">
     <div class="col-lg-6 mb-4">
@@ -80,9 +79,7 @@
             <div class="card-body">
                 @if (isLoading)
                 {
-                    <div class="text-center p-4">
-                        <div class="spinner-border text-primary" role="status"></div>
-                    </div>
+                    <Loading/>
                 }
                 else if (datasetsGraficoPorCategoria.Any() && datasetsGraficoPorCategoria.First().Data.Any())
                 {

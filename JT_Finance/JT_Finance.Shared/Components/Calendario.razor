@@ -12,43 +12,51 @@
     </div>
 
     <div class="calendar-grid">
-        @foreach (var dia in DiasDaSemana)
+        @if (IsLoading)
         {
-            <div class="calendar-weekday">@dia</div>
+            <Loading />
+        }
+        else
+        {
+            @foreach (var dia in DiasDaSemana)
+            {
+                <div class="calendar-weekday">@dia</div>
+            }
+
+            @foreach (var dia in diasDoMesParaExibir)
+            {
+                <div class="calendar-day-cell @GetDayCellClass(dia)" @onclick="() => AbrirDetalhesDoDia(dia)">
+
+                    <div class="day-header">
+                        <div class="day-number">@dia.Day</div>
+                    </div>
+
+                    <div class="entries-container">
+                        @foreach (var evento in GetEventosDoDia(dia))
+                        {
+                            <EntradaCalendario Evento="evento" />
+                        }
+                    </div>
+
+                    <div class="day-summary">
+                        @{
+                            var eventosDoDia = GetEventosDoDia(dia);
+                            var totalReceitas = eventosDoDia.Where(e => e.Tipo == TipoEvento.Receita).Sum(e => e.Valor);
+                            var totalDespesas = eventosDoDia.Where(e => e.Tipo == TipoEvento.Despesa).Sum(e => e.Valor);
+                        }
+                        @if (totalReceitas > 0)
+                        {
+                            <span class="summary-receita" title="Total de Receitas">+@totalReceitas.ToString("C2")</span>
+                        }
+                        @if (totalDespesas > 0)
+                        {
+                            <span class="summary-despesa" title="Total de Despesas">-@totalDespesas.ToString("C2")</span>
+                        }
+                    </div>
+                </div>
+            }
         }
 
-        @foreach (var dia in diasDoMesParaExibir)
-        {
-            <div class="calendar-day-cell @GetDayCellClass(dia)" @onclick="() => AbrirDetalhesDoDia(dia)">
-
-                <div class="day-header">
-                    <div class="day-number">@dia.Day</div>
-                </div>
-
-                <div class="entries-container">
-                    @foreach (var evento in GetEventosDoDia(dia))
-                    {
-                        <EntradaCalendario Evento="evento" />
-                    }
-                </div>
-
-                <div class="day-summary">
-                    @{
-                        var eventosDoDia = GetEventosDoDia(dia);
-                        var totalReceitas = eventosDoDia.Where(e => e.Tipo == TipoEvento.Receita).Sum(e => e.Valor);
-                        var totalDespesas = eventosDoDia.Where(e => e.Tipo == TipoEvento.Despesa).Sum(e => e.Valor);
-                    }
-                    @if (totalReceitas > 0)
-                    {
-                        <span class="summary-receita" title="Total de Receitas">+@totalReceitas.ToString("C2")</span>
-                    }
-                    @if (totalDespesas > 0)
-                    {
-                        <span class="summary-despesa" title="Total de Despesas">-@totalDespesas.ToString("C2")</span>
-                    }
-                </div>
-            </div>
-        }
     </div>
 </div>
 
@@ -93,10 +101,12 @@
     private DateTime? diaSelecionado;
     private List<EventoCalendario> eventosDoDiaSelecionado = new();
     private string modalTitle = "Detalhes do Dia";
-
+    private bool IsLoading;
     protected override async Task OnInitializedAsync()
     {
+        IsLoading = true;
         await CarregarDadosDoMes();
+        IsLoading = false;
     }
 
     private void ConstruirCalendario()

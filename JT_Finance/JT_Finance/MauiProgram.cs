@@ -27,6 +27,7 @@ namespace JT_Finance
             builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
             builder.Services.AddScoped<ICategoriaService, CategoriaService>();
             builder.Services.AddScoped<IReceitaService, ReceitaService>();
+            builder.Services.AddScoped<IDespesaService, DespesaService>();
             builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG

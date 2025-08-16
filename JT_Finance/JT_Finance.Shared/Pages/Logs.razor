@@ -6,7 +6,6 @@
 @using JT_Persistencia
 @using static JT_Finance.Shared.Components.Modal
 
-<h3 class="mb-3">Visualizador de Logs do Sistema</h3>
 
 <!-- Painel de Filtros -->
 <div class="card shadow-sm mb-3">
@@ -111,6 +110,8 @@
 </Modal>
 
 @code {
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
     private List<LogEntry>? listaLogs;
     private bool isLoading = true;
     private Modal confirmacaoExclusaoModal = new();
@@ -126,6 +127,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (SetPageTitleAsync != null)
+               await SetPageTitleAsync.Invoke("Logs");
         await CarregarLogs();
     }
 

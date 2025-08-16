@@ -4,7 +4,7 @@
 @using static JT_Finance.Shared.Components.Modal
 @inject IReceitaService ReceitaService
 @inject ICategoriaService CategoriaService
-@inject ToastService ToastService
+@inject ICategoriaService TipoService
 
 <Modal @ref="ModalRef" Title="@Title" OnClose="OnClose" Size="ModalSize.Large">
     <BodyContent>
@@ -158,8 +158,8 @@
 {
     try 
     {
-        TiposReceita = await CategoriaService.GetCategorias("Receita", "TipoReceita") ?? new List<Categoria>();
-        CategoriasReceita = await CategoriaService.GetCategorias("Receita", "CategoriaReceita") ?? new List<Categoria>();
+        TiposReceita = await TipoService.GetTipoCategoriasReceitas(); 
+        CategoriasReceita = await CategoriaService.GetCategoriasReceitas(); 
     }
     catch (Exception ex)
     {
@@ -240,10 +240,6 @@
                 showNewCategoriaForm = false;
             }
             novaCategoriaDescricao = string.Empty;
-        }
-        else
-        {
-            ToastService.ShowError("Erro", "Não foi possível salvar a nova categoria");
         }
     }
 }

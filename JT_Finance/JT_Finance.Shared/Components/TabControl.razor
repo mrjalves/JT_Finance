@@ -1,0 +1,52 @@
+﻿@namespace JT_Finance.Shared.Components
+
+<div class="tabs">
+    <ul class="nav nav-tabs">
+        @foreach (var tabPage in Pages)
+        {
+            <li class="nav-item">
+                <a class="nav-link @(IsActive(tabPage) ? "active" : "")" @onclick="() => ActivatePage(tabPage)">
+                    @tabPage.Title
+                </a>
+            </li>
+        }
+    </ul>
+
+    <CascadingValue Value="this">
+        <div class="tab-content p-3 border border-top-0">
+            @ChildContent
+        </div>
+    </CascadingValue>
+</div>
+
+@code {
+    /// <summary>
+    /// Conteúdo filho do controle de abas, que deve incluir um ou mais componentes TabPage.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    internal List<TabPage> Pages = new List<TabPage>();
+
+    internal TabPage? ActivePage { get; set; }
+
+    internal void AddPage(TabPage tabPage)
+    {
+        Pages.Add(tabPage);
+        if (Pages.Count == 1)
+        {
+            ActivePage = tabPage;
+        }
+        StateHasChanged();
+    }
+
+    private void ActivatePage(TabPage tabPage)
+    {
+        ActivePage = tabPage;
+    }
+
+    public bool IsActive(TabPage tabPage)
+    {
+        return tabPage == ActivePage;
+    }
+}
