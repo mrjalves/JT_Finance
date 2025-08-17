@@ -44,7 +44,7 @@
         </div>
     </div>
     <div class="col-md-4 mb-2">
-        <div class="card border-left-danger shadow h-100 py-2">
+        <div class="card border-left-danger shadow h-100 py-2 card-clickable" @onclick='() => AbrirModalDetalhes(" Do mês", DespesaMes)'>
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
@@ -209,6 +209,7 @@
     private List<ChartDataset> datasetsGraficoPorCategoria = new();
     private List<Despesa> DespesasVencidas = new();
     private List<Despesa> DespesaAVencer = new();
+    private List<Despesa> DespesaMes = new();
     protected override async Task OnInitializedAsync()
     {
         if (SetPageTitleAsync != null)
@@ -216,6 +217,8 @@
             await SetPageTitleAsync.Invoke("Dashboard");
         }
         await LoadDashboardData();
+        DespesaAVencer = await DespesaService.ObterDespesasAVencerAsync();
+        DespesasVencidas = await DespesaService.ObterDespesasVencidasAsync();
     }
 
     private async Task LoadDashboardData()
@@ -231,8 +234,8 @@
             totalDespesas = await DespesaService.GetTotalMes(mesReferencia);
             saldoAtual = totalReceitas - totalDespesas;
 
-            DespesaAVencer = await DespesaService.ObterDespesasAVencerAsync();
-            DespesasVencidas = await DespesaService.ObterDespesasVencidasAsync();
+           
+            DespesaMes = await DespesaService.ObterDespesasMesAsync(mesReferencia);
 
             // --- GRÁFICO DE TIPO (BARRAS) ---
             var despesasPorTipo = await DespesaService.GetDespesaPorTipo(mesReferencia);

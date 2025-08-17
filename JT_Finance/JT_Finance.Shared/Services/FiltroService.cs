@@ -18,7 +18,7 @@ namespace JT_Finance.Shared.Services
             FiltrosVisiveis = !FiltrosVisiveis;
             NotifyStateChanged();
         }
-
+      
         public void RegistrarFiltros(List<FiltroItem> filtros, Func<List<FiltroItem>, Task> onFiltroAplicadoCallback, Func<string, Task> onSearchAppliedCallback)
         {
             Filtros = filtros;

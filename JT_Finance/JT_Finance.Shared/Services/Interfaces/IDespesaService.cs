@@ -19,6 +19,7 @@ namespace JT_Finance.Shared.Services.Interfaces
         Task<bool> RemoverDespesaAsync(int id);
         Task<bool> DuplicarDespesaAsync(Despesa despesa);
         Task<List<TotalPorTipo>> GetDespesaPorTipo(DateTime mes);
+        Task<List<Despesa>> ObterDespesasMesAsync(DateTime mes);
         Task<List<TotalPorCategoria>> GetDespesaPorCategoria(DateTime mes);
         Task<decimal> GetTotalMes(DateTime mes);
         void NotificarErro(string titulo, string mensagem);

@@ -3,6 +3,8 @@
 using JT_Finance.Shared.Pages;
 using JT_Finance.Shared.Services.Interfaces;
 
+using Microsoft.Data.SqlClient;
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -154,5 +156,58 @@ namespace JT_Finance.Shared.Services
             var sql = @$"SELECT * FROM Despesas {condicao}";
             return await Task.FromResult(new Despesa().Consultar<Despesa>(sql));
         }
+
+        public async Task<List<Despesa>> ObterDespesasMesAsync(DateTime mesReferencia)
+        {
+            var dataInicio = new DateTime(mesReferencia.Year, mesReferencia.Month, 1);
+            var dataFim = dataInicio.AddMonths(1);
+
+            var sql = @$"
+                    SELECT
+                        D.*
+                    FROM
+                        Despesas AS D
+                        LEFT JOIN DespesasCartaoCredito AS DC ON D.Id = DC.IdDespesa
+                    WHERE
+                        -- CONDIÇÃO 1: Despesas de cartão de crédito com VENCIMENTO no período.
+                        (
+                            D.EhDespesaCartaoCredito = 1
+                            AND DC.DataVencimento >= '{dataInicio}'
+                            AND DC.DataVencimento < '{dataFim}'
+                        )
+                        OR
+                        -- CONDIÇÃO 2: Despesas gerais com DATA no período.
+                        (
+                            D.EhDespesaCartaoCredito = 0
+                            AND D.DataDespesa >= '{dataInicio}'
+                            AND D.DataDespesa < '{dataFim}'
+                        )
+                    ORDER BY
+                        -- Ordena pela data relevante para cada tipo de despesa.
+                        CASE
+                            WHEN D.EhDespesaCartaoCredito = 1 THEN DC.DataVencimento
+                            ELSE D.DataDespesa
+                        END DESC;
+                        ";
+
+                                
+            var despesas = new Despesa().Consultar<Despesa>(sql);
+
+            return await Task.FromResult(despesas ?? new List<Despesa>());
+            //var sql = @$"
+            //    SELECT * FROM Despesas D
+            //    WHERE AND D.DataDespesa >= '{dataInicio}'AND D.DataDespesa < '{dataFim}' AND D.EhDespesaCartaoCredito = 0
+            //    AND D.DespesaPaga = 0 
+            //    ORDER BY D.DataDespesa DESC";
+            //var _ = new Despesa().Consultar<Despesa>(sql);
+            //sql = @$"
+            //    SELECT * FROM Despesas D
+            //    INNER JOIN DespesasCartaoCredito DC ON D.Id = DC.IdDespesa
+            //    WHERE DC.DataVencimento >=  '{dataInicio}' AND DC.DataVencimento < '{dataFim}' AND DC.ParcelaPaga = 0 
+            //    ORDER BY D.DataDespesa DESC";
+            //_.AddRange(new Despesa().Consultar<Despesa>(sql));
+            //return await Task.FromResult(_);
+        }
+       
     }
 }
