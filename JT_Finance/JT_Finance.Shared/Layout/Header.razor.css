@@ -5,7 +5,7 @@
     padding: 0 2rem;
     border-bottom: 1px solid var(--header-border);
     background-color: var(--card-bg);
-    height: 70px;
+    height: 60px;
     flex-shrink: 0;
     position: sticky;
     top: 0;

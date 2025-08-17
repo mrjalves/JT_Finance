@@ -28,6 +28,8 @@ namespace JT_Finance
             builder.Services.AddScoped<ICategoriaService, CategoriaService>();
             builder.Services.AddScoped<IReceitaService, ReceitaService>();
             builder.Services.AddScoped<IDespesaService, DespesaService>();
+            builder.Services.AddSingleton<INotificationService, NotificationService>();
+            builder.Services.AddSingleton<IThemeService, ThemeService>();
             builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG

@@ -5,15 +5,10 @@
 @using static JT_Finance.Shared.Components.Modal
 @inject NavigationManager NavigationManager
 @inject ToastService ToastService
-
+@inject FiltroService FiltroService
 @if (isLoading)
 {
-    <div class="text-center p-4">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Carregando...</span>
-        </div>
-        <p class="mt-2"><em>Carregando faturas...</em></p>
-    </div>
+  <Loading/>
 }
 else if (cartao == null)
 {
@@ -28,29 +23,37 @@ else if (cartao == null)
 }
 else
 {
-    <!-- CABEÇALHO DA PÁGINA -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3>Faturas do Cartão: @cartao.Nome</h3>
-        <button class="btn btn-outline-secondary" @onclick="@(() => NavigationManager.NavigateTo("cartoes-credito"))">
-            <i class="bi bi-arrow-left-circle me-2"></i>Voltar
-        </button>
-    </div>
-
     <!-- RESUMO GERAL -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-light">
             Resumo Geral
         </div>
         <div class="card-body">
-            <h5 class="card-title">Total em Aberto: @totalGeral.ToString("C")</h5>
-            <p class="card-text text-muted">Exibindo @faturas.Count fatura(s) com um total de @faturas.SelectMany(f => f.Lancamentos).Count() lançamento(s).</p>
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="card-title">Total em Aberto: @totalGeral.ToString("C")</h5>
+                    <p class="card-text text-muted">Exibindo @faturas.Count fatura(s) com um total de @faturas.SelectMany(f => f.Lancamentos).Count() lançamento(s).</p>
+                </div>
+
+                @* O botão agora fica em uma nova linha, abaixo do texto *@
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <SearchFilter />
+                    <button class="btn btn-outline-primary" @onclick="FiltroService.ToggleFiltros">
+                        <i class="bi bi-filter action-icon" title="Filtrar" />
+                    </button>
+                    <button class="btn btn-outline-secondary" @onclick="@(() => NavigationManager.NavigateTo("cartoes-credito"))">
+                        <i class="bi bi-arrow-left-circle me-2"></i>Voltar
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- TABELA DE FATURAS EXPANSÍVEIS -->
     @if (faturas.Any())
     {
-        <div class="table-responsive">
+        <div class="card border-left-success shadow h-80 py-2">
+            <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
@@ -103,7 +106,7 @@ else
                         <!-- LINHA DE DETALHES (EXPANSÍVEL) -->
                         @if (fatura.EstaExpandida)
                         {
-                            <tr>
+                                <tr>
                                 <td colspan="5" class="p-0">
                                     <div class="p-3 bg-light">
                                         <table class="table table-sm table-bordered mb-0">
@@ -145,6 +148,7 @@ else
                     }
                 </tbody>
             </table>
+        </div>
         </div>
     }
     else
@@ -272,7 +276,7 @@ else
         isLoading = true;
         if (SetPageTitleAsync != null)
         {
-            await SetPageTitleAsync.Invoke("Faturas do Cartão");
+            await SetPageTitleAsync.Invoke($"Faturas do Cartão");
         }
 
         // Simula o carregamento para a UI renderizar o spinner

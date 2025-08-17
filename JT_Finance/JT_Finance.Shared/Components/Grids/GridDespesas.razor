@@ -1,9 +1,12 @@
-﻿@using JT_Classes.Financeiro
+﻿@using JT_Classes
+@using JT_Classes.Financeiro
 @using JT_Finance.Shared.Models
 @using JT_Finance.Shared.Services.Interfaces
 @inject IDespesaService DespesaService
+@inject ICategoriaService CategoriaService
 @inject FiltroService FiltroService
 
+<div class="card border-left-success shadow h-80 py-2">
 <DataGrid TItem="Despesa" Items="Despesas" IsLoading="IsLoading">
     <HeaderTemplate>
         <th>Descrição</th>
@@ -14,7 +17,9 @@
         <th>Categoria</th>
         <th>Cartão / Parcela</th>
         <th>Paga</th>
-        <th>Ações</th>
+        @if(!HideActions){
+            <th>Ações</th>
+        }
     </HeaderTemplate>
 
     <RowTemplate Context="despesa">
@@ -54,27 +59,30 @@
                 <span class="badge bg-danger">Não</span>
             }
         </td>
-        <td>
-            @if (!despesa.EhDespesaCartaoCredito)
+            @if (!HideActions)
             {
-                <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Despesa" @onclick="() => OnDuplicar.InvokeAsync(despesa)">
-                    <i class="bi bi-copy"></i>
-                </button>
-            }
-            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(despesa.Id)">
+                <td>
+                    @if (!despesa.EhDespesaCartaoCredito)
+                    {
+                        <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Despesa" @onclick="() => OnDuplicar.InvokeAsync(despesa)">
+                            <i class="bi bi-copy"></i>
+                        </button>
+                    }
+                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(despesa.Id)">
                 <i class="bi bi-pencil-fill"></i>
             </button>
             <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(despesa.Id)">
                 <i class="bi bi-trash-fill"></i>
             </button>
         </td>
+        }
     </RowTemplate>
 
     <EmptyTemplate>
         <p class="text-muted mb-0">Nenhuma despesa encontrada. Tente ajustar os filtros ou cadastre uma nova despesa.</p>
     </EmptyTemplate>
 </DataGrid>
-
+</div>
 @code {
     [Parameter]
     public bool IsLoading { get; set; }
@@ -85,11 +93,12 @@
 
     [Parameter]
     public EventCallback<int> OnRemover { get; set; }
-
+    [Parameter] public bool HideActions { get; set; } = false;
     [Parameter] 
     public List<Despesa>? Despesas { get; set; }
     private List<Despesa> listaTodasDespesas = new();
-
+    private List<Categoria> TiposDespesa = new();
+    private List<Categoria> CategoriasDespesa = new();
     protected override async Task OnInitializedAsync()
     {
         DespesaService.OnDataChanged += AtualizarDadosDaPagina;
@@ -110,13 +119,23 @@
     {
         IsLoading = true;
         await Task.WhenAll(
-            CarregarDespesas()
+            CarregarDespesas(),
+            CarregarOpcoes()
         );
         IsLoading = false;
     }
     private async Task CarregarDespesas(string whereClause = "")
     {
-        listaTodasDespesas = await DespesaService.ObterTodasDespesasAsync();
+        if (whereClause != "")
+            Despesas = await DespesaService.ObterDespesasAsync(whereClause);
+        else
+            listaTodasDespesas = await DespesaService.ObterTodasDespesasAsync();
+    }
+
+    private async Task CarregarOpcoes()
+    {
+        TiposDespesa = await CategoriaService.GetTipoCategoriasDespesa();
+        CategoriasDespesa = await CategoriaService.GetCategoriasDespesa();
     }
 
     private void ConfigurarFiltros()
@@ -125,6 +144,8 @@
         {
             new FiltroItem { Label = "Data Início", ColumnName = "DataDespesa", Type = "date" },
             new FiltroItem { Label = "Data Fim", ColumnName = "DataDespesa", Type = "date" },
+            new FiltroItem { Label = "Categoria", ColumnName = "ID_CATEGORIA_TIPO", Type = "select", Options = CategoriasDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
+            new FiltroItem { Label = "Tipo", ColumnName = "ID_CATEGORIA_SUB", Type = "select", Options = TiposDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
             new FiltroItem { Label = "Situação", ColumnName = "DespesaPaga", Type = "select", Options = new List<KeyValuePair<string, string>> { new("1", "Paga"), new("0", "Não Paga") } }
         };
         FiltroService.RegistrarFiltros(filtros, AplicarFiltros, AplicarPesquisa);
@@ -182,8 +203,8 @@
         var dataInicio = filtros.FirstOrDefault(f => f.Label == "Data Início")?.Value as DateTime?;
         var dataFim = filtros.FirstOrDefault(f => f.Label == "Data Fim")?.Value as DateTime?;
 
-        if (dataInicio.HasValue) whereConditions.Add($"DataDespesa >= '{dataInicio.Value:yyyy-MM-dd}'");
-        if (dataFim.HasValue) whereConditions.Add($"DataDespesa <= '{dataFim.Value:yyyy-MM-dd}'");
+        if (dataInicio.HasValue) whereConditions.Add($"DataDespesa >= '{dataInicio}'");
+        if (dataFim.HasValue) whereConditions.Add($"DataDespesa <= '{dataFim}'");
 
         foreach (var filtro in filtros.Where(f => f.Value != null && !string.IsNullOrEmpty(f.Value.ToString()) && f.Label != "Data Início" && f.Label != "Data Fim"))
         {

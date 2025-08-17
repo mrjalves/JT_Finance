@@ -5,8 +5,11 @@
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Components.Charts
 @using JT_Finance.Shared.Services
+@using JT_Finance.Shared.Services.Interfaces
+@using static JT_Finance.Shared.Components.Modal
 @inject IFormFactor FormFactor
-
+@inject IDespesaService DespesaService
+@inject IReceitaService ReceitaService
 <PageTitle>Dashboard</PageTitle>
 
 <!-- SELETOR DE MÊS -->
@@ -24,8 +27,8 @@
 
 
 <!-- CARDS DE RESUMO -->
-<div class="row mb-4">
-    <div class="col-md-4 mb-3">
+<div class="row mb-2">
+    <div class="col-md-4 mb-2">
         <div class="card border-left-success shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
@@ -40,7 +43,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-4 mb-2">
         <div class="card border-left-danger shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
@@ -55,7 +58,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-4 mb-2">
         <div class="card border-left-primary shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
@@ -72,8 +75,58 @@
     </div>
 </div>
 
+<div class="row mb-2">
+    @* Card para Despesas a Vencer *@
+    <div class="col-lg-6 mb-2">
+        <div class="card border-left-warning shadow h-100 py-2 card-clickable" @onclick='() => AbrirModalDetalhes(" Próximas ao Vencimento", DespesaAVencer)'>
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Próximas ao Vencimento
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @DespesaAVencer?.Count() despesa(s)
+                        </div>
+                        <div class="text-md text-gray-600">
+                            Total: @(DespesaAVencer?.Sum(d => d.Valor).ToString("C") ?? "R$ 0,00")
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Card para Despesas Vencidas *@
+    <div class="col-lg-6 mb-2">
+        <div class="card border-left-danger shadow h-100 py-2 card-clickable" @onclick='() => AbrirModalDetalhes(" Despesas Vencidas", DespesasVencidas)'>
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                            Vencidas
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @DespesasVencidas?.Count() despesa(s)
+                        </div>
+                        <div class="text-md text-gray-600">
+                            Total: @(DespesasVencidas?.Sum(d => d.Valor).ToString("C") ?? "R$ 0,00")
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- GRÁFICOS -->
-<div class="row mt-4">
+<div class="row mt-2">
     <div class="col-lg-6 mb-4">
         <div class="card shadow h-100">
             <div class="card-body">
@@ -105,9 +158,7 @@
             <div class="card-body">
                 @if (isLoading)
                 {
-                    <div class="text-center p-4">
-                        <div class="spinner-border text-primary" role="status"></div>
-                    </div>
+                    <Loading />
                 }
                 else if (datasetsGraficoPorTipo.Any() && datasetsGraficoPorTipo.First().Data.Any())
                 {
@@ -129,6 +180,14 @@
     </div>
 </div>
 
+<Modal @ref="modalDetalhes" Size="ModalSize.ExtraLarge">
+    <BodyContent>
+        <JT_Finance.Shared.Components.Grids.GridDespesas
+           Despesas="despesasParaExibir"
+           HideActions="true"
+        />
+    </BodyContent>
+</Modal>
 
 @code {
     [CascadingParameter]
@@ -148,7 +207,8 @@
     private List<ChartDataset> datasetsGraficoPorTipo = new();
     private List<string> despesaCategoriasLabels = new();
     private List<ChartDataset> datasetsGraficoPorCategoria = new();
-
+    private List<Despesa> DespesasVencidas = new();
+    private List<Despesa> DespesaAVencer = new();
     protected override async Task OnInitializedAsync()
     {
         if (SetPageTitleAsync != null)
@@ -164,15 +224,18 @@
         await InvokeAsync(StateHasChanged);
 
         // Usar Task.Run para não bloquear a UI enquanto os dados são buscados
-        await Task.Run(() =>
+        await Task.Run(async () =>
         {
             // --- CARREGA DADOS DOS CARDS ---
-            totalReceitas = Receita.GetTotalReceitasMes(mesReferencia);
-            totalDespesas = Despesa.GetTotalDespesaMes(mesReferencia);
+            totalReceitas = await ReceitaService.GetTotalMes(mesReferencia);
+            totalDespesas = await DespesaService.GetTotalMes(mesReferencia);
             saldoAtual = totalReceitas - totalDespesas;
 
+            DespesaAVencer = await DespesaService.ObterDespesasAVencerAsync();
+            DespesasVencidas = await DespesaService.ObterDespesasVencidasAsync();
+
             // --- GRÁFICO DE TIPO (BARRAS) ---
-            var despesasPorTipo = Despesa.GetDespesasAgrupadasPorTipo(mesReferencia);
+            var despesasPorTipo = await DespesaService.GetDespesaPorTipo(mesReferencia);
             despesaTiposLabels = despesasPorTipo.Select(d => d.Tipo).ToList();
             datasetsGraficoPorTipo = new List<ChartDataset>
             {
@@ -183,7 +246,7 @@
             };
 
             // --- GRÁFICO DE CATEGORIA (ROSCA) ---
-            var despesasPorCategoria = Despesa.GetDespesasAgrupadasPorCategoria(mesReferencia);
+            var despesasPorCategoria = await DespesaService.GetDespesaPorCategoria(mesReferencia);
             despesaCategoriasLabels = despesasPorCategoria.Select(d => d.Categoria).ToList();
             datasetsGraficoPorCategoria = new List<ChartDataset>
             {
@@ -205,4 +268,14 @@
 
     private async Task MudarMesAnterior() => await MudarMes(-1);
     private async Task MudarMesProximo() => await MudarMes(1);
+
+
+    private Modal modalDetalhes;
+    private List<Despesa> despesasParaExibir = new();
+    private void AbrirModalDetalhes(string titulo, List<Despesa> despesas)
+    {
+        despesasParaExibir = despesas;
+        modalDetalhes.Title = titulo;
+        modalDetalhes.Open();
+    }
 }

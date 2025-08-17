@@ -87,5 +87,17 @@ namespace JT_Finance.Shared.Services
         }
 
         private void NotifyDataChanged() => OnDataChanged?.Invoke();
+
+        public async Task<decimal> GetTotalMes(DateTime mes)
+        {
+            return await Task.FromResult(Receita.GetTotalReceitasMes(mes));
+        }
+
+        public async Task<List<Receita>> ObterReceitasAsync(string condicao)
+        {
+            var sql = @$"SELECT * FROM Receitas {condicao}";
+            return await Task.FromResult(new Receita().Consultar<Receita>(sql));
+
+        }
     }
 }

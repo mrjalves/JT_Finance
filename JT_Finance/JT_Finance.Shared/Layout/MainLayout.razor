@@ -1,14 +1,17 @@
 @using JT_Finance.Shared.Components.Toasts
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Services
-@inject FiltroService FiltroService
+@using JT_Finance.Shared.Services.Interfaces
+
+@inject IThemeService ThemeService
 @inherits LayoutComponentBase
+@implements IDisposable
 
 @{
     var layoutClass = _isSidebarExpanded ? "dashboard-layout expanded" : "dashboard-layout";
 }
 
-<div class="@layoutClass">
+<div class="@layoutClass" style="@themeStyle">
     <NavMenu IsExpanded="@_isSidebarExpanded" OnToggle="@ToggleSidebar" />
 
     <div class="main-content">
@@ -27,22 +30,41 @@
 
 @code {
     private bool _isSidebarExpanded = false;
-    private string _currentPageTitle = "Dashboard"; // Título padrão
+    private string _currentPageTitle = "Dashboard"; 
+    private string themeStyle = "";
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnChange += ApplyTheme;
+        ApplyTheme();
+    }
 
     private void ToggleSidebar()
     {
         _isSidebarExpanded = !_isSidebarExpanded;
     }
 
-    // --- INÍCIO DA MUDANÇA ---
-    // Método agora é assíncrono para garantir a atualização da UI
     private async Task SetPageTitleAsync(string title)
     {
         if (_currentPageTitle != title)
         {
             _currentPageTitle = title;
-            await InvokeAsync(StateHasChanged); // Força a atualização da UI de forma segura
+            await InvokeAsync(StateHasChanged); 
         }
     }
-    // --- FIM DA MUDANÇA ---
+
+    private void ApplyTheme()
+    {
+        var theme = ThemeService.CurrentTheme;
+        if (theme != null)
+        {
+            themeStyle = string.Join(";", theme.Colors.Select(c => $"{c.Key}:{c.Value}"));
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnChange -= ApplyTheme;
+    }
 }

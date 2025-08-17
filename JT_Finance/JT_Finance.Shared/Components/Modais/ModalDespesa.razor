@@ -4,7 +4,6 @@
 @using static JT_Finance.Shared.Components.Modal
 @inject IDespesaService DespesaService
 @inject ICategoriaService CategoriaService
-@inject ICategoriaService TipoService
 @inject ICartaoCreditoService CartoesService
 
 <Modal @ref="ModalRef" Title="@Title" OnClose="OnClose" Size="ModalSize.Large" CloseOnBackdropClick="false">
@@ -202,7 +201,7 @@
     {
         try
         {
-            TiposDespesa = await TipoService.GetTipoCategoriasDespesa();
+            TiposDespesa = await CategoriaService.GetTipoCategoriasDespesa();
             CategoriasDespesa = await CategoriaService.GetCategoriasDespesa();
         }
         catch (Exception ex)

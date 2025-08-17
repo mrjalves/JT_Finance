@@ -1,59 +1,65 @@
 ﻿@using JT_Classes
 @using JT_Classes.Financeiro
+@using JT_Finance.Shared.Models
+@using JT_Finance.Shared.Services.Interfaces
+@inject ICategoriaService CategoriaService
+@inject IReceitaService ReceitaService
+@inject FiltroService FiltroService
 
-<DataGrid TItem="Receita" Items="Receitas" IsLoading="IsLoading">
-    <HeaderTemplate>
-        <th>Descrição</th>
-        <th>Valor</th>
-        <th>Data</th>
-        <th>Categoria</th>
-        <th>Tipo</th>
-        <th>Recebida</th>
-        <th class="text-end">Ações</th>
-    </HeaderTemplate>
-    <RowTemplate Context="receita">
-        @if (IsLoading)
-        {
-            <Loading />
-        }
-        else
-        {
+<div class="card border-left-success shadow h-80 py-2">
+    <DataGrid TItem="Receita" Items="Receitas" IsLoading="IsLoading">
+        <HeaderTemplate>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th>Data</th>
+            <th>Categoria</th>
+            <th>Tipo</th>
+            <th>Recebida</th>
+            <th class="text-end">Ações</th>
+        </HeaderTemplate>
+        <RowTemplate Context="receita">
+            @if (IsLoading)
+            {
+                <Loading />
+            }
+            else
+            {
             
-            <td>@receita.Descricao</td>
-            <td>@receita.Valor.ToString("C")</td>
-            <td>@receita.DataReceita.ToShortDateString()</td>
-            <td>@(opcoesCategoriaReceita.FirstOrDefault(c => c.Id == receita.Categoria)?.Descricao)</td>
-            <td>@(opcoesTipoReceita.FirstOrDefault(c => c.Id == receita.TipoReceita)?.Descricao)</td>
-            <td>
-                @if (receita.ReceitaRecebida)
-                {
-                    <span class="badge bg-success">Sim</span>
-                }
-                else
-                {
-                    <span class="badge bg-secondary">Não</span>
-                }
-            </td>
-            <td class="text-end">
-                <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Receita" @onclick="() => OnDuplicar.InvokeAsync(receita)" @onclick:stopPropagation="true">
-                    <i class="bi bi-copy"></i>
-                </button>
+                <td>@receita.Descricao</td>
+                <td>@receita.Valor.ToString("C")</td>
+                <td>@receita.DataReceita.ToShortDateString()</td>
+                <td>@(CategoriasReceita.FirstOrDefault(c => c.Id == receita.Categoria)?.Descricao)</td>
+                <td>@(TiposReceita.FirstOrDefault(c => c.Id == receita.TipoReceita)?.Descricao)</td>
+                <td>
+                    @if (receita.ReceitaRecebida)
+                    {
+                        <span class="badge bg-success">Sim</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Não</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Receita" @onclick="() => OnDuplicar.InvokeAsync(receita)" @onclick:stopPropagation="true">
+                        <i class="bi bi-copy"></i>
+                    </button>
 
-                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(receita)" @onclick:stopPropagation="true">
-                    <i class="bi bi-pencil-fill me-1"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(receita.Id)" @onclick:stopPropagation="true">
-                    <i class="bi bi-trash-fill me-1"></i>
-                </button>
-            </td>
-        }
+                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(receita)" @onclick:stopPropagation="true">
+                        <i class="bi bi-pencil-fill me-1"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(receita.Id)" @onclick:stopPropagation="true">
+                        <i class="bi bi-trash-fill me-1"></i>
+                    </button>
+                </td>
+            }
 
-    </RowTemplate>
-    <EmptyTemplate>
-        <p class="text-muted mb-0">Nenhuma receita cadastrada ainda. Clique em "Nova Receita" para começar.</p>
-    </EmptyTemplate>
-</DataGrid>
-
+        </RowTemplate>
+        <EmptyTemplate>
+            <p class="text-muted mb-0">Nenhuma receita cadastrada ainda. Clique em "Nova Receita" para começar.</p>
+        </EmptyTemplate>
+    </DataGrid>
+</div>
 @code {
 
     #region PARAMETROS
@@ -70,11 +76,126 @@
     public EventCallback<int> OnRemover { get; set; }
     [Parameter]
     public EventCallback<Receita> OnDuplicar { get; set; }
-    [Parameter]
-    public List<Categoria>? opcoesTipoReceita { get; set; }
-    [Parameter]
-    public List<Categoria>? opcoesCategoriaReceita { get; set; }
     #endregion
+    private List<Categoria> TiposReceita = new();
+    private List<Categoria> CategoriasReceita = new();
+    private List<Receita> listaTodasReceitas = new();
+    protected override async Task OnInitializedAsync()
+    {
+        ReceitaService.OnDataChanged += AtualizarDadosDaPagina;
+        await CarregarDependencias();
+        ConfigurarFiltros();
+    }
+    private async void AtualizarDadosDaPagina()
+    {
+        await InvokeAsync(async () =>
+        {
+            await CarregarDependencias();
+            StateHasChanged();
+        });
+    }
 
+    private async Task CarregarDependencias()
+    {
+        IsLoading = true;
+        await Task.WhenAll(
+            CarregarReceitas(),
+            CarregarOpcoes()
+        );
+        IsLoading = false;
+    }
+
+    private async Task CarregarReceitas(string whereClause = "")
+    {
+        if (whereClause != "")
+            Receitas = await ReceitaService.ObterReceitasAsync(whereClause);
+        else
+            listaTodasReceitas = await ReceitaService.ObterTodasReceitasAsync();
+    }
+
+    private async Task CarregarOpcoes()
+    {
+        TiposReceita = await CategoriaService.GetTipoCategoriasReceitas();
+        CategoriasReceita = await CategoriaService.GetCategoriasReceitas();
+    }
+
+    private void ConfigurarFiltros()
+    {
+        var filtros = new List<FiltroItem>
+        {
+            new FiltroItem { Label = "Data Início", ColumnName = "DataReceita", Type = "date" },
+            new FiltroItem { Label = "Data Fim", ColumnName = "DataReceita", Type = "date" },
+            // new FiltroItem { Label = "Categoria", ColumnName = "ID_CATEGORIA_TIPO", Type = "select", Options = CategoriasReceita.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
+            // new FiltroItem { Label = "Tipo", ColumnName = "ID_CATEGORIA_SUB", Type = "select", Options = TiposReceita.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
+            new FiltroItem { Label = "Situação", ColumnName = "ReceitaRecebida", Type = "select", Options = new List<KeyValuePair<string, string>> { new("1", "Sim"), new("0", "Não") } }
+        };
+        FiltroService.RegistrarFiltros(filtros, AplicarFiltros, AplicarPesquisa);
+    }
+
+    private Task AplicarPesquisa(string searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            Receitas = new List<Receita>(listaTodasReceitas);
+        }
+        else
+        {
+            Receitas = listaTodasReceitas
+               .Where(d => LevenshteinDistance(d.Descricao.ToLower(), searchTerm.ToLower()) <= 2 || d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+               .ToList();
+        }
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private int LevenshteinDistance(string s, string t)
+    {
+        if (string.IsNullOrEmpty(s))
+        {
+            return string.IsNullOrEmpty(t) ? 0 : t.Length;
+        }
+
+        if (string.IsNullOrEmpty(t))
+        {
+            return s.Length;
+        }
+
+        int n = s.Length;
+        int m = t.Length;
+        int[,] d = new int[n + 1, m + 1];
+
+        for (int i = 0; i <= n; d[i, 0] = i++) ;
+        for (int j = 0; j <= m; d[0, j] = j++) ;
+
+        for (int i = 1; i <= n; i++)
+        {
+            for (int j = 1; j <= m; j++)
+            {
+                int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+                d[i, j] = Math.Min(
+                    Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                    d[i - 1, j - 1] + cost);
+            }
+        }
+        return d[n, m];
+    }
+    private async Task AplicarFiltros(List<FiltroItem> filtros)
+    {
+        var whereConditions = new List<string>();
+        var dataInicio = filtros.FirstOrDefault(f => f.Label == "Data Início")?.Value as DateTime?;
+        var dataFim = filtros.FirstOrDefault(f => f.Label == "Data Fim")?.Value as DateTime?;
+
+        if (dataInicio.HasValue) whereConditions.Add($"DataReceita >= '{dataInicio}'");
+        if (dataFim.HasValue) whereConditions.Add($"DataReceita <= '{dataFim}'");
+
+        foreach (var filtro in filtros.Where(f => f.Value != null && !string.IsNullOrEmpty(f.Value.ToString()) && f.Label != "Data Início" && f.Label != "Data Fim"))
+        {
+            whereConditions.Add($"{filtro.ColumnName} = {filtro.Value}");
+        }
+
+        string whereClause = whereConditions.Any() ? "WHERE " + string.Join(" AND ", whereConditions) : "";
+        await CarregarReceitas(whereClause);
+        StateHasChanged();
+    }
   
 }
