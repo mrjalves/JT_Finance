@@ -18,10 +18,8 @@ namespace JT_Finance
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
 
-            // Add device-specific services used by the JT_Finance.Shared project
-            builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
-            // Register ToastService
+            builder.Services.AddSingleton<IFormFactor, FormFactor>();
             builder.Services.AddSingleton<ToastService>();
             builder.Services.AddSingleton<FiltroService>();
             builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
@@ -30,6 +28,7 @@ namespace JT_Finance
             builder.Services.AddScoped<IDespesaService, DespesaService>();
             builder.Services.AddSingleton<INotificationService, NotificationService>();
             builder.Services.AddSingleton<IThemeService, ThemeService>();
+
             builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG
