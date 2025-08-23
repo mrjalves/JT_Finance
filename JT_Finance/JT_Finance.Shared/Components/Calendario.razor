@@ -137,18 +137,16 @@
 
     private async Task CarregarDadosDoMes()
     {
-        // ... (sua lógica de carregamento de dados permanece a mesma)
-        // // Lembre-se de adaptar para usar parâmetros SQL para maior segurança!
-        // await Task.Delay(50);
-        // var despesas = new Despesa().Consultar<Despesa>($"SELECT * FROM Despesas WHERE MONTH(DataDespesa) = {dataReferencia.Month} AND YEAR(DataDespesa) = {dataReferencia.Year}");
-        // var receitas = new Receita().Consultar<Receita>($"SELECT * FROM Receitas WHERE MONTH(DataReceita) = {dataReferencia.Month} AND YEAR(DataReceita) = {dataReferencia.Year}");
+        await Task.Delay(50);
+        var despesas = JT_Servicos.DespesaService.Find($" WHERE MONTH(DataDespesa) = {dataReferencia.Month} AND YEAR(DataDespesa) = {dataReferencia.Year}");
+        var receitas = JT_Servicos.ReceitaService.Find($" WHERE MONTH(DataReceita) = {dataReferencia.Month} AND YEAR(DataReceita) = {dataReferencia.Year}");
 
-        // eventosDoMes = new List<EventoCalendario>();
-        // eventosDoMes.AddRange(despesas.Select(d => new EventoCalendario { Data = d.DataDespesa, Descricao = d.Descricao, Valor = d.Valor, Tipo = TipoEvento.Despesa }));
-        // eventosDoMes.AddRange(receitas.Select(r => new EventoCalendario { Data = r.DataReceita, Descricao = r.Descricao, Valor = r.Valor, Tipo = TipoEvento.Receita }));
+        eventosDoMes = new List<EventoCalendario>();
+        eventosDoMes.AddRange(despesas.Select(d => new EventoCalendario { Data = d.DataDespesa, Descricao = d.Descricao, Valor = d.Valor, Tipo = TipoEvento.Despesa }));
+        eventosDoMes.AddRange(receitas.Select(r => new EventoCalendario { Data = r.DataReceita, Descricao = r.Descricao, Valor = r.Valor, Tipo = TipoEvento.Receita }));
 
-        // ConstruirCalendario();
-        // StateHasChanged();
+        ConstruirCalendario();
+        StateHasChanged();
     }
 
     private IEnumerable<EventoCalendario> GetEventosDoDia(DateTime dia)

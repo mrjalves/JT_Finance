@@ -1,4 +1,4 @@
-@* @page "/listacompras"
+@page "/listacompras"
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Services
@@ -207,11 +207,7 @@
         await Task.Yield();
         if (listaSelecionadaId > 0)
         {
-            // itensDaListaSelecionada = ListaCompraItem.Consultar<ListaCompraItem>($"SELECT * FROM ListaCompraItens WHERE IdListaCompra = {listaSelecionadaId}");
-        }
-        else
-        {
-            //itensDaListaSelecionada.Clear();
+            itensDaListaSelecionada = JT_Servicos.ListaCompraService.FindItens($" WHERE IdListaCompra = {listaSelecionadaId}");
         }
         isLoading = false;
     }
@@ -231,85 +227,85 @@
         itemModalRef.Open();
     }
 
-    // private async Task SalvarItem()
-    // {
-    //     if (itemAtual == null) return;
+    private async Task SalvarItem()
+    {
+        if (itemAtual == null) return;
         
-    //     bool sucesso = JT_Servicos.ListaCompraItemService.Save(itemAtual);
+        // bool sucesso = JT_Servicos.ListaCompraItemService.Save(itemAtual);
 
-    //     if (sucesso)
-    //     {
-    //         await itemModalRef.Close();
-    //         await CarregarItensDaLista();
-    //     }
-    // }
+        // if (sucesso)
+        // {
+        //     await itemModalRef.Close();
+        //     await CarregarItensDaLista();
+        // }
+    }
 
-    // private async Task AtualizarStatusItem(ListaCompraItem item)
-    // {
-    //     await Task.Delay(100);
-    //     item.Salvar();
-    // }
+    private async Task AtualizarStatusItem(ListaCompraItem item)
+    {
+        await Task.Delay(100);
+        //item.Salvar();
+    }
 
-    // // --- Lógica para Listas ---
-    // private void AbrirModalGerenciarListas() => listasModalRef.Open();
+    // --- Lógica para Listas ---
+    private void AbrirModalGerenciarListas() => listasModalRef.Open();
 
-    // private async Task AdicionarNovaLista()
-    // {
-    //     if (string.IsNullOrWhiteSpace(novaListaDescricao)) return;
-    //     var novaLista = new ListaCompra { Descricao = novaListaDescricao };
-    //     if (novaLista.Salvar())
-    //     {
-    //         novaListaDescricao = "";
-    //         await CarregarListas();
-    //         listaSelecionadaId = novaLista.Id;
-    //     }
-    // }
+    private async Task AdicionarNovaLista()
+    {
+        if (string.IsNullOrWhiteSpace(novaListaDescricao)) return;
+        var novaLista = new ListaCompra { Descricao = novaListaDescricao };
+        // if (novaLista.Salvar())
+        // {
+        //     novaListaDescricao = "";
+        //     await CarregarListas();
+        //     listaSelecionadaId = novaLista.Id;
+        // }
+    }
 
-    // private async Task SalvarLista(ListaCompra lista)
-    // {
-    //     if (lista.Salvar())
-    //     {
-    //         ToastService.ShowSuccess("Sucesso", "Nome da lista atualizado.");
-    //     }
-    // }
+    private async Task SalvarLista(ListaCompra lista)
+    {
+        // if (lista.Salvar())
+        // {
+        //     ToastService.ShowSuccess("Sucesso", "Nome da lista atualizado.");
+        // }
+    }
 
-    // // --- Lógica de Remoção Refatorada ---
-    // private async Task ConfirmarRemocaoItem(int id)
-    // {
-    //     idItemParaRemover = id;
-    //     idListaParaRemover = null; // Garante que apenas um ID esteja ativo
-    //     confirmDialog.Show("Confirmar Remoção", "Deseja realmente remover este item?");
-    // }
+    // --- Lógica de Remoção Refatorada ---
+    private async Task ConfirmarRemocaoItem(int id)
+    {
+        idItemParaRemover = id;
+        idListaParaRemover = null; // Garante que apenas um ID esteja ativo
+        confirmDialog.Show("Confirmar Remoção", "Deseja realmente remover este item?");
+    }
 
-    // private async Task ConfirmarRemocaoLista(int id)
-    // {
-    //     idListaParaRemover = id;
-    //     idItemParaRemover = null; // Garante que apenas um ID esteja ativo
-    //     confirmDialog.Show("Confirmar Remoção", "Deseja remover esta lista e TODOS os seus itens?");
-    // }
+    private async Task ConfirmarRemocaoLista(int id)
+    {
+        idListaParaRemover = id;
+        idItemParaRemover = null; // Garante que apenas um ID esteja ativo
+        confirmDialog.Show("Confirmar Remoção", "Deseja remover esta lista e TODOS os seus itens?");
+    }
 
-    // private async Task OnConfirmDelete()
-    // {
-    //     if (idItemParaRemover.HasValue)
-    //     {
-    //         var itemParaRemover = new ListaCompraItem { Id = idItemParaRemover.Value };
-    //         itemParaRemover.Excluir(itemParaRemover);
-    //         await CarregarItensDaLista();
-    //         ToastService.ShowSuccess("Sucesso", "Item removido.");
-    //     }
-    //     else if (idListaParaRemover.HasValue)
-    //     {
-    //         var listaParaRemover = new ListaCompra { Id = idListaParaRemover.Value };
-    //         if (listaParaRemover.Excluir(listaParaRemover))
-    //         {
-    //             listaSelecionadaId = 0;
-    //             await CarregarListas();
-    //             ToastService.ShowSuccess("Sucesso", "Lista removida.");
-    //         }
-    //     }
+    private async Task OnConfirmDelete()
+    {
+        // if (idItemParaRemover.HasValue)
+        // {
+        //     var itemParaRemover = new ListaCompraItem { Id = idItemParaRemover.Value };
+        //     itemParaRemover.Excluir(itemParaRemover);
+        //     await CarregarItensDaLista();
+        //     ToastService.ShowSuccess("Sucesso", "Item removido.");
+        // }
+        // else if (idListaParaRemover.HasValue)
+        // {
+        //     var listaParaRemover = new ListaCompra { Id = idListaParaRemover.Value };
+        //     if (listaParaRemover.Excluir(listaParaRemover))
+        //     {
+        //         listaSelecionadaId = 0;
+        //         await CarregarListas();
+        //         ToastService.ShowSuccess("Sucesso", "Lista removida.");
+        //     }
+        // }
 
-    //     // Limpa os IDs após a operação
-    //     idItemParaRemover = null;
-    //     idListaParaRemover = null;
-    // }
-} *@
+        // Limpa os IDs após a operação
+        idItemParaRemover = null;
+        idListaParaRemover = null;
+    }
+}
