@@ -20,7 +20,7 @@ namespace JT_Finance.Shared.Services
 
         public async Task<List<Receita>> ObterTodasReceitasAsync()
         {
-            _receitas = new Receita().Consultar<Receita>("SELECT * FROM Receitas ORDER BY DataReceita DESC");
+            _receitas = JT_Servicos.ReceitaService.GetAll();
             return await Task.FromResult(_receitas);
         }
 
@@ -32,7 +32,7 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> SalvarReceitaAsync(Receita receita)
         {
-            bool sucesso = receita.Salvar();
+            bool sucesso = JT_Servicos.ReceitaService.Save(receita);
             await ObterTodasReceitasAsync();
 
             if (sucesso)
@@ -46,8 +46,7 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> RemoverReceitaAsync(int id)
         {
-            var receita = new Receita { Id = id };
-            bool sucesso = receita.Excluir(receita);
+            bool sucesso = JT_Servicos.ReceitaService.Delete(id);
             await ObterTodasReceitasAsync();
 
             if (sucesso)
@@ -95,8 +94,7 @@ namespace JT_Finance.Shared.Services
 
         public async Task<List<Receita>> ObterReceitasAsync(string condicao)
         {
-            var sql = @$"SELECT * FROM Receitas {condicao}";
-            return await Task.FromResult(new Receita().Consultar<Receita>(sql));
+            return await Task.FromResult(JT_Servicos.ReceitaService.Find(condicao));
 
         }
     }

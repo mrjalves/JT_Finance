@@ -1,7 +1,7 @@
 ﻿@page "/fatura/{CartaoId:int}"
 @using System.Linq
+@using JT_Aplicacao
 @using JT_Classes.Financeiro
-@using JT_Persistencia
 @using static JT_Finance.Shared.Components.Modal
 @inject NavigationManager NavigationManager
 @inject ToastService ToastService
@@ -281,7 +281,7 @@ else
 
         if (cartao != null && cartao.Id > 0)
         {
-            var todasDespesas = cartao.ObterDespesas() ?? new List<Despesa>();
+            var todasDespesas = CartaoCredito.ObterDespesas(cartao.Id) ?? new List<Despesa>();
 
             // Agrupa as despesas por data de vencimento para formar as faturas
             faturas = todasDespesas

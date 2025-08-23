@@ -3,7 +3,6 @@
 @using JT_Aplicacao
 @using JT_Finance.Shared.Components
 @using System.Text
-@using JT_Persistencia
 @using static JT_Finance.Shared.Components.Modal
 
 
@@ -148,13 +147,12 @@
     {
         if (logParaExcluir == null) return;
 
-        // Assumindo que a sua classe LogEntry tem um método Excluir()
-        bool sucesso = logParaExcluir.Excluir(logParaExcluir);
+        bool sucesso = JT_Servicos.LogService.Delete(logParaExcluir.Id);
 
         if (sucesso)
         {
             confirmacaoExclusaoModal.Close();
-            await CarregarLogs(); // Recarrega a lista para remover o item excluído
+            await CarregarLogs(); 
         }
         else
         {
@@ -167,32 +165,7 @@
     {
         isLoading = true;
         await Task.Yield();
-
-        var sqlBuilder = new StringBuilder("SELECT * FROM Logs");
-        var conditions = new List<string>();
-        
-        if (!string.IsNullOrWhiteSpace(filtroNivel))
-        {
-            // conditions.Add($"Level = {FormatarValorSql(filtroNivel)}");
-        }
-        if (filtroDataInicio.HasValue)
-        {
-            conditions.Add($"Timestamp >= '{filtroDataInicio.Value:yyyy-MM-dd HH:mm:ss}'");
-        }
-        if (filtroDataFim.HasValue)
-        {
-            conditions.Add($"Timestamp <= '{filtroDataFim.Value.AddDays(1):yyyy-MM-dd HH:mm:ss}'");
-        }
-
-        if (conditions.Any())
-        {
-            sqlBuilder.Append(" WHERE ").Append(string.Join(" AND ", conditions));
-        }
-
-        sqlBuilder.Append(" ORDER BY Timestamp DESC");
-
-        // A página apenas monta a consulta e chama a camada de persistência para carregar os dados.
-        listaLogs = new LogEntry().Consultar<LogEntry>(sqlBuilder.ToString());
+        listaLogs = JT_Servicos.LogService.GetAll();
         isLoading = false;
     }
 

@@ -1,4 +1,5 @@
 @page "/receitas"
+@using JT_Aplicacao
 @using JT_Classes
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components.Grids
@@ -86,7 +87,7 @@
 
     private void AbrirModalParaNovaReceita()
     {
-        receitaAtual = new Receita(JT_Persistencia.Persistencia.StatusObjeto.Novo);
+        receitaAtual = new Receita();
         modalReceita.Title = "Adicionar Nova Receita";
         modalReceita.Open();
     }
@@ -94,7 +95,7 @@
     private void AbrirModalParaEditarReceita(Receita receitaParaEditar)
     {
         receitaAtual = receitaParaEditar;
-        receitaAtual.Status = JT_Persistencia.Persistencia.StatusObjeto.EmEdicao;
+        receitaAtual.Status = StatusObjeto.EmEdicao;
         modalReceita.Title = "Editar Receita";
         modalReceita.Open();
     }

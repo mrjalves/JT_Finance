@@ -1,4 +1,6 @@
-﻿using JT_Classes;
+﻿using JT_Aplicacao;
+
+using JT_Classes;
 using JT_Classes.Financeiro;
 
 using JT_Finance.Shared.Services.Interfaces;
@@ -34,8 +36,8 @@ namespace JT_Finance.Shared.Services
 
         public async Task<Categoria> CriarCategoriaAsync(Categoria categoria)
         {
-            categoria.Status = JT_Persistencia.Persistencia.StatusObjeto.Novo;
-            bool sucesso = categoria.Salvar();
+            categoria.Status = StatusObjeto.Novo;
+            bool sucesso = JT_Servicos.CategoriaService.Save(categoria);
             if (sucesso)
             {
                 await CarregarCategorias();
@@ -52,28 +54,28 @@ namespace JT_Finance.Shared.Services
         public async Task<List<Categoria>> GetCategoriasDespesa()
         {
             if (!_categorias.Any())
-                _categoriasDespesas = Categoria.ListarPorPapel("Despesa", "Categoria");
+                _categoriasDespesas = JT_Servicos.CategoriaService.ListarPorPapel("Despesa", "Categoria");
             return await Task.FromResult(_categoriasDespesas);
         }
 
         public async Task<List<Categoria>> GetCategoriasReceitas()
         {
             if (!_categorias.Any())
-                _categoriasReceitas = Categoria.ListarPorPapel("Receita", "CategoriaReceita");
+                _categoriasReceitas = JT_Servicos.CategoriaService.ListarPorPapel("Receita", "CategoriaReceita");
             return await Task.FromResult(_categoriasReceitas);
         }
 
         public async Task<List<Categoria>> GetTipoCategoriasDespesa()
         {
             if (!_categorias.Any())
-                _categoriasTipoDespesas = Categoria.ListarPorPapel("Despesa", "TipoDespesa");
+                _categoriasTipoDespesas = JT_Servicos.CategoriaService.ListarPorPapel("Despesa", "TipoDespesa");
             return await Task.FromResult(_categoriasTipoDespesas);
         }
 
         public async Task<List<Categoria>> GetTipoCategoriasReceitas()
         {
             if (!_categorias.Any())
-                _categoriasTipoReceitas = Categoria.ListarPorPapel("Receita", "TipoReceita");
+                _categoriasTipoReceitas = JT_Servicos.CategoriaService.ListarPorPapel("Receita", "TipoReceita");
             return await Task.FromResult(_categoriasTipoReceitas);
         }
 
@@ -89,7 +91,7 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> SalvarCategoriaAsync(Categoria categoria)
         {
-            bool sucesso = categoria.Salvar();
+            bool sucesso = JT_Servicos.CategoriaService.Save(categoria);
             if (sucesso)
             {
                 await CarregarCategorias();
@@ -99,7 +101,7 @@ namespace JT_Finance.Shared.Services
 
         private async Task CarregarCategorias()
         {
-            _categorias = new Categoria().Consultar<Categoria>("SELECT * FROM CATEGORIAS");
+            _categorias = JT_Servicos.CategoriaService.GetAll();
             OnDataChanged?.Invoke();
             await Task.CompletedTask;
         }

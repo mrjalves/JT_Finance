@@ -27,7 +27,7 @@ namespace JT_Finance.Shared.Services
 
         public async Task<List<Despesa>> ObterTodasDespesasAsync()
         {
-            _despesas = new Despesa().Consultar<Despesa>("SELECT * FROM Despesas ORDER BY DataDespesa DESC");
+            _despesas = JT_Servicos.DespesaService.GetAll();
             return await Task.FromResult(_despesas);
         }
 
@@ -53,8 +53,7 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> RemoverDespesaAsync(int id)
         {
-            var despesa = new Despesa { Id = id };
-            bool sucesso = despesa.Excluir(despesa);
+            bool sucesso = JT_Servicos.DespesaService.Delete(id);
             await ObterTodasDespesasAsync();
 
             if (sucesso)
@@ -68,7 +67,7 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> SalvarDespesaAsync(Despesa despesa)
         {
-            bool sucesso = despesa.Salvar();
+            bool sucesso = JT_Servicos.DespesaService.Save(despesa);
             await ObterTodasDespesasAsync();
 
             if (sucesso)
@@ -109,104 +108,22 @@ namespace JT_Finance.Shared.Services
 
         public async Task<List<Despesa>> ObterDespesasAVencerAsync()
         {
-            //return await Task.FromResult(Despesa.GetDespesasProximasAoVencimento());
-            
-            var dataInicio = DateTime.Today;
-            var dataFim = new DateTime(dataInicio.Year, dataInicio.Month, 1).AddMonths(1);
-
-            var sql = @$"
-            SELECT * FROM Despesas D
-            WHERE D.DataDespesa >= '{dataInicio}'AND D.DataDespesa < '{dataFim}'
-            AND D.DespesaPaga = 0 AND D.EhDespesaCartaoCredito = 0
-            ORDER BY D.DataDespesa DESC";
-            var _ = new Despesa().Consultar<Despesa>(sql);
-            sql = @$"
-            SELECT * FROM Despesas D
-            INNER JOIN DespesasCartaoCredito DC ON D.Id = DC.IdDespesa
-            WHERE DC.ParcelaPaga = 0 AND DC.DataVencimento >= '{dataInicio}' AND DC.DataVencimento < '{dataFim}'
-            ORDER BY D.DataDespesa DESC";
-            _.AddRange(new Despesa().Consultar<Despesa>(sql));
-            return await Task.FromResult(_);
+            return await Task.FromResult(Despesa.GetDespesasProximasAoVencimento());
         }
 
         public async Task<List<Despesa>> ObterDespesasVencidasAsync()
         {
-
-            var dataFim = DateTime.Today;
-
-            var sql = @$"
-                SELECT * FROM Despesas D
-                WHERE D.DataDespesa < '{dataFim}' AND D.EhDespesaCartaoCredito = 0
-                AND D.DespesaPaga = 0 
-                ORDER BY D.DataDespesa DESC";
-            var _ = new Despesa().Consultar<Despesa>(sql);
-            sql = @$"
-                SELECT * FROM Despesas D
-                INNER JOIN DespesasCartaoCredito DC ON D.Id = DC.IdDespesa
-                WHERE DC.DataVencimento < '{dataFim}' AND DC.ParcelaPaga = 0 
-                ORDER BY D.DataDespesa DESC";
-            _.AddRange(new Despesa().Consultar<Despesa>(sql));
-            return await Task.FromResult(_);
-
-            //   return await Task.FromResult(Despesa.GetDespesasVencidas());
+            return await Task.FromResult(Despesa.GetDespesasVencidas());
         }
 
         public async Task<List<Despesa>> ObterDespesasAsync(string condicao)
         {
-            var sql = @$"SELECT * FROM Despesas {condicao}";
-            return await Task.FromResult(new Despesa().Consultar<Despesa>(sql));
+            return await Task.FromResult(JT_Servicos.DespesaService.Find(condicao));
         }
 
         public async Task<List<Despesa>> ObterDespesasMesAsync(DateTime mesReferencia)
         {
-            var dataInicio = new DateTime(mesReferencia.Year, mesReferencia.Month, 1);
-            var dataFim = dataInicio.AddMonths(1);
-
-            var sql = @$"
-                    SELECT
-                        D.*
-                    FROM
-                        Despesas AS D
-                        LEFT JOIN DespesasCartaoCredito AS DC ON D.Id = DC.IdDespesa
-                    WHERE
-                        -- CONDIÇÃO 1: Despesas de cartão de crédito com VENCIMENTO no período.
-                        (
-                            D.EhDespesaCartaoCredito = 1
-                            AND DC.DataVencimento >= '{dataInicio}'
-                            AND DC.DataVencimento < '{dataFim}'
-                        )
-                        OR
-                        -- CONDIÇÃO 2: Despesas gerais com DATA no período.
-                        (
-                            D.EhDespesaCartaoCredito = 0
-                            AND D.DataDespesa >= '{dataInicio}'
-                            AND D.DataDespesa < '{dataFim}'
-                        )
-                    ORDER BY
-                        -- Ordena pela data relevante para cada tipo de despesa.
-                        CASE
-                            WHEN D.EhDespesaCartaoCredito = 1 THEN DC.DataVencimento
-                            ELSE D.DataDespesa
-                        END DESC;
-                        ";
-
-                                
-            var despesas = new Despesa().Consultar<Despesa>(sql);
-
-            return await Task.FromResult(despesas ?? new List<Despesa>());
-            //var sql = @$"
-            //    SELECT * FROM Despesas D
-            //    WHERE AND D.DataDespesa >= '{dataInicio}'AND D.DataDespesa < '{dataFim}' AND D.EhDespesaCartaoCredito = 0
-            //    AND D.DespesaPaga = 0 
-            //    ORDER BY D.DataDespesa DESC";
-            //var _ = new Despesa().Consultar<Despesa>(sql);
-            //sql = @$"
-            //    SELECT * FROM Despesas D
-            //    INNER JOIN DespesasCartaoCredito DC ON D.Id = DC.IdDespesa
-            //    WHERE DC.DataVencimento >=  '{dataInicio}' AND DC.DataVencimento < '{dataFim}' AND DC.ParcelaPaga = 0 
-            //    ORDER BY D.DataDespesa DESC";
-            //_.AddRange(new Despesa().Consultar<Despesa>(sql));
-            //return await Task.FromResult(_);
+           return await Task.FromResult(Despesa.GetDespesasPorMes(mesReferencia));
         }
        
     }

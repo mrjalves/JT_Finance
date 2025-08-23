@@ -1,4 +1,5 @@
 ﻿@page "/cartoes-credito"
+@using JT_Aplicacao
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Components.Modais
@@ -81,7 +82,7 @@
 
     private void AbrirModalParaNovoCartao()
     {
-        cartaoAtual = new CartaoCredito(JT_Persistencia.Persistencia.StatusObjeto.Novo);
+        cartaoAtual = new CartaoCredito();
         modalCartao.Title = "Novo Cartão de Crédito";
         modalCartao.Open();
     }
@@ -89,7 +90,7 @@
     private void AbrirModalParaEditarCartao(int id)
     {
         cartaoAtual = listaCartoes?.FirstOrDefault(c => c.Id == id);
-        cartaoAtual.Status = JT_Persistencia.Persistencia.StatusObjeto.EmEdicao;
+        cartaoAtual.Status = StatusObjeto.EmEdicao;
         modalCartao.Title = "Editar Cartão de Crédito";
         modalCartao.Open();
     }

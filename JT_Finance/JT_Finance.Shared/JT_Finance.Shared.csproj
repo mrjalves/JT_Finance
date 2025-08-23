@@ -25,14 +25,8 @@
     <Reference Include="JT_Classes">
       <HintPath>..\..\..\JT_ApplicationLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_Classes.dll</HintPath>
     </Reference>
-    <Reference Include="JT_Dados">
-      <HintPath>..\..\..\JT_ApplicationLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_Dados.dll</HintPath>
-    </Reference>
-    <Reference Include="JT_Persistencia">
-      <HintPath>..\..\..\JT_ApplicationLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_Persistencia.dll</HintPath>
-    </Reference>
-    <Reference Include="JT_RegrasNegocios">
-      <HintPath>..\..\..\JT_ApplicationLayer\JT_BusinessLayer\bin\Debug\net9.0\JT_RegrasNegocios.dll</HintPath>
+    <Reference Include="JT_Servicos">
+      <HintPath>..\..\..\JT_ApplicationLayer\JT_Servicos\bin\Debug\net9.0\JT_Servicos.dll</HintPath>
     </Reference>
   </ItemGroup>
 

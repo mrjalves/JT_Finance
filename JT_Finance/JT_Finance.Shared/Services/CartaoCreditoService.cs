@@ -17,12 +17,12 @@ namespace JT_Finance.Shared.Services
         public CartaoCreditoService(ToastService toastService)
         {
             _toastService = toastService;
-            _cartoes = new List<CartaoCredito>();
+            _cartoes = [];
         }
 
         public async Task CarregarDadosAsync()
         {
-            _cartoes = new CartaoCredito().Consultar<CartaoCredito>("SELECT * FROM CartoesCredito ORDER BY Nome");
+            _cartoes = JT_Servicos.CartaoCreditoService.GetAll();
             await Task.CompletedTask;
             NotifyDataChanged();
         }
@@ -35,15 +35,14 @@ namespace JT_Finance.Shared.Services
             return _cartoes;
         }
 
-        public async Task<CartaoCredito> ObterCartaoPorIdAsync(int id)
+        public async Task<CartaoCredito> ObterCartaoPorId(int id)
         {
-            await CarregarDadosAsync();
-            return _cartoes.FirstOrDefault(c => c.Id == id);
+            return await Task.FromResult(JT_Servicos.CartaoCreditoService.GetById(id));
         }
 
         public async Task<bool> SalvarCartaoAsync(CartaoCredito cartao)
         {
-            bool sucesso = cartao.Salvar();
+            bool sucesso = JT_Servicos.CartaoCreditoService.Save(cartao);
             await CarregarDadosAsync();
 
             if (sucesso)
@@ -56,8 +55,7 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> RemoverCartaoAsync(int id)
         {
-            var cartao = new CartaoCredito { Id = id };
-            bool sucesso = cartao.Excluir(cartao);
+            bool sucesso = JT_Servicos.CartaoCreditoService.Delete(id);
             await CarregarDadosAsync();
 
             if (sucesso)
@@ -79,5 +77,10 @@ namespace JT_Finance.Shared.Services
         }
         // Mantenha a implementação existente que já contém o evento
         private void NotifyDataChanged() => OnDataChanged?.Invoke();
+
+        public async Task<List<Despesa>> ObterDespesas(int id)
+        {
+            return await Task.FromResult(JT_Servicos.CartaoCreditoService.ObterDespesas(id));
+        }
     }
 }

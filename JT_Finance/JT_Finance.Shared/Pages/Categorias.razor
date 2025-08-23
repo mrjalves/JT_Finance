@@ -1,4 +1,5 @@
 ﻿@page "/gerenciar-categorias"
+@using JT_Aplicacao
 @using JT_Classes
 @using JT_Finance.Shared.Services
 @using JT_Finance.Shared.Services.Interfaces
@@ -173,7 +174,7 @@
         var (displayName, entityType) = papeisDeCategoria[selectedRole];
         modalTitle = $"Nova Opção para {displayName}";
 
-        opcaoEmEdicao = new Categoria(JT_Persistencia.Persistencia.StatusObjeto.Novo)
+        opcaoEmEdicao = new Categoria()
         {
             TipoEntidade = entityType,
             Nome = selectedRole,
@@ -186,7 +187,7 @@
         modalTitle = $"Editar Opção: {opcaoParaEditar.Descricao}";
         opcaoEmEdicao = new Categoria
         {
-            Status = JT_Persistencia.Persistencia.StatusObjeto.EmEdicao,
+            Status = StatusObjeto.EmEdicao,
             Id = opcaoParaEditar.Id,
             Nome = opcaoParaEditar.Nome,
             Descricao = opcaoParaEditar.Descricao,
@@ -199,7 +200,7 @@
 
     private async Task HandleSave()
     {
-        if (opcaoEmEdicao.Salvar())
+        if (JT_Servicos.CategoriaService.Save(opcaoEmEdicao))
         {
             FecharModal();
             await CarregarOpcoes();
@@ -218,7 +219,7 @@
     }
     private async Task EfetuarRemocaoCategoria()
     {
-        if (opcaoEmEdicao.Excluir(opcaoEmEdicao))
+        if (JT_Servicos.CategoriaService.Delete(opcaoEmEdicao.Id))
         {
             ToastService.ShowSuccess("Removida!", "A Categoria foi removida.");
             await CarregarOpcoes(); 

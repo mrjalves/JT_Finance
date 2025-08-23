@@ -83,7 +83,7 @@ else
         {
             configuracaoAtual = new Configuracao { Id = 1 };
             // Salva esta configuração inicial para que exista no banco para futuras edições.
-            configuracaoAtual.Salvar();
+            JT_Servicos.ConfiguracaoService.Save(configuracaoAtual);
         }
     }
 
@@ -93,7 +93,7 @@ else
 
         try
         {
-            bool sucesso = configuracaoAtual.Salvar();
+            bool sucesso = JT_Servicos.ConfiguracaoService.Save(configuracaoAtual);
 
             if (sucesso)
             {
