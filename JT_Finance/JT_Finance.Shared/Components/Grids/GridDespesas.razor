@@ -1,4 +1,5 @@
-﻿@using JT_Classes
+﻿@using JT_Aplicacao
+@using JT_Classes
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Models
 @using JT_Finance.Shared.Services.Interfaces
@@ -102,7 +103,7 @@
     protected override async Task OnInitializedAsync()
     {
         DespesaService.OnDataChanged += AtualizarDadosDaPagina;
-        //await CarregarDependencias();
+        await CarregarDependencias();
         ConfigurarFiltros();
     }
 
@@ -140,14 +141,7 @@
 
     private void ConfigurarFiltros()
     {
-        var filtros = new List<FiltroItem>
-        {
-            new FiltroItem { Label = "Data Início", ColumnName = "DataDespesa", Type = "date" },
-            new FiltroItem { Label = "Data Fim", ColumnName = "DataDespesa", Type = "date" },
-            new FiltroItem { Label = "Categoria", ColumnName = "ID_CATEGORIA_TIPO", Type = "select", Options = CategoriasDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
-            new FiltroItem { Label = "Tipo", ColumnName = "ID_CATEGORIA_SUB", Type = "select", Options = TiposDespesa.Select(c => new KeyValuePair<string, string>(c.Id.ToString(), c.Descricao)).ToList() },
-            new FiltroItem { Label = "Situação", ColumnName = "DespesaPaga", Type = "select", Options = new List<KeyValuePair<string, string>> { new("1", "Paga"), new("0", "Não Paga") } }
-        };
+        var filtros = Despesa.GetFiltros();
         FiltroService.RegistrarFiltros(filtros, AplicarFiltros, AplicarPesquisa);
     }
 
@@ -160,30 +154,33 @@
         else
         {
             Despesas = listaTodasDespesas
-               .Where(d => FiltroItem.LevenshteinDistance(d.Descricao.ToLower(), searchTerm.ToLower()) <= 2 || d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+               .Where(d => Filtro.LevenshteinDistance(d.Descricao.ToLower(), searchTerm.ToLower()) <= 2 || d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                .ToList();
         }
         StateHasChanged();
         return Task.CompletedTask;
     }
-   
-    private async Task AplicarFiltros(List<FiltroItem> filtros)
+
+    private async Task AplicarFiltros(List<Filtro> filtros)
     {
-        var whereConditions = new List<string>();
-        var dataInicio = filtros.FirstOrDefault(f => f.Label == "Data Início")?.Value as DateTime?;
-        var dataFim = filtros.FirstOrDefault(f => f.Label == "Data Fim")?.Value as DateTime?;
+        // var whereConditions = new List<string>();
+        // var dataInicio = filtros.FirstOrDefault(f => f.Label == "Data Início")?.Value as DateTime?;
+        // var dataFim = filtros.FirstOrDefault(f => f.Label == "Data Fim")?.Value as DateTime?;
 
-        if (dataInicio.HasValue && dataFim.HasValue) whereConditions.Add($"DataDespesa >= '{dataInicio}'");
-        else if (dataInicio.HasValue) whereConditions.Add($"DataDespesa = '{dataInicio}'");
-        if (dataFim.HasValue) whereConditions.Add($"DataDespesa <= '{dataFim}'");
+        // if (dataInicio.HasValue && dataFim.HasValue) whereConditions.Add($"DataDespesa >= '{dataInicio}'");
+        // else if (dataInicio.HasValue) whereConditions.Add($"DataDespesa = '{dataInicio}'");
+        // if (dataFim.HasValue) whereConditions.Add($"DataDespesa <= '{dataFim}'");
 
-        foreach (var filtro in filtros.Where(f => f.Value != null && !string.IsNullOrEmpty(f.Value.ToString()) && f.Label != "Data Início" && f.Label != "Data Fim"))
-        {
-            whereConditions.Add($"{filtro.ColumnName} = {filtro.Value}");
-        }
+        // foreach (var filtro in filtros.Where(f => f.Value != null && !string.IsNullOrEmpty(f.Value.ToString()) && f.Label != "Data Início" && f.Label != "Data Fim"))
+        // {
+        //     whereConditions.Add($"{filtro.ColumnName} = {filtro.Value}");
+        // }
 
-        string whereClause = whereConditions.Any() ? "WHERE " + string.Join(" AND ", whereConditions) : "";
-        await CarregarDespesas(whereClause);
+        // string whereClause = whereConditions.Any() ? "WHERE " + string.Join(" AND ", whereConditions) : "";
+
+
+        // await CarregarDespesas(whereClause);
+        Despesas = JT_Servicos.DespesaService.Filter(filtros);
         StateHasChanged();
     }
 

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
+using JT_Aplicacao;
+
 using JT_Finance.Shared.Models;
 
 namespace JT_Finance.Shared.Services
@@ -8,9 +11,9 @@ namespace JT_Finance.Shared.Services
     public class FiltroService
     {
         public bool FiltrosVisiveis { get; private set; }
-        public List<FiltroItem> Filtros { get; private set; } = new();
+        public List<Filtro> Filtros { get; private set; } = new();
         public event Action OnChange;
-        public event Func<List<FiltroItem>, Task> OnFiltroAplicado;
+        public event Func<List<Filtro>, Task> OnFiltroAplicado;
         public event Func<string, Task> OnSearchApplied;
 
         public void ToggleFiltros()
@@ -19,7 +22,7 @@ namespace JT_Finance.Shared.Services
             NotifyStateChanged();
         }
       
-        public void RegistrarFiltros(List<FiltroItem> filtros, Func<List<FiltroItem>, Task> onFiltroAplicadoCallback, Func<string, Task> onSearchAppliedCallback)
+        public void RegistrarFiltros(List<Filtro> filtros, Func<List<Filtro>, Task> onFiltroAplicadoCallback, Func<string, Task> onSearchAppliedCallback)
         {
             Filtros = filtros;
             OnFiltroAplicado = onFiltroAplicadoCallback;
