@@ -18,6 +18,7 @@ main {
 }
 
 .sidebar {
+    width: 3em;
     background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
     /* Em telas pequenas, o NavMenu.razor.css controla o sidebar (nav-scrollable) como um overlay.
        Portanto, não precisamos de muita estilização para .sidebar em si aqui para < 641px. */
@@ -135,7 +136,7 @@ main {
 .dashboard-layout {
     display: grid;
     /* Largura inicial do menu minimizado */
-    grid-template-columns: 80px 1fr;
+    grid-template-columns: 3rem 1fr;
     height: 100vh;
     /* Transição suave ao mudar a largura das colunas */
     transition: grid-template-columns 0.3s ease-in-out;
@@ -144,7 +145,8 @@ main {
     /* Estado expandido do layout */
     .dashboard-layout.expanded {
         /* Largura do menu expandido */
-        grid-template-columns: 260px 1fr;
+        grid-template-columns: 12rem 1fr;
+      
     }
 
 .main-content {
