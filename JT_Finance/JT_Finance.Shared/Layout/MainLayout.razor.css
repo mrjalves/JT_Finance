@@ -75,28 +75,33 @@ main {
     }
 }
 
-@media (min-width: 641px) {
-    .main-content-wrapper {
-        flex-direction: row; /* Sidebar ao lado do main content */
+@media (max-width: 768px) {
+    .dashboard-layout{
+        display:flex !important;
     }
+}
+    @media (min-width: 641px) {
+        .main-content-wrapper {
+            flex-direction: row; /* Sidebar ao lado do main content */
+        }
 
-    .sidebar {
-        width: 250px;
-        height: 100%; /* Ocupa 100% da altura do .main-content-wrapper */
-        /* position: sticky; não é mais necessário aqui, pois o main-content-wrapper scrolla
+        .sidebar {
+            width: 250px;
+            height: 100%; /* Ocupa 100% da altura do .main-content-wrapper */
+            /* position: sticky; não é mais necessário aqui, pois o main-content-wrapper scrolla
            ou o .nav-scrollable dentro do sidebar scrolla.
            Se quisermos o sidebar sticky em relação à página inteira (abaixo do Header),
            o .main-content-wrapper precisaria gerenciar o scroll, e o sidebar seria sticky top: 3.5rem
            ou o .page seria o container de scroll.
            Por simplicidade, o sidebar terá altura total do wrapper e o conteúdo interno (.nav-scrollable) scrolla.
         */
-    }
+        }
 
-    /* Se .top-row se referia ao header da página, ele foi substituído pelo componente Header.
+        /* Se .top-row se referia ao header da página, ele foi substituído pelo componente Header.
        Se se referia a uma barra de ferramentas dentro de <main>, ela não existe por padrão.
        As regras de padding para article e .top-row aqui podem ser ajustadas ou removidas.
     */
-    /* .top-row {
+        /* .top-row {
         position: sticky;
         top: 0; // Isto seria problemático se o Header já tem 3.5rem. Seria top: 3.5rem.
         z-index: 1;
@@ -108,55 +113,55 @@ main {
         width: 0;
     } */
 
-    article.content { /* Ajustado para article.content para especificidade */
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
-    }
-}
-
-#blazor-error-ui {
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
-    box-sizing: border-box;
-    display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
-}
-
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
-.dashboard-layout {
-    display: grid;
-    /* Largura inicial do menu minimizado */
-    grid-template-columns: 3rem 1fr;
-    height: 100vh;
-    /* Transição suave ao mudar a largura das colunas */
-    transition: grid-template-columns 0.3s ease-in-out;
-}
-
-    /* Estado expandido do layout */
-    .dashboard-layout.expanded {
-        /* Largura do menu expandido */
-        grid-template-columns: 12rem 1fr;
-      
+        article.content { /* Ajustado para article.content para especificidade */
+            padding-left: 2rem !important;
+            padding-right: 1.5rem !important;
+        }
     }
 
-.main-content {
-    display: flex;
-    flex-direction: column;
-    background-color: var(--main-bg);
-    overflow-y: auto;
-}
+    #blazor-error-ui {
+        background: lightyellow;
+        bottom: 0;
+        box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+        box-sizing: border-box;
+        display: none;
+        left: 0;
+        padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+        position: fixed;
+        width: 100%;
+        z-index: 1000;
+    }
 
-main.content-body {
-    padding: 0.8rem;
-    flex-grow: 1;
-}
+        #blazor-error-ui .dismiss {
+            cursor: pointer;
+            position: absolute;
+            right: 0.75rem;
+            top: 0.5rem;
+        }
+
+    .dashboard-layout {
+        display: grid;
+        /* Largura inicial do menu minimizado */
+        grid-template-columns: 3rem 1fr;
+        height: 100vh;
+        /* Transição suave ao mudar a largura das colunas */
+        transition: grid-template-columns 0.3s ease-in-out;
+    }
+
+        /* Estado expandido do layout */
+        .dashboard-layout.expanded {
+            /* Largura do menu expandido */
+            grid-template-columns: 12rem 1fr;
+        }
+
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--main-bg);
+        overflow-y: auto;
+    }
+
+    main.content-body {
+        padding: 0.8rem;
+        flex-grow: 1;
+    }

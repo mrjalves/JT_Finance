@@ -1,8 +1,11 @@
 ﻿using JT_Classes.Financeiro;
 
+using JT_Finance.Shared.Repository; // Importe a nova interface
 using JT_Finance.Shared.Services.Interfaces;
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace JT_Finance.Shared.Services
@@ -10,92 +13,95 @@ namespace JT_Finance.Shared.Services
     public class ReceitaService : IReceitaService
     {
         private readonly ToastService _toastService;
+        private readonly IReceitaRep _repository; // Dependência da interface
         private List<Receita> _receitas = new();
         public event Action OnDataChanged;
 
-        public ReceitaService(ToastService toastService)
+        public ReceitaService(ToastService toastService, IReceitaRep repository)
         {
             _toastService = toastService;
+            _repository = repository;
+        }
+
+        // Método privado para carregar ou recarregar a cache
+        private async Task CarregarDadosAsync()
+        {
+            _receitas = await _repository.GetAllAsync();
+            NotifyDataChanged();
         }
 
         public async Task<List<Receita>> ObterTodasReceitasAsync()
         {
-            _receitas = JT_Servicos.ReceitaService.GetAll();
-            return await Task.FromResult(_receitas);
+            if (!_receitas.Any())
+            {
+                await CarregarDadosAsync();
+            }
+            return _receitas;
         }
 
         public async Task<Receita> ObterReceitaPorIdAsync(int id)
         {
-            await ObterTodasReceitasAsync();
-            return _receitas.FirstOrDefault(r => r.Id == id);
+            return await _repository.GetByIdAsync(id);
         }
 
         public async Task<bool> SalvarReceitaAsync(Receita receita)
         {
-            bool sucesso = JT_Servicos.ReceitaService.Save(receita);
-            await ObterTodasReceitasAsync();
-
+            bool sucesso = await _repository.SaveAsync(receita);
             if (sucesso)
+            {
                 NotificarSucesso("Sucesso", "Receita salva com sucesso!");
+                await CarregarDadosAsync(); // Recarrega a lista
+            }
             else
+            {
                 NotificarErro("Erro", "Falha ao salvar receita.");
-
-            NotifyDataChanged();
+            }
             return sucesso;
         }
 
         public async Task<bool> RemoverReceitaAsync(int id)
         {
-            bool sucesso = JT_Servicos.ReceitaService.Delete(id);
-            await ObterTodasReceitasAsync();
-
+            bool sucesso = await _repository.DeleteAsync(id);
             if (sucesso)
+            {
                 NotificarSucesso("Sucesso", "Receita removida com sucesso!");
+                await CarregarDadosAsync(); // Recarrega a lista
+            }
             else
+            {
                 NotificarErro("Erro", "Falha ao remover receita.");
-
-            NotifyDataChanged();
+            }
             return sucesso;
         }
 
         public async Task<bool> DuplicarReceitaAsync(int id)
         {
-            var receita = await ObterReceitaPorIdAsync(id);
-            if (receita == null) return false;
-
-            bool sucesso = receita.Duplicar();
-            await ObterTodasReceitasAsync();
-
+            bool sucesso = await _repository.DuplicateAsync(id);
             if (sucesso)
+            {
                 NotificarSucesso("Sucesso", "Receita duplicada com sucesso!");
+                await CarregarDadosAsync(); // Recarrega a lista
+            }
             else
+            {
                 NotificarErro("Erro", "Falha ao duplicar receita.");
-
-            NotifyDataChanged();
+            }
             return sucesso;
         }
 
-        public void NotificarErro(string titulo, string mensagem)
-        {
-            _toastService.ShowError(titulo, mensagem);
-        }
-
-        public void NotificarSucesso(string titulo, string mensagem)
-        {
-            _toastService.ShowSuccess(titulo, mensagem);
-        }
-
-        private void NotifyDataChanged() => OnDataChanged?.Invoke();
-
         public async Task<decimal> GetTotalMes(DateTime mes)
         {
-            return await Task.FromResult(Receita.GetTotalReceitasMes(mes));
+            return await _repository.GetTotalMesAsync(mes);
         }
 
         public async Task<List<Receita>> ObterReceitasAsync(string condicao)
         {
-            return await Task.FromResult(JT_Servicos.ReceitaService.Find(condicao));
-
+            return await _repository.FindAsync(condicao);
         }
+
+        // Métodos de notificação
+        public void NotificarErro(string titulo, string mensagem) => _toastService.ShowError(titulo, mensagem);
+        public void NotificarSucesso(string titulo, string mensagem) => _toastService.ShowSuccess(titulo, mensagem);
+        private void NotifyDataChanged() => OnDataChanged?.Invoke();
     }
 }

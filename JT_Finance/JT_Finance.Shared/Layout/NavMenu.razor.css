@@ -247,3 +247,103 @@
     color: var(--sidebar-icon-active-color);
     background-color: var(--sidebar-icon-hover-bg);
 }
+
+/* ==========================================================================
+   ESTILOS PARA DISPOSITIVOS MÓVEIS (MENU INFERIOR)
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .sidebar-brand,
+    .sidebar-footer,
+    .toggle-button,
+    .navbar-toggler,
+    .expanded .sidebar, .nav-text {
+        display: none; 
+    }
+
+    /* 1. O contêiner principal do menu (antiga sidebar)
+    -------------------------------------------------------------------------- */
+    .sidebar {
+        width: 100%;
+        height: 2.5rem; /* Altura ideal para toque e visualização */
+        position: fixed;
+        bottom: 0;
+        border-top: 1px solid #e0e0e0; /* Linha sutil de separação */
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* 2. A lista de navegação
+    -------------------------------------------------------------------------- */
+    .sidebar-nav {
+        display: flex;
+        justify-content: space-around; /* Distribui os itens igualmente */
+        align-items: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* 3. Cada item do menu (link individual)
+    -------------------------------------------------------------------------- */
+    .nav-item {
+        flex: 1; /* Cada item ocupa o mesmo espaço */
+        display: flex;
+        align-items: center;
+        height: 100%;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+        .nav-item:first-of-type{
+            padding-top:0;
+        }
+        .nav-item:last-of-type {
+            padding-bottom: 0;
+        }
+        /* O link clicável dentro do item */
+        .nav-item ::deep .nav-link {
+            display: flex;
+            transition: color 0.2s ease-in-out;
+            justify-content: center !important;
+            border-radius: 8px; /* Borda arredondada para feedback de toque */
+        }
+            /* Feedback visual ao tocar no botão */
+            .nav-item .nav-link:active {
+                background-color: rgba(0, 0, 0, 0.05);
+            }
+
+        /* 4. Ícone e Texto
+    -------------------------------------------------------------------------- */
+        .nav-item i {
+            font-size: 1rem; /* Ícones um pouco maiores */
+            margin: 0;
+        }
+
+   
+
+    /* 5. Estilo do item ATIVO
+    -------------------------------------------------------------------------- */
+    .nav-item .nav-link.active {
+        /* A cor primária da sua aplicação (ex: um azul ou verde) */
+        color: #1a73e8;
+    }
+
+        .nav-item .nav-link.active .nav-text {
+            font-weight: 700; /* Texto em negrito para o item ativo */
+        }
+
+    /* 6. Limpeza de estilos desnecessários em mobile
+    -------------------------------------------------------------------------- */
+ 
+    
+        /* Garante que o menu "deslizante" não interfira */
+        .nav-scrollable,
+        .navbar-toggler:checked ~ .nav-scrollable {
+            position: static;
+            transform: none;
+            width: 100%;
+            background-image: none;
+            overflow-y: hidden;
+            padding-top: 0;
+            display: flex; /* Garante que o conteúdo dentro (o .sidebar-nav) seja renderizado */
+            height: 100%;
+        }
+}

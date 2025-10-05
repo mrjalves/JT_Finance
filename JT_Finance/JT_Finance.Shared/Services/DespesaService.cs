@@ -1,15 +1,8 @@
 ﻿using JT_Classes.Financeiro;
 
-using JT_Finance.Shared.Pages;
+using JT_Finance.Shared.Repository;
 using JT_Finance.Shared.Services.Interfaces;
-
-using Microsoft.Data.SqlClient;
-
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace JT_Finance.Shared.Services
@@ -17,45 +10,43 @@ namespace JT_Finance.Shared.Services
     public class DespesaService : IDespesaService
     {
         private readonly ToastService _toastService;
-        private List<Despesa> _despesas = new();
+        private readonly IDespesaRep _repository;
         public event Action OnDataChanged;
 
-        public DespesaService(ToastService toastService)
+        public DespesaService(ToastService toastService, IDespesaRep repository)
         {
             _toastService = toastService;
+            _repository = repository;
         }
 
         public async Task<List<Despesa>> ObterTodasDespesasAsync()
         {
-            _despesas = JT_Servicos.DespesaService.GetAll();
-            return await Task.FromResult(_despesas);
+            // A implementação original tinha uma cache local "_despesas".
+            // Removi para sempre buscar os dados mais recentes do repositório.
+            // Se a cache for necessária, a lógica pode ser readicionada aqui.
+            return await _repository.GetAllAsync();
         }
 
         public async Task<bool> DuplicarDespesaAsync(Despesa despesa)
         {
-            bool sucesso = despesa.Duplicar();
+            bool sucesso = await _repository.DuplicarAsync(despesa);
             if (sucesso)
                 NotificarSucesso("Duplicada!", "A Despesa foi duplicada.");
             else
                 NotificarErro("Erro!", "Não foi possível duplicar a Despesa.");
+
             NotifyDataChanged();
             return sucesso;
         }
 
-
         public async Task<Despesa> ObterDespesaPorIdAsync(int id)
         {
-            await ObterTodasDespesasAsync();
-            return _despesas.FirstOrDefault(r => r.Id == id);
+            return await _repository.GetByIdAsync(id);
         }
-
-     
 
         public async Task<bool> RemoverDespesaAsync(int id)
         {
-            bool sucesso = JT_Servicos.DespesaService.Delete(id);
-            await ObterTodasDespesasAsync();
-
+            bool sucesso = await _repository.DeleteAsync(id);
             if (sucesso)
                 NotificarSucesso("Sucesso", "despesa removida com sucesso!");
             else
@@ -67,9 +58,7 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> SalvarDespesaAsync(Despesa despesa)
         {
-            bool sucesso = JT_Servicos.DespesaService.Save(despesa);
-            await ObterTodasDespesasAsync();
-
+            bool sucesso = await _repository.SaveAsync(despesa);
             if (sucesso)
                 NotificarSucesso("Sucesso", "Despesa salva com sucesso!");
             else
@@ -77,6 +66,42 @@ namespace JT_Finance.Shared.Services
 
             NotifyDataChanged();
             return sucesso;
+        }
+
+
+        public async Task<List<Despesa>> ObterDespesasAsync(string condicao)
+        {
+            return await _repository.FindAsync(condicao);
+        }
+
+        public async Task<List<Despesa>> ObterDespesasMesAsync(DateTime mesReferencia)
+        {
+            return await _repository.GetDespesasPorMesAsync(mesReferencia);
+        }
+
+        public async Task<List<TotalPorTipo>> GetDespesaPorTipo(DateTime mes)
+        {
+            return await _repository.GetDespesasAgrupadasPorTipoAsync(mes);
+        }
+
+        public async Task<List<TotalPorCategoria>> GetDespesaPorCategoria(DateTime mes)
+        {
+            return await _repository.GetDespesasAgrupadasPorCategoriaAsync(mes);
+        }
+
+        public async Task<decimal> GetTotalMes(DateTime mes)
+        {
+            return await _repository.GetTotalDespesaMesAsync(mes);
+        }
+
+        public async Task<List<Despesa>> ObterDespesasAVencerAsync()
+        {
+            return await _repository.GetDespesasProximasAoVencimentoAsync();
+        }
+
+        public async Task<List<Despesa>> ObterDespesasVencidasAsync()
+        {
+            return await _repository.GetDespesasVencidasAsync();
         }
 
         public void NotificarErro(string titulo, string mensagem)
@@ -90,41 +115,5 @@ namespace JT_Finance.Shared.Services
         }
 
         private void NotifyDataChanged() => OnDataChanged?.Invoke();
-
-        public async Task<List<TotalPorTipo>> GetDespesaPorTipo(DateTime mes)
-        {
-            return await Task.FromResult(Despesa.GetDespesasAgrupadasPorTipo(mes));
-        }
-
-        public async  Task<List<TotalPorCategoria>> GetDespesaPorCategoria(DateTime mes)
-        {
-            return await Task.FromResult(Despesa.GetDespesasAgrupadasPorCategoria(mes));
-        }
-
-        public async Task<decimal> GetTotalMes(DateTime mes)
-        {
-            return await Task.FromResult(Despesa.GetTotalDespesaMes(mes));
-        }
-
-        public async Task<List<Despesa>> ObterDespesasAVencerAsync()
-        {
-            return await Task.FromResult(Despesa.GetDespesasProximasAoVencimento());
-        }
-
-        public async Task<List<Despesa>> ObterDespesasVencidasAsync()
-        {
-            return await Task.FromResult(Despesa.GetDespesasVencidas());
-        }
-
-        public async Task<List<Despesa>> ObterDespesasAsync(string condicao)
-        {
-            return await Task.FromResult(JT_Servicos.DespesaService.Find(condicao));
-        }
-
-        public async Task<List<Despesa>> ObterDespesasMesAsync(DateTime mesReferencia)
-        {
-           return await Task.FromResult(Despesa.GetDespesasPorMes(mesReferencia));
-        }
-       
     }
 }

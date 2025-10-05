@@ -2,8 +2,7 @@
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Services
 @using JT_Finance.Shared.Services.Interfaces
-
-@inject IThemeService ThemeService
+@using JT_Finance.Shared.Models
 @inherits LayoutComponentBase
 @implements IDisposable
 
@@ -11,37 +10,130 @@
     var layoutClass = _isSidebarExpanded ? "dashboard-layout expanded" : "dashboard-layout";
 }
 
-<div class="@layoutClass" style="@themeStyle">
-    <NavMenu IsExpanded="@_isSidebarExpanded" OnToggle="@ToggleSidebar" />
+@if (_isInitialized)
+{
+    <div class="@layoutClass" style="@themeStyle">
+        
+            <NavMenu IsExpanded="@_isSidebarExpanded" OnToggle="@ToggleSidebar" />
 
-    <div class="main-content">
-        <Header PageTitle="@_currentPageTitle" />
-
-        <main class="content-body">
-            <CascadingValue Value="(Func<string, Task>)SetPageTitleAsync">
-                @Body
-            </CascadingValue>
-        </main>
-        <Footer/>
+            <div class="main-content">
+                @* <div class="top-row px-4">
+                    <span class="page-title">@_currentPageTitle</span>
+                    <div class="user-info">
+                        <span>Olá, @CurrentUserState.UsuarioName</span>
+                        <button class="btn btn-link logout-button" @onclick="HandleLogout">Sair</button>
+                    </div>
+                </div> *@
+            <Header PageTitle="@_currentPageTitle"  />
+                <main class="content-body">
+                    <CascadingValue Value="(Func<string, Task>)SetPageTitleAsync">
+                        @Body
+                    </CascadingValue>
+                </main>
+                <Footer />
+            </div>
     </div>
-</div>
-<ToastContainer />
-<Filtros />
+
+    <ToastContainer />
+    <Filtros />
+}
+else
+{
+    <div class="loading-container">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+    </div>
+}
 
 @code {
-    private bool _isSidebarExpanded = false;
-    private string _currentPageTitle = "Dashboard"; 
-    private string themeStyle = "";
+    [Inject] private IThemeService ThemeService { get; set; }
+    [Inject] private IJSRuntime JSRuntime { get; set; } // já tem @inject no topo
+    [Inject] private FirebaseAuthService AuthService { get; set; }
+    [Inject] private CurrentUserState CurrentUserState { get; set; }
+    [Inject] private NavigationManager NavigationManager { get; set; }
 
+    private bool _isSidebarExpanded = false;
+    private string _currentPageTitle = "Dashboard";
+    private string themeStyle = "";
+    private bool _isInitialized = false;
+
+    // Apenas registra handlers e aplica tema (sincronamente) - sem JS aqui
     protected override void OnInitialized()
     {
         ThemeService.OnChange += ApplyTheme;
+        CurrentUserState.OnStateChanged += HandleAuthStateChanged;
         ApplyTheme();
+    }
+
+    // Executa a inicialização que usa JS (localStorage / Firebase JS) apenas depois do primeiro render
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        try
+        {
+            // Garante que o CurrentUserState possua o IJSRuntime certo deste circuito
+            CurrentUserState.Initialize(JSRuntime);
+
+            // Inicializa o auth (vai carregar o estado do localStorage internamente)
+            await AuthService.InitializeAsync();
+
+            // Se você usa login por redirect (Google), processa o resultado retornado
+            var redirectResult = await AuthService.GetRedirectResultAsync();
+            if (redirectResult != null && redirectResult.Success)
+            {
+                // usuário salvo pelo CurrentUserState dentro de GetRedirectResultAsync/InitializeAsync
+            }
+
+            // Checa se deve redirecionar à página de login
+            var path = new Uri(NavigationManager.Uri).AbsolutePath;
+            var isPublic = path == "/login" || path == "/cadastro";
+            if (!CurrentUserState.Autenticado && !isPublic)
+            {
+                NavigationManager.NavigateTo("/login");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Falha na inicialização do Auth (OnAfterRender): {ex.Message}");
+        }
+
+        _isInitialized = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // Quando o estado do usuário mudar, usa InvokeAsync para navegar/atualizar UI com segurança
+    private void HandleAuthStateChanged() => _ = InvokeAsync(() =>
+    {
+        if (!CurrentUserState.Autenticado)
+        {
+            var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+            if (currentPath != "/login" && currentPath != "/cadastro")
+            {
+                NavigationManager.NavigateTo("/login");
+            }
+        }
+        StateHasChanged();
+    });
+
+    private async Task HandleLogout()
+    {
+        await AuthService.SignOutAsync();
+        NavigationManager.NavigateTo("/login", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnChange -= ApplyTheme;
+        CurrentUserState.OnStateChanged -= HandleAuthStateChanged;
     }
 
     private void ToggleSidebar()
     {
         _isSidebarExpanded = !_isSidebarExpanded;
+        StateHasChanged();
     }
 
     private async Task SetPageTitleAsync(string title)
@@ -49,7 +141,7 @@
         if (_currentPageTitle != title)
         {
             _currentPageTitle = title;
-            await InvokeAsync(StateHasChanged); 
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -61,10 +153,5 @@
             themeStyle = string.Join(";", theme.Colors.Select(c => $"{c.Key}:{c.Value}"));
             StateHasChanged();
         }
-    }
-
-    public void Dispose()
-    {
-        ThemeService.OnChange -= ApplyTheme;
     }
 }

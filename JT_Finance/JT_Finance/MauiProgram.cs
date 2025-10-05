@@ -1,4 +1,6 @@
 ﻿using JT_Finance.Services;
+using JT_Finance.Shared.Models;
+using JT_Finance.Shared.Repository;
 using JT_Finance.Shared.Services;
 using JT_Finance.Shared.Services.Interfaces;
 
@@ -18,7 +20,9 @@ namespace JT_Finance
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
 
-
+            builder.Services.AddScoped<IDespesaRep, DesktopDespRep>();
+            builder.Services.AddScoped<ICartaoCreditoRep, DesktopCartaoCreditoRep>();
+            builder.Services.AddScoped<IReceitaRep, DesktopReceitaRep>();
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
             builder.Services.AddSingleton<ToastService>();
             builder.Services.AddSingleton<FiltroService>();
@@ -28,7 +32,8 @@ namespace JT_Finance
             builder.Services.AddScoped<IDespesaService, DespesaService>();
             builder.Services.AddSingleton<INotificationService, NotificationService>();
             builder.Services.AddSingleton<IThemeService, ThemeService>();
-
+            builder.Services.AddScoped<FirebaseAuthService>();
+            builder.Services.AddSingleton<CurrentUserState>();
             builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG
