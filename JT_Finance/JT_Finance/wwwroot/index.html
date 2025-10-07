@@ -17,12 +17,17 @@
 
 <body>
     <!-- Firebase SDK v9 modular -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+    <!--<script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import {
-            getAuth, signInWithEmailAndPassword, signInWithRedirect, getRedirectResult,
-            signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged
-        } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+            getAuth,
+            signInWithEmailAndPassword,
+            signInWithRedirect,
+            getRedirectResult,
+            GoogleAuthProvider,
+            signOut,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBMGBmvLhvar7rpys7NDvzEexbH_TZUEJs",
@@ -40,74 +45,104 @@
 
         // 🔥 USE O MESMO NOME EM TODOS OS LUGARES
         window.FireBase = {
-            signInWithEmail: async (email, password) => {
-                try {
-                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                    return {
-                        success: true,
-                        user: {
-                            uid: userCredential.user.uid,
-                            email: userCredential.user.email,
-                            displayName: userCredential.user.displayName,
-                        }
-                    };
-                } catch (error) {
-                    return { success: false, errorMessage: error.message };
-                }
-            },
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+            import {
+                getAuth,
+                signInWithEmailAndPassword,
+                signInWithRedirect,
+                getRedirectResult,
+                GoogleAuthProvider,
+                signOut,
+                onAuthStateChanged
+            } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-            signInWithGoogle: async () => {
-                try {
-                    await signInWithRedirect(auth, googleProvider);
-                    // Esta função não terá um 'return' direto, pois a página será recarregada.
-                    // O resultado será pego pela função abaixo.
-                    return { success: true };
-                } catch (error) {
-                    return { success: false, errorMessage: error.message };
-                }
-            },
+            const firebaseConfig = {
+                apiKey: "AIzaSyBMGBmvLhvar7rpys7NDvzEexbH_TZUEJs",
+                authDomain: "controlefinanceiro-35e2a.firebaseapp.com",
+                projectId: "controlefinanceiro-35e2a",
+                storageBucket: "controlefinanceiro-35e2a.firebasestorage.app",
+                messagingSenderId: "521428017393",
+                appId: "1:521428017393:web:051e7a3bf6edac00980950",
+                measurementId: "G-92FBF0J0MP"
+            };
 
-            // NOVA FUNÇÃO para verificar o resultado do login após o redirecionamento
-            getGoogleRedirectResult: async () => {
-                try {
-                    const result = await getRedirectResult(auth);
-                    if (result && result.user) {
-                        // Usuário logou com sucesso via redirect
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const googleProvider = new GoogleAuthProvider();
+
+            // 🔥 USE O MESMO NOME EM TODOS OS LUGARES
+            window.FireBase = {
+                signInWithEmail: async (email, password) => {
+                    try {
+                        const userCredential = await signInWithEmailAndPassword(auth, email, password);
                         return {
                             success: true,
                             user: {
-                                uid: result.user.uid,
-                                email: result.user.email,
-                                displayName: result.user.displayName,
+                                uid: userCredential.user.uid,
+                                email: userCredential.user.email,
+                                displayName: userCredential.user.displayName,
                             }
                         };
+                    } catch (error) {
+                        return { success: false, errorMessage: error.message };
                     }
-                    // Nenhum usuário logado via redirect (carregamento normal da página)
-                    return { success: false, errorMessage: "No redirect result" };
-                } catch (error) {
-                    return { success: false, errorMessage: error.message };
+                },
+
+                // --- CORREÇÃO APLICADA AQUI ---
+                // Esta função agora usa o fluxo de REDIRECIONAMENTO, que é o correto para desktop/híbrido.
+                signInWithGoogle: async () => {
+                    try {
+                        // Esta função apenas inicia o redirecionamento. O resultado será capturado
+                        // pela função getGoogleRedirectResult quando o usuário voltar para o app.
+                        await signInWithRedirect(auth, googleProvider);
+                        return { success: true }; // Retorna sucesso para indicar que o processo começou.
+                    } catch (error) {
+                        return { success: false, errorMessage: error.message };
+                    }
+                },
+
+                // Esta função está CORRETA e é a segunda parte do fluxo de redirecionamento.
+                // Ela será chamada pelo MainLayout quando o app for recarregado.
+                getGoogleRedirectResult: async () => {
+                    try {
+                        const result = await getRedirectResult(auth);
+                        if (result && result.user) {
+                            // Usuário logou com sucesso via redirect
+                            return {
+                                success: true,
+                                user: {
+                                    uid: result.user.uid,
+                                    email: result.user.email,
+                                    displayName: result.user.displayName,
+                                }
+                            };
+                        }
+                        // Nenhum usuário logado via redirect (carregamento normal da página)
+                        return { success: false, errorMessage: "No redirect result" };
+                    } catch (error) {
+                        return { success: false, errorMessage: error.message };
+                    }
+                },
+
+                signOut: async () => {
+                    await signOut(auth);
+                },
+
+                onAuthStateChanged: (dotNetHelper) => {
+                    onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            dotNetHelper.invokeMethodAsync('OnAuthStateChanged', {
+                                uid: user.uid,
+                                email: user.email,
+                                displayName: user.displayName
+                            });
+                        } else {
+                            dotNetHelper.invokeMethodAsync('OnAuthStateChanged', null);
+                        }
+                    });
                 }
-            },
-
-            signOut: async () => {
-                await signOut(auth);
-            },
-
-            onAuthStateChanged: (dotNetHelper) => {
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        dotNetHelper.invokeMethodAsync('OnAuthStateChanged', {
-                            uid: user.uid,
-                            email: user.email,
-                            displayName: user.displayName
-                        });
-                    } else {
-                        dotNetHelper.invokeMethodAsync('OnAuthStateChanged', null);
-                    }
-                });
-            }
-        };
-    </script>
+            };
+    </script>-->
     <div class="status-bar-safe-area"></div>
 
     <div id="app">
