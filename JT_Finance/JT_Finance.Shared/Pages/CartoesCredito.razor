@@ -1,11 +1,11 @@
 ﻿@page "/cartoes-credito"
 @using JT_Aplicacao
 @using JT_Classes.Financeiro
+@using JT_Classes.Financeiro.structs
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Components.Modais
 @using JT_Finance.Shared.Services
 @using JT_Finance.Shared.Services.Interfaces
-@using static JT_Finance.Shared.Components.Modal
 @inject ICartaoCreditoService CartaoService
 @inject FiltroService FiltroService
 
@@ -47,8 +47,8 @@
     [CascadingParameter]
     public Func<string, Task>? SetPageTitleAsync { get; set; }
 
-    private List<CartaoCredito> listaCartoes = new();
-    private CartaoCredito? cartaoAtual;
+    private List<sCartaoStruct> listaCartoes = new();
+    private CartaoCredito cartaoAtual;
     private bool isLoading = true;
 
     private ModalCartaoCredito modalCartao = new();
@@ -69,7 +69,7 @@
     {
         await InvokeAsync(async () =>
         {
-            await CarregarCartoes();
+           // await CarregarCartoes();
             StateHasChanged();
         });
     }
@@ -89,7 +89,8 @@
 
     private void AbrirModalParaEditarCartao(int id)
     {
-        cartaoAtual = listaCartoes?.FirstOrDefault(c => c.Id == id);
+        var item = listaCartoes.FirstOrDefault(c => c.Id == id);
+        cartaoAtual = sCartaoStruct.ToEntity(item);
         cartaoAtual.Status = StatusObjeto.EmEdicao;
         modalCartao.Title = "Editar Cartão de Crédito";
         modalCartao.Open();

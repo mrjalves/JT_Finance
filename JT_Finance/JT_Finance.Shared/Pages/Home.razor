@@ -2,11 +2,12 @@
 @using System.Globalization
 @using JT_Classes
 @using JT_Classes.Financeiro
+@using JT_Classes.Financeiro.structs
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Components.Charts
 @using JT_Finance.Shared.Services
 @using JT_Finance.Shared.Services.Interfaces
-@using static JT_Finance.Shared.Components.Modal
+@using static JT_UserInterface.Shared.Components.Modal
 @inject IFormFactor FormFactor
 @inject IDespesaService DespesaService
 @inject IReceitaService ReceitaService
@@ -207,9 +208,9 @@
     private List<ChartDataset> datasetsGraficoPorTipo = new();
     private List<string> despesaCategoriasLabels = new();
     private List<ChartDataset> datasetsGraficoPorCategoria = new();
-    private List<Despesa> DespesasVencidas = new();
-    private List<Despesa> DespesaAVencer = new();
-    private List<Despesa> DespesaMes = new();
+    private List<sDespesaStruct> DespesasVencidas = new();
+    private List<sDespesaStruct> DespesaAVencer = new();
+    private List<sDespesaStruct> DespesaMes = new();
     protected override async Task OnInitializedAsync()
     {
         if (SetPageTitleAsync != null)
@@ -274,8 +275,8 @@
 
 
     private Modal modalDetalhes;
-    private List<Despesa> despesasParaExibir = new();
-    private void AbrirModalDetalhes(string titulo, List<Despesa> despesas)
+    private List<sDespesaStruct> despesasParaExibir = new();
+    private void AbrirModalDetalhes(string titulo, List<sDespesaStruct> despesas)
     {
         despesasParaExibir = despesas;
         modalDetalhes.Title = titulo;

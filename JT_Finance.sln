@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JT_Finance.Web", "JT_Financ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JT_Finance.Web.Client", "JT_Finance\JT_Finance.Web.Client\JT_Finance.Web.Client.csproj", "{9F12E0DE-3566-4C78-B23B-CF788F9DB59E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JT_UserInterface.Shared", "..\JT_ApplicationLayer\JT_UserInterface.Shared\JT_UserInterface.Shared.csproj", "{00FB35F7-E066-7B0F-5FB1-B9B8B5570D1C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,6 +36,10 @@ Global
 		{9F12E0DE-3566-4C78-B23B-CF788F9DB59E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F12E0DE-3566-4C78-B23B-CF788F9DB59E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F12E0DE-3566-4C78-B23B-CF788F9DB59E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00FB35F7-E066-7B0F-5FB1-B9B8B5570D1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00FB35F7-E066-7B0F-5FB1-B9B8B5570D1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00FB35F7-E066-7B0F-5FB1-B9B8B5570D1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00FB35F7-E066-7B0F-5FB1-B9B8B5570D1C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

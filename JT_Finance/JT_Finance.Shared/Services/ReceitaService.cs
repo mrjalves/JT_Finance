@@ -3,6 +3,8 @@
 using JT_Finance.Shared.Repository; // Importe a nova interface
 using JT_Finance.Shared.Services.Interfaces;
 
+using JT_UserInterface.Shared.Services;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,8 +1,10 @@
 ﻿@using JT_Aplicacao
 @using JT_Classes
 @using JT_Classes.Financeiro
+@using JT_Classes.Financeiro.structs
 @using JT_Finance.Shared.Services.Interfaces
-@using static JT_Finance.Shared.Components.Modal
+@using JT_UserInterface.Shared.Services.Interfaces
+@using static JT_UserInterface.Shared.Components.Modal
 @inject IDespesaService DespesaService
 @inject ICategoriaService CategoriaService
 @inject ICartaoCreditoService CartoesService
@@ -170,7 +172,7 @@
 
     private List<Categoria> TiposDespesa = new();
     private List<Categoria> CategoriasDespesa= new();
-    private List<CartaoCredito> CartoesCredito = new();
+    private List<sCartaoStruct> CartoesCredito = new();
     private bool showNewTipoForm = false;
     private bool showNewCategoriaForm = false;
     private string novaCategoriaDescricao = string.Empty;

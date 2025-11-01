@@ -1,4 +1,5 @@
 ﻿using JT_Classes.Financeiro;
+using JT_Classes.Financeiro.structs;
 
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ namespace JT_Finance.Shared.Repository
 {
     public class DesktopDespRep : IDespesaRep
     {
-        public Task<List<Despesa>> GetAllAsync()
+        public Task<List<sDespesaStruct>> GetAllAsync()
         {
             return Task.FromResult(JT_Servicos.DespesaService.GetAll());
         }
@@ -38,7 +39,7 @@ namespace JT_Finance.Shared.Repository
             return Task.FromResult(JT_Servicos.DespesaService.Save(despesa));
         }
 
-        public Task<List<Despesa>> FindAsync(string condicao)
+        public Task<List<sDespesaStruct>> FindAsync(string condicao)
         {
             return Task.FromResult(JT_Servicos.DespesaService.Find(condicao));
         }
@@ -59,19 +60,21 @@ namespace JT_Finance.Shared.Repository
             return Task.FromResult(Despesa.GetTotalDespesaMes(mes));
         }
 
-        public Task<List<Despesa>> GetDespesasProximasAoVencimentoAsync()
+        public Task<List<sDespesaStruct>> GetDespesasProximasAoVencimentoAsync()
         {
             return Task.FromResult(Despesa.GetDespesasProximasAoVencimento());
         }
 
-        public Task<List<Despesa>> GetDespesasVencidasAsync()
+        public Task<List<sDespesaStruct>> GetDespesasVencidasAsync()
         {
             return Task.FromResult(Despesa.GetDespesasVencidas());
         }
 
-        public Task<List<Despesa>> GetDespesasPorMesAsync(DateTime mesReferencia)
+        public Task<List<sDespesaStruct>> GetDespesasPorMesAsync(DateTime mesReferencia)
         {
             return Task.FromResult(Despesa.GetDespesasPorMes(mesReferencia));
         }
+
+     
     }
 }

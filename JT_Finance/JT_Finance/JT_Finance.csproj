@@ -30,7 +30,7 @@
     <!-- Versions -->
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
-
+	  <DefineConstants>WINDOWS;$(DefineConstants)</DefineConstants>
     <!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
     <WindowsPackageType>None</WindowsPackageType>
 
@@ -42,6 +42,40 @@
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
     <PackageIcon>favicon.png</PackageIcon>
     <Copyright>julio alves - jtech</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android|AnyCPU'">
+    <AndroidKeyStore>False</AndroidKeyStore>
+    <ApplicationId>com.jtech.finance</ApplicationId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
+    <AndroidKeyStore>False</AndroidKeyStore>
+    <ApplicationId>com.jtech.finance</ApplicationId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
+    <ApplicationId>com.jtech.finance</ApplicationId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-maccatalyst|AnyCPU'">
+    <ApplicationId>com.jtech.finance</ApplicationId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-windows10.0.19041.0|AnyCPU'">
+    <ApplicationId>com.jtech.finance</ApplicationId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-ios|AnyCPU'">
+    <ApplicationId>com.jtech.finance</ApplicationId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-maccatalyst|AnyCPU'">
+    <ApplicationId>com.jtech.finance</ApplicationId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-windows10.0.19041.0|AnyCPU'">
+    <ApplicationId>com.jtech.finance</ApplicationId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -75,6 +109,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\JT_Finance.Shared\JT_Finance.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="JT_Servicos">
+      <HintPath>..\..\..\JT_ApplicationLayer\JT_Servicos\bin\Debug\net9.0\JT_Servicos.dll</HintPath>
+    </Reference>
+    <Reference Include="JT_UserInterface.Shared">
+      <HintPath>..\..\..\JT_ApplicationLayer\JT_UserInterface.Shared\bin\Debug\net9.0\JT_UserInterface.Shared.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

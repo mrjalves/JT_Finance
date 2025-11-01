@@ -1,12 +1,15 @@
 @page "/despesas"
 @using JT_Classes
 @using JT_Classes.Financeiro
+@using JT_Classes.Financeiro.structs
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Components.Grids
 @using JT_Finance.Shared.Components.Modais
 @using JT_Finance.Shared.Services
 @using System.Text
 @using JT_Finance.Shared.Services.Interfaces
+@using JT_UserInterface.Shared.Components
+@using JT_UserInterface.Shared.Services
 @inject IDespesaService DespesaService
 @implements IDisposable
 @inject FiltroService FiltroService
@@ -54,7 +57,7 @@
     private ConfirmDialog confirmDeleteDialog = new();
     private Despesa? despesaAtual;
    
-    private List<Despesa> despesasFiltradas = new();
+    private List<sDespesaStruct> despesasFiltradas = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -89,9 +92,9 @@
         despesasFiltradas = await DespesaService.ObterTodasDespesasAsync();
     }
 
-    private async Task DuplicarDespesa(Despesa Despesa)
+    private async Task DuplicarDespesa(sDespesaStruct Despesa)
     {
-        await DespesaService.DuplicarDespesaAsync(Despesa);
+        await DespesaService.DuplicarDespesaAsync(Despesa.ToEntity());
     }
 
     private async Task EfetuarRemocaoDespesa()

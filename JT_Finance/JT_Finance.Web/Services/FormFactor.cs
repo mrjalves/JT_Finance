@@ -1,5 +1,7 @@
 using JT_Finance.Shared.Services;
 
+using JT_UserInterface.Shared.Services;
+
 namespace JT_Finance.Web.Services
 {
     public class FormFactor : IFormFactor

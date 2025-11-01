@@ -1,10 +1,11 @@
 ﻿@using JT_Classes.Financeiro
+@using JT_Classes.Financeiro.structs
 @using JT_Finance.Shared.Services.Interfaces
 @inject ICartaoCreditoService CartaoService
 @inject NavigationManager NavigationManager
 
 <div class="card border-left-success shadow h-80 py-2">
-    <DataGrid TItem="CartaoCredito" Items="Cartoes" IsLoading="IsLoading">
+    <DataGrid TItem="sCartaoStruct" Items="Cartoes" IsLoading="IsLoading">
         <HeaderTemplate>
             <th>Nome</th>
             <th>Limite</th>
@@ -44,7 +45,7 @@
 </div>
 @code {
     [Parameter]
-    public List<CartaoCredito> Cartoes { get; set; } = new();
+    public List<sCartaoStruct> Cartoes { get; set; } = new();
 
     [Parameter]
     public bool IsLoading { get; set; }

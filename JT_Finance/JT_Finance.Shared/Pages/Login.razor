@@ -89,7 +89,7 @@
 
         var result = await AuthService.SignInWithGoogleAsync();
 
-        if (result.Success)
+         if (result.Success)
         {
             //Console.WriteLine($"Login com Google bem-sucedido para: {result.User.Email}");
             NavigationManager.NavigateTo("/"); // Redireciona para a página principal

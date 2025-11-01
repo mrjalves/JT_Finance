@@ -2,7 +2,8 @@
 @using System.Linq
 @using JT_Aplicacao
 @using JT_Classes.Financeiro
-@using static JT_Finance.Shared.Components.Modal
+@using JT_Classes.Financeiro.structs
+@using static JT_UserInterface.Shared.Components.Modal
 @inject NavigationManager NavigationManager
 @inject ToastService ToastService
 @inject FiltroService FiltroService
@@ -52,7 +53,7 @@ else
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 5%;"></th> <!-- Coluna para o botão de expandir -->
+                        <th style="width: 5%;"></th>
                         <th>Vencimento</th>
                         <th>Valor da Fatura</th>
                         <th class="text-center">Lançamentos</th>
@@ -63,7 +64,7 @@ else
                 <tbody>
                     @foreach (var fatura in faturas)
                     {
-                        <!-- LINHA PRINCIPAL DA FATURA (SEMPRE VISÍVEL) -->
+                        <!-- LINHA PRINCIPAL -->
                         <tr @onclick="() => AlternarVisibilidadeFatura(fatura)" style="cursor: pointer;">
                             <td>
                                 <button class="btn btn-sm btn-outline-secondary border-0">
@@ -98,10 +99,10 @@ else
                             </td>
                         </tr>
 
-                        <!-- LINHA DE DETALHES (EXPANSÍVEL) -->
+                        <!-- DETALHES -->
                         @if (fatura.EstaExpandida)
                         {
-                                <tr>
+                            <tr>
                                 <td colspan="5" class="p-0">
                                     <div class="p-3 bg-light">
                                         <table class="table table-sm table-bordered mb-0">
@@ -118,12 +119,12 @@ else
                                                 @foreach (var despesa in fatura.Lancamentos)
                                                 {
                                                     <tr>
-                                                        <td>@despesa.Descricao</td>
-                                                        <td>@despesa.DataDespesa.ToShortDateString()</td>
-                                                        <td>@despesa.Valor.ToString("C")</td>
-                                                        <td class="text-center">@despesa.DetalhesCartaoCredito?.NumeroParcela</td>
+                                                        <td>@despesa.Despesa.Descricao</td>
+                                                            <td>@despesa.Despesa.DataDespesa.ToShortDateString()</td>
+                                                            <td>@despesa.Despesa.Valor.ToString("C")</td>
+                                                            <td class="text-center">@despesa.DespesaCartaoCredito.NumeroParcela</td>
                                                         <td class="text-center">
-                                                            @if (despesa.DetalhesCartaoCredito?.ParcelaPaga == true)
+                                                                @if (despesa.DespesaCartaoCredito.ParcelaPaga == true)
                                                             {
                                                                 <span class="badge bg-success">Sim</span>
                                                             }
@@ -192,11 +193,11 @@ else
     public class FaturaViewModel
     {
         public DateTime DataVencimento { get; set; }
-        public decimal ValorTotal => Lancamentos.Sum(l => l.Valor);
+        public decimal ValorTotal => Lancamentos.Sum(l => l.Despesa.Valor);
         public int QuantidadeLancamentos => Lancamentos.Count;
-        public List<Despesa> Lancamentos { get; set; } = new();
+        public List<sCartaoDespesaStruct> Lancamentos { get; set; } = new();
         public bool EstaExpandida { get; set; } = false; // Começa recolhida por padrão
-        public bool EstaPaga => Lancamentos.All(l => l.DetalhesCartaoCredito?.ParcelaPaga == true);
+        public bool EstaPaga => Lancamentos.All(l => l.DespesaCartaoCredito.ParcelaPaga == true);
     }
     private bool isProcessing = false; // Controla o estado de "carregando" do botão
     // --- CÓDIGO NOVO ABAIXO ---
@@ -219,24 +220,20 @@ else
     /// <summary>
     /// Método chamado pelo botão 'Confirmar' do modal. Executa a lógica de negócio.
     /// </summary>
-    /// <summary>
-    /// Método chamado pelo botão 'Confirmar' do modal. Executa a lógica de negócio.
-    /// </summary>
     private async Task ConfirmarPagamento()
     {
         if (isProcessing || faturaParaPagar == null)
         {
-            return; // Segurança para evitar processamento duplo
+            return;
         }
 
         isProcessing = true;
-        await InvokeAsync(StateHasChanged); // Atualiza a UI para mostrar o botão desativado
+        await InvokeAsync(StateHasChanged);
 
         try
         {
-            // --- ESTA É A CHAMADA CORRETA ---
             // Agora passamos a data de pagamento que o utilizador selecionou no modal.
-            bool sucesso = Despesa.PagarFatura(faturaParaPagar.Lancamentos, dataPagamento);
+            bool sucesso = CartaoCredito.PagarFatura(faturaParaPagar.Lancamentos, dataPagamento);
 
             if (sucesso)
             {
@@ -252,7 +249,7 @@ else
         catch (Exception ex)
         {
             ToastService.ShowError("Erro Inesperado!", "Ocorreu uma falha ao processar o pagamento.");
-            Log.RegistrarErro(ex); // Boa prática
+            Log.RegistrarErro(ex); 
         }
         finally
         {
@@ -281,12 +278,11 @@ else
 
         if (cartao != null && cartao.Id > 0)
         {
-            var todasDespesas = CartaoCredito.ObterDespesas(cartao.Id) ?? new List<Despesa>();
+            var todasDespesas = CartaoCredito.ObterDespesas(cartao.Id) ?? new List<sCartaoDespesaStruct>();
 
             // Agrupa as despesas por data de vencimento para formar as faturas
             faturas = todasDespesas
-                .Where(d => d.DetalhesCartaoCredito != null) // Garante que só peguemos despesas de cartão
-                .GroupBy(d => d.DetalhesCartaoCredito.DataVencimento.Date) // Agrupa pela data de vencimento
+                .GroupBy(d => d.DespesaCartaoCredito.DataVencimento.Date) // Agrupa pela data de vencimento
                 .Select(grupo => new FaturaViewModel
                 {
                     DataVencimento = grupo.Key,

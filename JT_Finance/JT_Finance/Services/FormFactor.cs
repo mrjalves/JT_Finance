@@ -1,4 +1,5 @@
-using JT_Finance.Shared.Services;
+
+using JT_UserInterface.Shared.Services;
 
 namespace JT_Finance.Services
 {

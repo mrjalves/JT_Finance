@@ -1,10 +1,11 @@
 ﻿using JT_Classes.Financeiro;
+using JT_Classes.Financeiro.structs;
 
 namespace JT_Finance.Shared.Services.Interfaces
 {
     public interface ICartaoCreditoService
     {
-        Task<List<CartaoCredito>> ObterTodosCartoesAsync();
+        Task<List<sCartaoStruct>> ObterTodosCartoesAsync();
         Task<CartaoCredito> ObterCartaoPorId(int id);
         Task<bool> SalvarCartaoAsync(CartaoCredito cartao);
         Task<bool> RemoverCartaoAsync(int id);

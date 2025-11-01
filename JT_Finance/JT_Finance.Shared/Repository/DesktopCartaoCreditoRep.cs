@@ -1,4 +1,5 @@
 ﻿using JT_Classes.Financeiro;
+using JT_Classes.Financeiro.structs;
 
 using JT_Servicos; // Usando a camada de serviço original
 
@@ -9,10 +10,7 @@ namespace JT_Finance.Shared.Repository
 {
     public class DesktopCartaoCreditoRep : ICartaoCreditoRep
     {
-        public Task<List<CartaoCredito>> GetAllAsync()
-        {
-            return Task.FromResult(CartaoCreditoService.GetAll());
-        }
+     
 
         public Task<CartaoCredito> GetByIdAsync(int id)
         {
@@ -32,6 +30,11 @@ namespace JT_Finance.Shared.Repository
         public Task<List<Despesa>> GetDespesasAsync(int cartaoId)
         {
             return Task.FromResult(CartaoCreditoService.ObterDespesas(cartaoId));
+        }
+
+        Task<List<sCartaoStruct>> ICartaoCreditoRep.GetAllAsync()
+        {
+            return Task.FromResult(CartaoCreditoService.GetAll());
         }
     }
 }

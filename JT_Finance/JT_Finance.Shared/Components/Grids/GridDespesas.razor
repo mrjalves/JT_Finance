@@ -1,14 +1,16 @@
 ﻿@using JT_Aplicacao
 @using JT_Classes
 @using JT_Classes.Financeiro
+@using JT_Classes.Financeiro.structs
 @using JT_Finance.Shared.Models
 @using JT_Finance.Shared.Services.Interfaces
+@using JT_UserInterface.Shared.Services.Interfaces
 @inject IDespesaService DespesaService
 @inject ICategoriaService CategoriaService
 @inject FiltroService FiltroService
 
 <div class="card border-left-success shadow h-80 py-2">
-<DataGrid TItem="Despesa" Items="Despesas" IsLoading="IsLoading">
+<DataGrid TItem="sDespesaStruct" Items="Despesas" IsLoading="IsLoading">
     <HeaderTemplate>
         <th>Descrição</th>
         <th>Valor</th>
@@ -28,22 +30,22 @@
         <td>@despesa.Valor.ToString("C")</td>
         <td>@despesa.DataDespesa.ToShortDateString()</td>
         <td>
-            @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
+            @if (despesa.EhDespesaCartaoCredito && despesa.DespCartaoCredito != null)
             {
-                @despesa.DetalhesCartaoCredito.DataVencimento.ToShortDateString()
+                    @despesa.DespCartaoCredito.DataVencimento.ToShortDateString()
             }
             else
             {
                 <span class="text-muted">—</span>
             }
         </td>
-        <td>@despesa.CategoriaTipoDespesa?.Descricao</td>
-        <td>@despesa.CategoriaDespesa?.Descricao</td>
+        <td>@despesa.CategoriaStruct.Nome</td>
+        <td>@despesa.TipoStruct.Nome</td>
         <td>
-            @if (despesa.EhDespesaCartaoCredito && despesa.DetalhesCartaoCredito != null)
+                @if (despesa.EhDespesaCartaoCredito && despesa.DespCartaoCredito != null)
             {
-                <span class="d-block">@despesa.DetalhesCartaoCredito.Cartao?.Nome</span>
-                <small class="text-muted">@despesa.DetalhesCartaoCredito.NumeroParcela</small>
+                <span class="d-block">@despesa.Cartao.Nome</span>
+                <small class="text-muted">@despesa.DespCartaoCredito.NumeroParcela</small>
             }
             else
             {
@@ -88,7 +90,7 @@
     [Parameter]
     public bool IsLoading { get; set; }
     [Parameter]
-    public EventCallback<Despesa> OnDuplicar { get; set; }
+    public EventCallback<sDespesaStruct> OnDuplicar { get; set; }
     [Parameter]
     public EventCallback<int> OnEditar { get; set; }
 
@@ -96,8 +98,8 @@
     public EventCallback<int> OnRemover { get; set; }
     [Parameter] public bool HideActions { get; set; } = false;
     [Parameter] 
-    public List<Despesa>? Despesas { get; set; }
-    private List<Despesa> listaTodasDespesas = new();
+    public List<sDespesaStruct>? Despesas { get; set; }
+    private List<sDespesaStruct> listaTodasDespesas = new();
     private List<Categoria> TiposDespesa = new();
     private List<Categoria> CategoriasDespesa = new();
     protected override async Task OnInitializedAsync()
@@ -149,7 +151,7 @@
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
-            Despesas = new List<Despesa>(listaTodasDespesas);
+            Despesas = new List<sDespesaStruct>(listaTodasDespesas);
         }
         else
         {
@@ -163,23 +165,6 @@
 
     private async Task AplicarFiltros(List<Filtro> filtros)
     {
-        // var whereConditions = new List<string>();
-        // var dataInicio = filtros.FirstOrDefault(f => f.Label == "Data Início")?.Value as DateTime?;
-        // var dataFim = filtros.FirstOrDefault(f => f.Label == "Data Fim")?.Value as DateTime?;
-
-        // if (dataInicio.HasValue && dataFim.HasValue) whereConditions.Add($"DataDespesa >= '{dataInicio}'");
-        // else if (dataInicio.HasValue) whereConditions.Add($"DataDespesa = '{dataInicio}'");
-        // if (dataFim.HasValue) whereConditions.Add($"DataDespesa <= '{dataFim}'");
-
-        // foreach (var filtro in filtros.Where(f => f.Value != null && !string.IsNullOrEmpty(f.Value.ToString()) && f.Label != "Data Início" && f.Label != "Data Fim"))
-        // {
-        //     whereConditions.Add($"{filtro.ColumnName} = {filtro.Value}");
-        // }
-
-        // string whereClause = whereConditions.Any() ? "WHERE " + string.Join(" AND ", whereConditions) : "";
-
-
-        // await CarregarDespesas(whereClause);
         Despesas = JT_Servicos.DespesaService.Filter(filtros);
         StateHasChanged();
     }

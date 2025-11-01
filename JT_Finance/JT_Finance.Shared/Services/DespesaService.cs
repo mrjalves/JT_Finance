@@ -1,7 +1,11 @@
 ﻿using JT_Classes.Financeiro;
+using JT_Classes.Financeiro.structs;
 
 using JT_Finance.Shared.Repository;
 using JT_Finance.Shared.Services.Interfaces;
+
+using JT_UserInterface.Shared.Services;
+
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -19,7 +23,11 @@ namespace JT_Finance.Shared.Services
             _repository = repository;
         }
 
-        public async Task<List<Despesa>> ObterTodasDespesasAsync()
+        public DespesaService()
+        {
+        }
+
+        public async Task<List<sDespesaStruct>> ObterTodasDespesasAsync()
         {
             // A implementação original tinha uma cache local "_despesas".
             // Removi para sempre buscar os dados mais recentes do repositório.
@@ -69,12 +77,12 @@ namespace JT_Finance.Shared.Services
         }
 
 
-        public async Task<List<Despesa>> ObterDespesasAsync(string condicao)
+        public async Task<List<sDespesaStruct>> ObterDespesasAsync(string condicao)
         {
             return await _repository.FindAsync(condicao);
         }
 
-        public async Task<List<Despesa>> ObterDespesasMesAsync(DateTime mesReferencia)
+        public async Task<List<sDespesaStruct>> ObterDespesasMesAsync(DateTime mesReferencia)
         {
             return await _repository.GetDespesasPorMesAsync(mesReferencia);
         }
@@ -94,12 +102,12 @@ namespace JT_Finance.Shared.Services
             return await _repository.GetTotalDespesaMesAsync(mes);
         }
 
-        public async Task<List<Despesa>> ObterDespesasAVencerAsync()
+        public async Task<List<sDespesaStruct>> ObterDespesasAVencerAsync()
         {
             return await _repository.GetDespesasProximasAoVencimentoAsync();
         }
 
-        public async Task<List<Despesa>> ObterDespesasVencidasAsync()
+        public async Task<List<sDespesaStruct>> ObterDespesasVencidasAsync()
         {
             return await _repository.GetDespesasVencidasAsync();
         }
@@ -115,5 +123,6 @@ namespace JT_Finance.Shared.Services
         }
 
         private void NotifyDataChanged() => OnDataChanged?.Invoke();
+    
     }
 }

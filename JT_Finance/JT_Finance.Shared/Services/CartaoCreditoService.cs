@@ -1,7 +1,10 @@
 ﻿using JT_Classes.Financeiro;
+using JT_Classes.Financeiro.structs;
 
 using JT_Finance.Shared.Repository; // Importe a interface
 using JT_Finance.Shared.Services.Interfaces;
+
+using JT_UserInterface.Shared.Services;
 
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +17,7 @@ namespace JT_Finance.Shared.Services
         private readonly ToastService _toastService;
         private readonly ICartaoCreditoRep _repository; // Dependência da interface
         private List<CartaoCredito> _cartoes;
+        private List<sCartaoStruct> _scartoes;
         public event Action OnDataChanged;
 
         // Injeta a interface do repositório no construtor
@@ -21,24 +25,25 @@ namespace JT_Finance.Shared.Services
         {
             _toastService = toastService;
             _repository = repository;
-            _cartoes = [];
+            _cartoes = new List<CartaoCredito>();
+            _scartoes = new List<sCartaoStruct>();
         }
 
         // Carrega (ou recarrega) os dados usando o repositório
         public async Task CarregarDadosAsync()
         {
-            _cartoes = await _repository.GetAllAsync();
+            _scartoes = await _repository.GetAllAsync();
             NotifyDataChanged();
         }
 
-        public async Task<List<CartaoCredito>> ObterTodosCartoesAsync()
+        public async Task<List<sCartaoStruct>> ObterTodosCartoesAsync()
         {
             // Usa uma cache simples para não buscar os dados toda hora
             if (!_cartoes.Any())
             {
                 await CarregarDadosAsync();
             }
-            return _cartoes;
+            return _scartoes;
         }
 
         public async Task<CartaoCredito> ObterCartaoPorId(int id)

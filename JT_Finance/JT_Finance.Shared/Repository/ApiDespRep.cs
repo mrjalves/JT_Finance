@@ -1,4 +1,5 @@
 ﻿using JT_Classes.Financeiro;
+using JT_Classes.Financeiro.structs;
 
 using System;
 using System.Collections.Generic;
@@ -86,16 +87,33 @@ namespace JT_Finance.Shared.Repository
             return await _httpClient.GetFromJsonAsync<List<Despesa>>("/api/despesas/avencer");
         }
 
-        public async Task<List<Despesa>> GetDespesasVencidasAsync()
+        public async Task<List<sDespesaStruct>> GetDespesasVencidasAsync()
         {
             // Endpoint sugerido: GET despesas/vencidas
-            return await _httpClient.GetFromJsonAsync<List<Despesa>>("/api/despesas/vencidas");
+            return await _httpClient.GetFromJsonAsync<List<sDespesaStruct>>("/api/despesas/vencidas");
         }
 
-        public async Task<List<Despesa>> GetDespesasPorMesAsync(DateTime mes)
+        public async Task<List<sDespesaStruct>> GetDespesasPorMesAsync(DateTime mes)
         {
             // Endpoint sugerido: GET despesas/pormes?mesReferencia=...
-            return await _httpClient.GetFromJsonAsync<List<Despesa>>($"/api/despesas/mes?mes={mes:yyyy-MM-dd}");
+            return await _httpClient.GetFromJsonAsync<List<sDespesaStruct>>($"/api/despesas/mes?mes={mes:yyyy-MM-dd}");
         }
+
+        Task<List<sDespesaStruct>> IDespesaRep.GetAllAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<List<sDespesaStruct>> IDespesaRep.FindAsync(string condicao)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<List<sDespesaStruct>> IDespesaRep.GetDespesasProximasAoVencimentoAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        
     }
 }
