@@ -5,15 +5,58 @@
 @inject NavigationManager NavigationManager
 
 <div class="card border-left-success shadow h-80 py-2">
-    <DataGrid TItem="sCartaoStruct" Items="Cartoes" IsLoading="IsLoading">
-        <HeaderTemplate>
-            <th>Nome</th>
-            <th>Limite</th>
-            <th>Vencimento</th>
-            <th>Fechamento</th>
-            <th>Status</th>
+    <DataGrid TItem="sCartaoStruct"
+              Items="Cartoes"
+              IsLoading="IsLoading"
+              SortSelectors="SortSelectors"
+              ViewportMaxHeight="calc(100vh - 17rem)">
+        <SortableHeaderTemplate Context="ctx">
+            <th role="button" @onclick="() => ctx.SortBy(KeyNome)">
+                Nome
+                @if (ctx.IsSortedBy(KeyNome))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
+            <th role="button" @onclick="() => ctx.SortBy(KeyLimite)">
+                Limite
+                @if (ctx.IsSortedBy(KeyLimite))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
+            <th role="button" @onclick="() => ctx.SortBy(KeyVencimento)">
+                Vencimento
+                @if (ctx.IsSortedBy(KeyVencimento))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
+            <th role="button" @onclick="() => ctx.SortBy(KeyFechamento)">
+                Fechamento
+                @if (ctx.IsSortedBy(KeyFechamento))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
+            <th role="button" @onclick="() => ctx.SortBy(KeyStatus)">
+                Status
+                @if (ctx.IsSortedBy(KeyStatus))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
+            <th role="button" @onclick="() => ctx.SortBy(KeyFaturaMes)">
+                Fatura (mês)
+                @if (ctx.IsSortedBy(KeyFaturaMes))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
+            <th>Totais</th>
             <th class="text-end">Ações</th>
-        </HeaderTemplate>
+        </SortableHeaderTemplate>
+
         <RowTemplate Context="cartao">
             <td @ondblclick="() => VerFatura(cartao.Id)" style="cursor: pointer;" title="Dê um duplo clique para ver as despesas">@cartao.Nome</td>
             <td @ondblclick="() => VerFatura(cartao.Id)" style="cursor: pointer;" title="Dê um duplo clique para ver as despesas">@cartao.Limite.ToString("C")</td>
@@ -29,11 +72,36 @@
                     <span class="badge bg-secondary">Inativo</span>
                 }
             </td>
+            <td>
+                <div class="d-flex flex-column">
+                    <span title="Valor da fatura do mês atual">@GetTotalFaturaMes(cartao.Id).ToString("C")</span>
+                    <small class="text-muted">mês atual</small>
+                </div>
+            </td>
+            <td>
+                <div class="d-flex flex-column">
+                    <span title="Total em aberto nas faturas">@GetTotalEmAberto(cartao.Id).ToString("C")</span>
+                    <small class="text-muted">em aberto</small>
+                </div>
+            </td>
             <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(cartao.Id)" @onclick:stopPropagation="true">
+                <button class="btn btn-sm btn-outline-primary me-2"
+                        title="Abrir faturas"
+                        @onclick="() => VerFatura(cartao.Id)"
+                        @onclick:stopPropagation="true">
+                    <i class="bi bi-receipt me-1"></i>
+                </button>
+
+                <button class="btn btn-sm btn-outline-primary me-2"
+                        title="Editar cartão"
+                        @onclick="() => OnEditar.InvokeAsync(cartao.Id)"
+                        @onclick:stopPropagation="true">
                     <i class="bi bi-pencil-fill me-1"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(cartao.Id)" @onclick:stopPropagation="true">
+                <button class="btn btn-sm btn-outline-danger"
+                        title="Remover cartão"
+                        @onclick="() => OnRemover.InvokeAsync(cartao.Id)"
+                        @onclick:stopPropagation="true">
                     <i class="bi bi-trash-fill me-1"></i>
                 </button>
             </td>
@@ -42,6 +110,20 @@
             <p class="text-muted mb-0">Nenhum cartão cadastrado ainda. Clique em "Novo Cartão" para começar.</p>
         </EmptyTemplate>
     </DataGrid>
+
+    <!-- Totais -->
+    <div class="card-footer totals-footer d-flex flex-wrap gap-3 justify-content-between align-items-center">
+        <div class="d-flex flex-wrap gap-3">
+            <span><strong>Cartões:</strong> @QtdCartoes</span>
+            <span><strong>Limite Total:</strong> @LimiteTotal.ToString("C")</span>
+            <span class="text-success"><strong>Ativos:</strong> @QtdAtivos</span>
+            <span class="text-secondary"><strong>Inativos:</strong> @QtdInativos</span>
+        </div>
+        <div class="d-flex flex-wrap gap-3">
+            <span class="text-primary"><strong>Total Geral do Mês:</strong> @TotalGeralFaturaMes.ToString("C")</span>
+            <span class="text-danger"><strong>Total Geral em Aberto:</strong> @TotalGeralEmAberto.ToString("C")</span>
+        </div>
+    </div>
 </div>
 @code {
     [Parameter]
@@ -55,6 +137,93 @@
 
     [Parameter]
     public EventCallback<int> OnRemover { get; set; }
+
+    private const string KeyNome = nameof(sCartaoStruct.Nome);
+    private const string KeyLimite = nameof(sCartaoStruct.Limite);
+    private const string KeyVencimento = "Vencimento";
+    private const string KeyFechamento = "Fechamento";
+    private const string KeyStatus = "Status";
+    private const string KeyFaturaMes = "FaturaMes";
+
+
+    private IReadOnlyDictionary<string, Func<sCartaoStruct, IComparable?>> SortSelectors => 
+        new Dictionary<string, Func<sCartaoStruct, IComparable?>>
+        {
+            [KeyNome] = c => c.Nome,
+            [KeyLimite] = c => c.Limite,
+            [KeyVencimento] = c => c.DiaVencimento,
+            [KeyFechamento] = c => c.DiaFechamento,
+            [KeyStatus] = c => c.Ativo,
+            [KeyFaturaMes] = c => _totaisFaturaMes.TryGetValue(c.Id, out var v) ? v : 0m
+        };
+
+
+    // Totais (já existentes)
+    private int QtdCartoes => (Cartoes ?? new()).Count;
+    private int QtdAtivos => (Cartoes ?? new()).Count(c => c.Ativo);
+    private int QtdInativos => QtdCartoes - QtdAtivos;
+    private decimal LimiteTotal => (Cartoes ?? new()).Sum(c => c.Limite);
+
+    // Novos dicionários de totais
+    private readonly Dictionary<int, decimal> _totaisEmAberto = new();
+    private readonly Dictionary<int, decimal> _totaisFaturaMes = new();
+
+    private decimal TotalGeralEmAberto => _totaisEmAberto.Values.DefaultIfEmpty(0m).Sum();
+    private decimal TotalGeralFaturaMes => _totaisFaturaMes.Values.DefaultIfEmpty(0m).Sum();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await CarregarTotaisFaturaMesAsync();
+        await CarregarTotaisEmAbertoAsync();
+    }
+
+    private async Task CarregarTotaisFaturaMesAsync()
+    {
+        _totaisFaturaMes.Clear();
+        if (Cartoes is null || Cartoes.Count == 0) return;
+
+        var hoje = DateTime.Today;
+        var inicio = new DateTime(hoje.Year, hoje.Month, 1);
+        var fim = inicio.AddMonths(1).AddDays(-1);
+
+        foreach (var c in Cartoes)
+        {
+            var lanc = CartaoCredito.ObterDespesas(c.Id) ?? new List<sCartaoDespesaStruct>();
+            var totalMes = lanc
+                .Where(l => l.DespesaCartaoCredito != null
+                            && l.DespesaCartaoCredito.DataVencimento >= inicio
+                            && l.DespesaCartaoCredito.DataVencimento <= fim)
+                            .Sum(l => l.Despesa != null ? l.Despesa.Valor : 0m);
+            _totaisFaturaMes[c.Id] = totalMes;
+            await Task.Yield();
+        }
+        StateHasChanged();
+    }
+
+    private async Task CarregarTotaisEmAbertoAsync()
+    {
+        _totaisEmAberto.Clear();
+        if (Cartoes is null || Cartoes.Count == 0) return;
+
+        foreach (var c in Cartoes)
+        {
+            var lanc = CartaoCredito.ObterDespesas(c.Id) ?? new List<sCartaoDespesaStruct>();
+            var totalAberto = lanc
+                .Where(l => l.DespesaCartaoCredito.ParcelaPaga != true)
+                .Sum(l => l.Despesa != null ? l.Despesa.Valor : 0m);
+
+            _totaisEmAberto[c.Id] = totalAberto;
+            await Task.Yield();
+        }
+        StateHasChanged();
+    }
+
+    private decimal GetTotalEmAberto(int cartaoId) =>
+        _totaisEmAberto.TryGetValue(cartaoId, out var v) ? v : 0m;
+
+    private decimal GetTotalFaturaMes(int cartaoId) =>
+        _totaisFaturaMes.TryGetValue(cartaoId, out var v) ? v : 0m;
 
     private void VerFatura(int cartaoId)
     {

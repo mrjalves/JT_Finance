@@ -1,12 +1,18 @@
 ﻿@page "/fatura/{CartaoId:int}"
+@page "/fatura/{CartaoId:int}/{Year:int}-{Month:int}"
 @using System.Linq
 @using JT_Aplicacao
 @using JT_Classes.Financeiro
 @using JT_Classes.Financeiro.structs
+@using JT_Finance.Shared.Components.Modais
 @using static JT_UserInterface.Shared.Components.Modal
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
 @inject NavigationManager NavigationManager
 @inject ToastService ToastService
 @inject FiltroService FiltroService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
 @if (isLoading)
 {
   <Loading/>
@@ -17,7 +23,7 @@ else if (cartao == null)
         <h4 class="alert-heading">Cartão não encontrado!</h4>
         <p>O cartão com o ID fornecido não foi encontrado. Por favor, verifique o link ou volte para a lista de cartões.</p>
         <hr>
-        <button class="btn btn-secondary" @onclick="@(() => NavigationManager.NavigateTo("cartoes-credito"))">
+        <button class="btn btn-secondary" @onclick="Voltar">
             <i class="bi bi-arrow-left-circle me-2"></i>Voltar para a Lista
         </button>
     </div>
@@ -26,26 +32,44 @@ else
 {
     <!-- RESUMO GERAL -->
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
-            Resumo Geral
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div>
+                <strong>Faturas do Cartão:</strong>
+                <span class="ms-1">@cartao.Nome</span>
+                @if (Year.HasValue && Month.HasValue)
+                {
+                    <span class="ms-2 badge bg-primary">@(new DateTime(Year.Value, Month.Value, 1).ToString("MMMM yyyy"))</span>
+                }
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm" title="Nova Despesa (Alt+N)" aria-label="Nova Despesa (Alt+N)"
+                        @onclick="AbrirModalParaNovaDespesaGeral">
+                    <i class="bi bi-plus-circle me-2"></i>Nova Despesa
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <h5 class="card-title">Total em Aberto: @totalGeral.ToString("C")</h5>
+                    <h5 class="card-title mb-1">Total em Aberto: @totalEmAberto.ToString("C")</h5>
+                    <div class="card-text text-muted">Total Pago: <strong>@totalPago.ToString("C")</strong></div>
                     <p class="card-text text-muted">Exibindo @faturas.Count fatura(s) com um total de @faturas.SelectMany(f => f.Lancamentos).Count() lançamento(s).</p>
                 </div>
 
                 <div class="d-flex justify-content-end align-items-center gap-2">
-                    <button class="btn btn-outline-secondary" @onclick="@(() => NavigationManager.NavigateTo("cartoes-credito"))">
+                    <button class="btn btn-outline-secondary" @onclick="Voltar">
                         <i class="bi bi-arrow-left-circle me-2"></i>Voltar
                     </button>
                 </div>
             </div>
+            <div class="text-muted small mt-2">
+                <span class="me-3">Limite: <strong>@cartao.Limite.ToString("C")</strong></span>
+                <span class="me-3">Vencimento: <strong>dia @cartao.DiaVencimento</strong></span>
+                <span>Fechamento: <strong>dia @cartao.DiaFechamento</strong></span>
+            </div>
         </div>
     </div>
 
-    <!-- TABELA DE FATURAS EXPANSÍVEIS -->
     @if (faturas.Any())
     {
         <div class="card border-left-success shadow h-80 py-2">
@@ -56,6 +80,7 @@ else
                         <th style="width: 5%;"></th>
                         <th>Vencimento</th>
                         <th>Valor da Fatura</th>
+                        <th>Pago</th>
                         <th class="text-center">Lançamentos</th>
                         <th class="text-center">Status</th>
                         <th>Ações</th>
@@ -64,7 +89,6 @@ else
                 <tbody>
                     @foreach (var fatura in faturas)
                     {
-                        <!-- LINHA PRINCIPAL -->
                         <tr @onclick="() => AlternarVisibilidadeFatura(fatura)" style="cursor: pointer;">
                             <td>
                                 <button class="btn btn-sm btn-outline-secondary border-0">
@@ -73,6 +97,7 @@ else
                             </td>
                             <td><strong>@fatura.DataVencimento.ToString("MMMM yyyy")</strong></td>
                             <td><strong>@fatura.ValorTotal.ToString("C")</strong></td>
+                            <td><strong>@fatura.ValorPago.ToString("C")</strong></td>
                             <td class="text-center"><span class="badge bg-info rounded-pill">@fatura.QuantidadeLancamentos</span></td>
                             <td class="text-center">
                                 @if(fatura.DataVencimento < DateTime.Today && !fatura.EstaPaga) {
@@ -84,26 +109,34 @@ else
                                 }
                             </td>
                             <td>
-                                @if (fatura.EstaPaga)
-                                {
-                                    <button class="btn btn-outline-success btn-sm disabled" title="Esta fatura já foi paga.">
-                                        <i class="bi bi-check-all"></i> Pago
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-primary"
+                                            title="Adicionar despesa nesta fatura"
+                                            @onclick="(e) => AbrirModalParaNovaDespesaNaFatura(fatura)"
+                                            @onclick:stopPropagation="true">
+                                        <i class="bi bi-plus-circle"></i>
                                     </button>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-success btn-sm" @onclick="() => AbrirModalPagamento(fatura)" disabled="@isProcessing">
-                                        <i class="bi bi-check-circle-fill"></i> Pagar Fatura
-                                    </button>
-                                }
+
+                                    @if (fatura.EstaPaga)
+                                    {
+                                        <button class="btn btn-outline-success disabled" title="Esta fatura já foi paga." @onclick:stopPropagation="true">
+                                            <i class="bi bi-check-all"></i> Pago
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-success" @onclick="(e) => AbrirModalPagamento(fatura)" disabled="@isProcessing" @onclick:stopPropagation="true">
+                                            <i class="bi bi-check-circle-fill"></i> Pagar Fatura
+                                        </button>
+                                    }
+                                </div>
                             </td>
                         </tr>
 
-                        <!-- DETALHES -->
                         @if (fatura.EstaExpandida)
                         {
                             <tr>
-                                <td colspan="5" class="p-0">
+                                <td colspan="7" class="p-0">
                                     <div class="p-3 bg-light">
                                         <table class="table table-sm table-bordered mb-0">
                                             <thead>
@@ -120,11 +153,11 @@ else
                                                 {
                                                     <tr>
                                                         <td>@despesa.Despesa.Descricao</td>
-                                                            <td>@despesa.Despesa.DataDespesa.ToShortDateString()</td>
-                                                            <td>@despesa.Despesa.Valor.ToString("C")</td>
-                                                            <td class="text-center">@despesa.DespesaCartaoCredito.NumeroParcela</td>
+                                                        <td>@despesa.Despesa.DataDespesa.ToShortDateString()</td>
+                                                        <td>@despesa.Despesa.Valor.ToString("C")</td>
+                                                        <td class="text-center">@despesa.DespesaCartaoCredito.NumeroParcela</td>
                                                         <td class="text-center">
-                                                                @if (despesa.DespesaCartaoCredito.ParcelaPaga == true)
+                                                            @if (despesa.DespesaCartaoCredito.ParcelaPaga == true)
                                                             {
                                                                 <span class="badge bg-success">Sim</span>
                                                             }
@@ -151,7 +184,7 @@ else
     {
         <div class="alert alert-info">
             <i class="bi bi-info-circle-fill me-2"></i>
-            Nenhuma despesa encontrada para este cartão.
+            Nenhuma despesa encontrada para este cartão@(Year.HasValue && Month.HasValue ? $" em {new DateTime(Year.Value, Month.Value, 1):MMMM yyyy}" : "").
         </div>
     }
 }
@@ -175,51 +208,128 @@ else
     </FooterContent>
 </Modal>
 
+<ModalDespesa
+    @ref="modalDespesa"
+    Despesa="despesaAtual"
+    OnClose="OnDespesaModalClose"
+    OnCancel="HandleCancelarModalDespesa" />
+
 @code {
     [Parameter]
     public int CartaoId { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "year")]
+    public int? Year { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "month")]
+    public int? Month { get; set; }
 
     [CascadingParameter]
     public Func<string, Task>? SetPageTitleAsync { get; set; }
 
     private CartaoCredito? cartao;
     private List<FaturaViewModel> faturas = new();
-    private decimal totalGeral = 0;
+    private decimal totalEmAberto = 0m;
+    private decimal totalPago = 0m;
     private bool isLoading = true;
 
-    /// <summary>
-    /// Modelo de visualização para agrupar despesas em uma única fatura.
-    /// </summary>
     public class FaturaViewModel
     {
         public DateTime DataVencimento { get; set; }
         public decimal ValorTotal => Lancamentos.Sum(l => l.Despesa.Valor);
+        public decimal ValorPago => Lancamentos.Where(l => l.DespesaCartaoCredito.ParcelaPaga == true).Sum(l => l.Despesa.Valor);
+        public decimal ValorEmAberto => ValorTotal - ValorPago;
         public int QuantidadeLancamentos => Lancamentos.Count;
         public List<sCartaoDespesaStruct> Lancamentos { get; set; } = new();
-        public bool EstaExpandida { get; set; } = false; // Começa recolhida por padrão
+        public bool EstaExpandida { get; set; } = false;
         public bool EstaPaga => Lancamentos.All(l => l.DespesaCartaoCredito.ParcelaPaga == true);
     }
-    private bool isProcessing = false; // Controla o estado de "carregando" do botão
-    // --- CÓDIGO NOVO ABAIXO ---
+    private bool isProcessing = false;
 
-    // Variáveis para controlar o modal e os dados do pagamento
     private Modal? pagamentoModal;
     private FaturaViewModel? faturaParaPagar;
     private DateTime dataPagamento = DateTime.Today;
 
-    /// <summary>
-    /// Prepara os dados e abre o modal para o utilizador confirmar a data do pagamento.
-    /// </summary>
-    private void AbrirModalPagamento(FaturaViewModel fatura)
+    private ModalDespesa modalDespesa = new();
+    private Despesa? despesaAtual;
+
+    private DotNetObjectReference<Fatura>? _novoHotkeysRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        faturaParaPagar = fatura;    // Guarda a fatura que estamos a processar
-        dataPagamento = DateTime.Today; // Reinicia a data para o dia atual
-        pagamentoModal.Open();      // Abre o modal
+        if (firstRender)
+        {
+            try
+            {
+                _novoHotkeysRef = DotNetObjectReference.Create(this);
+                await JSRuntime.InvokeVoidAsync("JTHotkeys.enableNewHotkeys", _novoHotkeysRef);
+            }
+            catch { }
+        }
     }
 
-    /// <summary>
-    /// Método chamado pelo botão 'Confirmar' do modal. Executa a lógica de negócio.
-    /// </summary>
+    [JSInvokable]
+    public async Task OnNovoHotkey()
+    {
+        await InvokeAsync(() =>
+        {
+            AbrirModalParaNovaDespesaGeral();
+            StateHasChanged();
+        });
+    }
+
+    private void AbrirModalPagamento(FaturaViewModel fatura)
+    {
+        faturaParaPagar = fatura;
+        dataPagamento = DateTime.Today;
+        pagamentoModal.Open();
+    }
+
+    private void AbrirModalParaNovaDespesaGeral()
+    {
+        if (cartao is null) return;
+
+        despesaAtual = new Despesa
+        {
+            Descricao = string.Empty,
+            Valor = 0m,
+            DataDespesa = DateTime.Today,
+            EhDespesaCartaoCredito = true,
+            
+        };
+
+
+        despesaAtual.DetalhesCartaoCredito.IdCartao = cartao.Id;
+        despesaAtual.DetalhesCartaoCredito.QuantidadeParcelas = 1;
+        despesaAtual.DetalhesCartaoCredito.DataVencimento =
+            new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(1)
+                .AddDays(cartao.DiaVencimento - 1);
+
+        modalDespesa.Title = $"Nova Despesa - {cartao.Nome}";
+        modalDespesa.Open();
+    }
+
+    private void AbrirModalParaNovaDespesaNaFatura(FaturaViewModel fatura)
+    {
+        if (cartao is null) return;
+
+        despesaAtual = new Despesa
+        {
+            Descricao = string.Empty,
+            Valor = 0m,
+            DataDespesa = DateTime.Today,
+            EhDespesaCartaoCredito = true
+        };
+
+        despesaAtual.DetalhesCartaoCredito.IdCartao = cartao.Id;
+        despesaAtual.DetalhesCartaoCredito.QuantidadeParcelas = 1;
+        despesaAtual.DetalhesCartaoCredito.DataVencimento =
+            new DateTime(fatura.DataVencimento.Year, fatura.DataVencimento.Month, cartao.DiaVencimento);
+
+        modalDespesa.Title = $"Nova Despesa nesta Fatura - {cartao.Nome}";
+        modalDespesa.Open();
+    }
+
     private async Task ConfirmarPagamento()
     {
         if (isProcessing || faturaParaPagar == null)
@@ -232,13 +342,11 @@ else
 
         try
         {
-            // Agora passamos a data de pagamento que o utilizador selecionou no modal.
             bool sucesso = CartaoCredito.PagarFatura(faturaParaPagar.Lancamentos, dataPagamento);
 
             if (sucesso)
             {
-                // Recalcula o total geral em aberto para o cabeçalho
-                totalGeral = faturas.Where(f => !f.EstaPaga).Sum(f => f.ValorTotal);
+                await RecarregarFaturasAsync();
                 ToastService.ShowSuccess("Sucesso!", "Fatura paga com a data selecionada.");
             }
             else
@@ -249,64 +357,121 @@ else
         catch (Exception ex)
         {
             ToastService.ShowError("Erro Inesperado!", "Ocorreu uma falha ao processar o pagamento.");
-            Log.RegistrarErro(ex); 
+            Log.RegistrarErro(ex);
         }
         finally
         {
             isProcessing = false;
-            // Usa o método correto para fechar o modal, conforme o seu código
             if (pagamentoModal != null)
             {
                 await pagamentoModal.Close();
             }
-            await InvokeAsync(StateHasChanged); // Notifica o Blazor para re-renderizar a página
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (cartao is not null)
+        {
+            await RecarregarFaturasAsync();
         }
     }
 
     protected override async Task OnInitializedAsync()
     {
         isLoading = true;
-        if (SetPageTitleAsync != null)
-        {
-            await SetPageTitleAsync.Invoke($"Faturas do Cartão");
-        }
-
-        // Simula o carregamento para a UI renderizar o spinner
-        await Task.Yield(); 
+        await Task.Yield();
 
         cartao = new CartaoCredito(CartaoId);
 
-        if (cartao != null && cartao.Id > 0)
+        await RecarregarFaturasAsync();
+
+        if (SetPageTitleAsync != null)
         {
-            var todasDespesas = CartaoCredito.ObterDespesas(cartao.Id) ?? new List<sCartaoDespesaStruct>();
-
-            // Agrupa as despesas por data de vencimento para formar as faturas
-            faturas = todasDespesas
-                .GroupBy(d => d.DespesaCartaoCredito.DataVencimento.Date) // Agrupa pela data de vencimento
-                .Select(grupo => new FaturaViewModel
-                {
-                    DataVencimento = grupo.Key,
-                    Lancamentos = grupo.ToList()
-                })
-                .OrderByDescending(f => f.DataVencimento) // Faturas mais recentes primeiro
-                .ToList();
-
-            // Calcula o total de todas as faturas em aberto
-            totalGeral = faturas.Where(f => !f.EstaPaga).Sum(f => f.ValorTotal);
+            var titulo = cartao != null ? $"Faturas do Cartão - {cartao.Nome}" : "Faturas do Cartão";
+            if (Year.HasValue && Month.HasValue)
+                titulo += $" ({new DateTime(Year.Value, Month.Value, 1):MMMM yyyy})";
+            await SetPageTitleAsync.Invoke(titulo);
         }
 
         isLoading = false;
     }
 
-    /// <summary>
-    /// Alterna a visibilidade dos detalhes de uma fatura específica.
-    /// </summary>
+    private async Task RecarregarFaturasAsync()
+    {
+        if (cartao != null && cartao.Id > 0)
+        {
+            var todasDespesas = CartaoCredito.ObterDespesas(cartao.Id) ?? new List<sCartaoDespesaStruct>();
+
+            faturas = todasDespesas
+                .GroupBy(d =>
+                {
+                    var dv = d.DespesaCartaoCredito.DataVencimento;
+                    return (dv.Year, dv.Month);
+                })
+                .Select(grupo => new FaturaViewModel
+                {
+                    DataVencimento = new DateTime(grupo.Key.Year, grupo.Key.Month, cartao.DiaVencimento),
+                    Lancamentos = grupo.ToList()
+                })
+                .OrderByDescending(f => f.DataVencimento)
+                .ToList();
+
+            if (Year.HasValue && Month.HasValue)
+            {
+                faturas = faturas
+                    .Where(f => f.DataVencimento.Year == Year.Value && f.DataVencimento.Month == Month.Value)
+                    .ToList();
+
+                foreach (var f in faturas) f.EstaExpandida = true;
+            }
+
+            // Totais consolidados
+            totalPago = faturas.Sum(f => f.ValorPago);
+            totalEmAberto = faturas.Sum(f => f.ValorEmAberto);
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
     private void AlternarVisibilidadeFatura(FaturaViewModel fatura)
     {
         fatura.EstaExpandida = !fatura.EstaExpandida;
     }
+
     private async Task HandleCancelarFormularioModal(MouseEventArgs args)
     {
         await pagamentoModal.Close();
+    }
+
+    private async Task HandleCancelarModalDespesa()
+    {
+        despesaAtual = null;
+        await modalDespesa.Close();
+    }
+
+    private async Task OnDespesaModalClose()
+    {
+        despesaAtual = null;
+        await RecarregarFaturasAsync();
+    }
+
+    private async Task Voltar()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("BlazorInterop.goBack", "/cartoes-credito");
+        }
+        catch
+        {
+            NavigationManager.NavigateTo("cartoes-credito");
+        }
+    }
+
+    public void Dispose()
+    {
+        try { _ = JSRuntime.InvokeVoidAsync("JTHotkeys.disableNewHotkeys"); } catch { }
+        _novoHotkeysRef?.Dispose();
     }
 }

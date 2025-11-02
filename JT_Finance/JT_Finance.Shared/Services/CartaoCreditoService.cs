@@ -6,6 +6,7 @@ using JT_Finance.Shared.Services.Interfaces;
 
 using JT_UserInterface.Shared.Services;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,7 +21,6 @@ namespace JT_Finance.Shared.Services
         private List<sCartaoStruct> _scartoes;
         public event Action OnDataChanged;
 
-        // Injeta a interface do repositório no construtor
         public CartaoCreditoService(ToastService toastService, ICartaoCreditoRep repository)
         {
             _toastService = toastService;
@@ -30,16 +30,16 @@ namespace JT_Finance.Shared.Services
         }
 
         // Carrega (ou recarrega) os dados usando o repositório
+        // NÃO dispara evento aqui para evitar loops
         public async Task CarregarDadosAsync()
         {
             _scartoes = await _repository.GetAllAsync();
-            NotifyDataChanged();
         }
 
         public async Task<List<sCartaoStruct>> ObterTodosCartoesAsync()
         {
-            // Usa uma cache simples para não buscar os dados toda hora
-            if (!_cartoes.Any())
+            // Use a lista correta para a cache
+            if (!_scartoes.Any())
             {
                 await CarregarDadosAsync();
             }
@@ -58,7 +58,8 @@ namespace JT_Finance.Shared.Services
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Cartão salvo com sucesso!");
-                await CarregarDadosAsync(); // Recarrega a lista após salvar
+                await CarregarDadosAsync();     // recarrega dados
+                NotifyDataChanged();            // agora sim, notifica
             }
             else
             {
@@ -75,7 +76,8 @@ namespace JT_Finance.Shared.Services
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Cartão removido com sucesso!");
-                await CarregarDadosAsync(); // Recarrega a lista após remover
+                await CarregarDadosAsync();     // recarrega dados
+                NotifyDataChanged();            // notifica após recarregar
             }
             else
             {
@@ -90,7 +92,6 @@ namespace JT_Finance.Shared.Services
             return await _repository.GetDespesasAsync(id);
         }
 
-        // Métodos de notificação permanecem iguais
         public void NotificarErro(string titulo, string mensagem)
         {
             _toastService.ShowError(titulo, mensagem);

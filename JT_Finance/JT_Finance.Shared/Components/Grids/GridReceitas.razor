@@ -9,58 +9,110 @@
 @inject FiltroService FiltroService
 
 <div class="card border-left-success shadow h-80 py-2">
-    <DataGrid TItem="Receita" Items="Receitas" IsLoading="IsLoading">
-        <HeaderTemplate>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Data</th>
-            <th>Categoria</th>
-            <th>Tipo</th>
-            <th>Recebida</th>
+    <DataGrid TItem="Receita"
+              Items="ItensBase"
+              IsLoading="IsLoading"
+              SortSelectors="SortSelectors"
+              ViewportMaxHeight="calc(100vh - 17rem)">
+        <SortableHeaderTemplate Context="ctx">
+            <th role="button" @onclick="() => ctx.SortBy(KeyDescricao)">
+                Descrição
+                @if (ctx.IsSortedBy(KeyDescricao))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
+            <th role="button" @onclick="() => ctx.SortBy(KeyValor)">
+                Valor
+                @if (ctx.IsSortedBy(KeyValor))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
+            <th role="button" @onclick="() => ctx.SortBy(KeyData)">
+                Data
+                @if (ctx.IsSortedBy(KeyData))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
+            <th role="button" @onclick="() => ctx.SortBy(KeyCategoria)">
+                Categoria
+                @if (ctx.IsSortedBy(KeyCategoria))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
+            <th role="button" @onclick="() => ctx.SortBy(KeyTipo)">
+                Tipo
+                @if (ctx.IsSortedBy(KeyTipo))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
+            <th role="button" @onclick="() => ctx.SortBy(KeyRecebida)">
+                Recebida
+                @if (ctx.IsSortedBy(KeyRecebida))
+                {
+                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
+                }
+            </th>
             <th class="text-end">Ações</th>
-        </HeaderTemplate>
+        </SortableHeaderTemplate>
+
         <RowTemplate Context="receita">
-            @if (IsLoading)
-            {
-                <Loading />
-            }
-            else
-            {
-            
-                <td>@receita.Descricao</td>
-                <td>@receita.Valor.ToString("C")</td>
-                <td>@receita.DataReceita.ToShortDateString()</td>
-                <td>@(CategoriasReceita.FirstOrDefault(c => c.Id == receita.Categoria)?.Descricao)</td>
-                <td>@(TiposReceita.FirstOrDefault(c => c.Id == receita.TipoReceita)?.Descricao)</td>
-                <td>
-                    @if (receita.ReceitaRecebida)
-                    {
-                        <span class="badge bg-success">Sim</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary">Não</span>
-                    }
-                </td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Receita" @onclick="() => OnDuplicar.InvokeAsync(receita)" @onclick:stopPropagation="true">
-                        <i class="bi bi-copy"></i>
+            <td>@receita.Descricao</td>
+            <td>@receita.Valor.ToString("C")</td>
+            <td>@receita.DataReceita.ToShortDateString()</td>
+            <td>@(CategoriasReceita.FirstOrDefault(c => c.Id == receita.Categoria)?.Descricao)</td>
+            <td>@(TiposReceita.FirstOrDefault(c => c.Id == receita.TipoReceita)?.Descricao)</td>
+            <td>
+                @if (receita.ReceitaRecebida)
+                {
+                    <span class="badge bg-success">Sim</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Não</span>
+                }
+            </td>
+            <td class="text-end">
+                @if (!receita.ReceitaRecebida)
+                {
+                    <button class="btn btn-sm btn-success me-2"
+                            title="Marcar como recebida"
+                            @onclick="() => MarcarComoRecebidaAsync(receita)"
+                            @onclick:stopPropagation="true">
+                        <i class="bi bi-check2-circle"></i>
                     </button>
+                }
 
-                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(receita)" @onclick:stopPropagation="true">
-                        <i class="bi bi-pencil-fill me-1"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(receita.Id)" @onclick:stopPropagation="true">
-                        <i class="bi bi-trash-fill me-1"></i>
-                    </button>
-                </td>
-            }
+                <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Receita" @onclick="() => OnDuplicar.InvokeAsync(receita)" @onclick:stopPropagation="true">
+                    <i class="bi bi-copy"></i>
+                </button>
 
+                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(receita)" @onclick:stopPropagation="true">
+                    <i class="bi bi-pencil-fill me-1"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(receita.Id)" @onclick:stopPropagation="true">
+                    <i class="bi bi-trash-fill me-1"></i>
+                </button>
+            </td>
         </RowTemplate>
         <EmptyTemplate>
             <p class="text-muted mb-0">Nenhuma receita cadastrada ainda. Clique em "Nova Receita" para começar.</p>
         </EmptyTemplate>
     </DataGrid>
+
+    <!-- Totais -->
+    <div class="card-footer totals-footer d-flex flex-wrap gap-3 justify-content-between align-items-center">
+        <div class="d-flex flex-wrap gap-3">
+            <span><strong>Itens:</strong> @QtdReceitas</span>
+            <span><strong>Total:</strong> @TotalReceitas.ToString("C")</span>
+            <span class="text-success"><strong>Recebidas:</strong> @TotalRecebidas.ToString("C")</span>
+            <span class="text-warning"><strong>Pendentes:</strong> @TotalPendentes.ToString("C")</span>
+        </div>
+    </div>
 </div>
 @code {
 
@@ -79,15 +131,50 @@
     [Parameter]
     public EventCallback<Receita> OnDuplicar { get; set; }
     #endregion
+
     private List<Categoria> TiposReceita = new();
     private List<Categoria> CategoriasReceita = new();
     private List<Receita> listaTodasReceitas = new();
+
+    private const string KeyDescricao = nameof(Receita.Descricao);
+    private const string KeyValor = nameof(Receita.Valor);
+    private const string KeyData = nameof(Receita.DataReceita);
+    private const string KeyCategoria = "Categoria";
+    private const string KeyTipo = "Tipo";
+    private const string KeyRecebida = "Recebida";
+
+    private IEnumerable<Receita> ItensBase =>
+        (Receitas != null && Receitas.Count > 0 ? Receitas : listaTodasReceitas) ?? Enumerable.Empty<Receita>();
+
+    // Totais
+    private int QtdReceitas => ItensBase.Count();
+    private decimal TotalReceitas => ItensBase.Sum(r => r.Valor);
+    private decimal TotalRecebidas => ItensBase.Where(r => r.ReceitaRecebida).Sum(r => r.Valor);
+    private decimal TotalPendentes => TotalReceitas - TotalRecebidas;
+
+    private IReadOnlyDictionary<string, Func<Receita, IComparable?>> SortSelectors;
+
     protected override async Task OnInitializedAsync()
     {
         ReceitaService.OnDataChanged += AtualizarDadosDaPagina;
         await CarregarDependencias();
         ConfigurarFiltros();
+        InicializarSortSelectors(); 
     }
+
+    private void InicializarSortSelectors()
+    {
+        SortSelectors = new Dictionary<string, Func<Receita, IComparable?>>
+        {
+            [KeyDescricao] = r => r.Descricao,
+            [KeyValor] = r => r.Valor,
+            [KeyData] = r => r.DataReceita,
+            [KeyCategoria] = r => CategoriasReceita.FirstOrDefault(c => c.Id == r.Categoria)?.Descricao ?? string.Empty,
+            [KeyTipo] = r => TiposReceita.FirstOrDefault(c => c.Id == r.TipoReceita)?.Descricao ?? string.Empty,
+            [KeyRecebida] = r => r.ReceitaRecebida
+        };
+    }
+
     private async void AtualizarDadosDaPagina()
     {
         await InvokeAsync(async () =>
@@ -136,7 +223,8 @@
         else
         {
             Receitas = listaTodasReceitas
-               .Where(d => Filtro.LevenshteinDistance(d.Descricao.ToLower(), searchTerm.ToLower()) <= 2 || d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+               .Where(d => Filtro.LevenshteinDistance(d.Descricao.ToLower(), searchTerm.ToLower()) <= 2
+                        || d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                .ToList();
         }
         StateHasChanged();
@@ -162,5 +250,13 @@
         await CarregarReceitas(whereClause);
         StateHasChanged();
     }
-  
+
+    // Nova ação: marcar como recebida
+    private async Task MarcarComoRecebidaAsync(Receita receita)
+    {
+        if (receita is null || receita.ReceitaRecebida) return;
+
+        receita.ReceitaRecebida = true;
+        await ReceitaService.SalvarReceitaAsync(receita);
+    }
 }

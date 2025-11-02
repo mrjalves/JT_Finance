@@ -8,31 +8,83 @@
 @inject IDespesaService DespesaService
 @inject ICategoriaService CategoriaService
 @inject FiltroService FiltroService
+@inject NavigationManager NavigationManager
 
 <div class="card border-left-success shadow h-80 py-2">
-<DataGrid TItem="sDespesaStruct" Items="Despesas" IsLoading="IsLoading">
-    <HeaderTemplate>
-        <th>Descrição</th>
-        <th>Valor</th>
-        <th>Data</th>
-        <th>Data Vencimento</th>
-        <th>Tipo</th>
-        <th>Categoria</th>
-        <th>Cartão / Parcela</th>
-        <th>Paga</th>
-        @if(!HideActions){
+<DataGrid TItem="sDespesaStruct"
+          Items="ItensBase"
+          IsLoading="IsLoading"
+          SortSelectors="SortSelectors"
+          ViewportMaxHeight="calc(100vh - 17rem)">
+    <SortableHeaderTemplate Context="ctx">
+        <th role="button" @onclick="() => ctx.SortBy(KeyDescricao)">
+            Descrição
+            @if (ctx.IsSortedBy(KeyDescricao))
+            {
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+            }
+        </th>
+        <th role="button" @onclick="() => ctx.SortBy(KeyValor)">
+            Valor
+            @if (ctx.IsSortedBy(KeyValor))
+            {
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+            }
+        </th>
+        <th role="button" @onclick="() => ctx.SortBy(KeyData)">
+            Data
+            @if (ctx.IsSortedBy(KeyData))
+            {
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+            }
+        </th>
+        <th role="button" @onclick="() => ctx.SortBy(KeyVencimento)">
+            Data Vencimento
+            @if (ctx.IsSortedBy(KeyVencimento))
+            {
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+            }
+        </th>
+        <th role="button" @onclick="() => ctx.SortBy(KeyCategoria)">
+            Categoria
+            @if (ctx.IsSortedBy(KeyCategoria))
+            {
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+            }
+        </th>
+        <th role="button" @onclick="() => ctx.SortBy(KeyTipo)">
+            Tipo
+            @if (ctx.IsSortedBy(KeyTipo))
+            {
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+            }
+        </th>
+        <th role="button" @onclick="() => ctx.SortBy(KeyCartaoParcela)">
+            Cartão / Parcela
+            @if (ctx.IsSortedBy(KeyCartaoParcela))
+            {
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+            }
+        </th>
+        <th role="button" @onclick="() => ctx.SortBy(KeyPaga)">
+            Paga
+            @if (ctx.IsSortedBy(KeyPaga))
+            {
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+            }
+        </th>
+       @*  @if(!HideActions){ *@
             <th>Ações</th>
-        }
-    </HeaderTemplate>
+    </SortableHeaderTemplate>
 
     <RowTemplate Context="despesa">
         <td>@despesa.Descricao</td>
         <td>@despesa.Valor.ToString("C")</td>
         <td>@despesa.DataDespesa.ToShortDateString()</td>
         <td>
-            @if (despesa.EhDespesaCartaoCredito && despesa.DespCartaoCredito != null)
+            @if (despesa.EhDespesaCartaoCredito && despesa.DespCartaoCredito.DataVencimento != default)
             {
-                    @despesa.DespCartaoCredito.DataVencimento.ToShortDateString()
+                @despesa.DespCartaoCredito.DataVencimento.ToShortDateString()
             }
             else
             {
@@ -42,7 +94,7 @@
         <td>@despesa.CategoriaStruct.Nome</td>
         <td>@despesa.TipoStruct.Nome</td>
         <td>
-                @if (despesa.EhDespesaCartaoCredito && despesa.DespCartaoCredito != null)
+            @if (despesa.EhDespesaCartaoCredito && despesa.DespCartaoCredito.DataVencimento != default)
             {
                 <span class="d-block">@despesa.Cartao.Nome</span>
                 <small class="text-muted">@despesa.DespCartaoCredito.NumeroParcela</small>
@@ -59,49 +111,104 @@
             }
             else
             {
-                <span class="badge bg-danger">Não</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-danger">Não</span>
+                </div>
             }
         </td>
-            @if (!HideActions)
-            {
-                <td>
-                    @if (!despesa.EhDespesaCartaoCredito)
+            <td>
+                @if (!despesa.EhDespesaCartaoCredito)
+                {
+                    @if (!despesa.DespesaPaga)
                     {
-                        <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Despesa" @onclick="() => OnDuplicar.InvokeAsync(despesa)">
-                            <i class="bi bi-copy"></i>
+                        <button class="btn btn-sm btn-success me-2" title="Marcar como paga" @onclick="() => PagarDespesaAsync(despesa)" @onclick:stopPropagation="true">
+                            <i class="bi bi-check2-circle"></i>
                         </button>
                     }
-                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(despesa.Id)">
-                <i class="bi bi-pencil-fill"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(despesa.Id)">
-                <i class="bi bi-trash-fill"></i>
-            </button>
-        </td>
+                    <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Despesa" @onclick="() => OnDuplicar.InvokeAsync(despesa)" @onclick:stopPropagation="true">
+                        <i class="bi bi-copy"></i>
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-sm btn-outline-primary me-2" title="Ver fatura desta despesa" @onclick="() => AbrirFaturaDoCartao(despesa)" @onclick:stopPropagation="true">
+                        <i class="bi bi-receipt"></i>
+                    </button>
+                }
+        @if (!HideActions)
+        {
+                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(despesa.Id)" @onclick:stopPropagation="true">
+                    <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(despesa.Id)" @onclick:stopPropagation="true">
+                    <i class="bi bi-trash-fill"></i>
+                </button>
         }
+            </td>
     </RowTemplate>
 
     <EmptyTemplate>
         <p class="text-muted mb-0">Nenhuma despesa encontrada. Tente ajustar os filtros ou cadastre uma nova despesa.</p>
     </EmptyTemplate>
 </DataGrid>
+
+<!-- Totais -->
+<div class="card-footer totals-footer d-flex flex-wrap gap-3 justify-content-between align-items-center">
+    <div class="d-flex flex-wrap gap-3">
+        <span><strong>Itens:</strong> @QtdDespesas</span>
+        <span><strong>Total:</strong> @TotalDespesas.ToString("C")</span>
+        <span class="text-success"><strong>Pagas:</strong> @TotalPagas.ToString("C")</span>
+        <span class="text-danger"><strong>Pendentes:</strong> @TotalPendentes.ToString("C")</span>
+    </div>
+</div>
 </div>
 @code {
-    [Parameter]
-    public bool IsLoading { get; set; }
-    [Parameter]
-    public EventCallback<sDespesaStruct> OnDuplicar { get; set; }
-    [Parameter]
-    public EventCallback<int> OnEditar { get; set; }
-
-    [Parameter]
-    public EventCallback<int> OnRemover { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback<sDespesaStruct> OnDuplicar { get; set; }
+    [Parameter] public EventCallback<int> OnEditar { get; set; }
+    [Parameter] public EventCallback<int> OnRemover { get; set; }
     [Parameter] public bool HideActions { get; set; } = false;
-    [Parameter] 
-    public List<sDespesaStruct>? Despesas { get; set; }
+    [Parameter] public List<sDespesaStruct>? Despesas { get; set; }
+
     private List<sDespesaStruct> listaTodasDespesas = new();
     private List<Categoria> TiposDespesa = new();
     private List<Categoria> CategoriasDespesa = new();
+
+    private const string KeyDescricao = nameof(sDespesaStruct.Descricao);
+    private const string KeyValor = nameof(sDespesaStruct.Valor);
+    private const string KeyData = nameof(sDespesaStruct.DataDespesa);
+    private const string KeyVencimento = "Vencimento";
+    private const string KeyCategoria = "Categoria";
+    private const string KeyTipo = "Tipo";
+    private const string KeyCartaoParcela = "CartaoParcela";
+    private const string KeyPaga = "Paga";
+
+    private IEnumerable<sDespesaStruct> ItensBase =>
+        (Despesas ?? listaTodasDespesas) ?? Enumerable.Empty<sDespesaStruct>();
+
+    // Totais
+    private int QtdDespesas => ItensBase.Count();
+    private decimal TotalDespesas => ItensBase.Sum(d => d.Valor);
+    private decimal TotalPagas => ItensBase.Where(d => d.DespesaPaga).Sum(d => d.Valor);
+    private decimal TotalPendentes => TotalDespesas - TotalPagas;
+
+    private static readonly IReadOnlyDictionary<string, Func<sDespesaStruct, IComparable?>> SortSelectors
+        = new Dictionary<string, Func<sDespesaStruct, IComparable?>>
+    {
+        [KeyDescricao] = d => d.Descricao,
+        [KeyValor] = d => d.Valor,
+        [KeyData] = d => d.DataDespesa,
+        [KeyCategoria] = d => d.CategoriaStruct.Nome,
+        [KeyTipo] = d => d.TipoStruct.Nome,
+        [KeyPaga] = d => d.DespesaPaga,
+        [KeyVencimento] = d => (d.EhDespesaCartaoCredito && d.DespCartaoCredito.DataVencimento != default)
+            ? d.DespCartaoCredito.DataVencimento
+            : DateTime.MaxValue,
+        [KeyCartaoParcela] = d => d.EhDespesaCartaoCredito && !string.IsNullOrEmpty(d.Cartao.Nome)
+            ? $"{d.Cartao.Nome}|{d.DespCartaoCredito.NumeroParcela:000000}"
+            : "~"
+    };
+
     protected override async Task OnInitializedAsync()
     {
         DespesaService.OnDataChanged += AtualizarDadosDaPagina;
@@ -127,6 +234,7 @@
         );
         IsLoading = false;
     }
+
     private async Task CarregarDespesas(string whereClause = "")
     {
         if (whereClause != "")
@@ -156,7 +264,8 @@
         else
         {
             Despesas = listaTodasDespesas
-               .Where(d => Filtro.LevenshteinDistance(d.Descricao.ToLower(), searchTerm.ToLower()) <= 2 || d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+               .Where(d => Filtro.LevenshteinDistance(d.Descricao.ToLower(), searchTerm.ToLower()) <= 2
+                    || d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                .ToList();
         }
         StateHasChanged();
@@ -169,4 +278,23 @@
         StateHasChanged();
     }
 
+    // --- Ações adicionadas ---
+    private async Task PagarDespesaAsync(sDespesaStruct despesa)
+    {
+        var entidade = despesa.ToEntity();
+        entidade.DespesaPaga = true;
+        entidade.DataPagamento = DateTime.Today;
+        entidade.EhDespesaCartaoCredito = false;
+
+        await DespesaService.SalvarDespesaAsync(entidade);
+    }
+
+    private void AbrirFaturaDoCartao(sDespesaStruct despesa)
+    {
+        if (despesa.EhDespesaCartaoCredito && despesa.DespCartaoCredito.IdCartao > 0)
+        {
+            var dv = despesa.DespCartaoCredito.DataVencimento;
+            NavigationManager.NavigateTo($"/fatura/{despesa.DespCartaoCredito.IdCartao}/{dv.Year}-{dv.Month}");
+        }
+    }
 }

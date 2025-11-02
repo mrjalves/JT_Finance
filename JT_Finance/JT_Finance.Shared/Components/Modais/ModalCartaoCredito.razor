@@ -2,6 +2,7 @@
 @using JT_Finance.Shared.Services.Interfaces
 @using static JT_UserInterface.Shared.Components.Modal
 @inject ICartaoCreditoService CartaoService
+@inject NavigationManager NavigationManager
 
 <Modal @ref="ModalRef" Title="@Title" OnClose="OnClose" Size="ModalSize.Large" CloseOnBackdropClick="false">
     <BodyContent>
@@ -42,14 +43,22 @@
                 </div>
 
                 <hr />
-
-                <div class="d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-secondary" @onclick="HandleCancel">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                <div class="d-flex justify-content-between w-100">
+                    <button class="btn btn-outline-info"
+                            title="@(Cartao?.Id > 0 ? "Ver resumo da fatura" : "Disponível após salvar o cartão")"
+                            disabled="@(Cartao?.Id <= 0)"
+                            @onclick="IrParaResumo">
+                        <i class="bi bi-receipt me-1"></i> Resumo
+                    </button>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" @onclick="HandleCancel">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
                 </div>
             </EditForm>
         }
     </BodyContent>
+    
 </Modal>
 
 @code {
@@ -57,12 +66,13 @@
     [Parameter] public CartaoCredito? Cartao { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback OnSave { get; set; }
 
     private Modal ModalRef = new();
 
     private async Task HandleSubmit()
     {
-        if (Cartao != null)
+        if (Cartao != null && Cartao.Id > 0)
         {
             await CartaoService.SalvarCartaoAsync(Cartao);
             await Close();
@@ -76,5 +86,11 @@
     {
         await OnCancel.InvokeAsync();
         await Close();
+    }
+
+    private void IrParaResumo()
+    {
+        if (Cartao is null || Cartao.Id <= 0) return;
+        NavigationManager.NavigateTo($"/fatura/{Cartao.Id}");
     }
 }
