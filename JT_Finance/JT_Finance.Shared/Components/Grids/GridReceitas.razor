@@ -222,9 +222,12 @@
         }
         else
         {
+            // Otimização: Evitar chamadas desnecessárias ao LevenshteinDistance
+            var lowerSearchTerm = searchTerm.ToLower();
             Receitas = listaTodasReceitas
-               .Where(d => Filtro.LevenshteinDistance(d.Descricao.ToLower(), searchTerm.ToLower()) <= 2
-                        || d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+               .Where(d => d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                        || (Math.Abs(d.Descricao.Length - searchTerm.Length) <= 2
+                            && Filtro.LevenshteinDistance(d.Descricao.ToLower(), lowerSearchTerm) <= 2))
                .ToList();
         }
         StateHasChanged();
