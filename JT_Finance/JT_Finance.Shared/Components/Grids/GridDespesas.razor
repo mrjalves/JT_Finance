@@ -186,11 +186,42 @@
     private IEnumerable<sDespesaStruct> ItensBase =>
         (Despesas ?? listaTodasDespesas) ?? Enumerable.Empty<sDespesaStruct>();
 
-    // Totais
-    private int QtdDespesas => ItensBase.Count();
-    private decimal TotalDespesas => ItensBase.Sum(d => d.Valor);
-    private decimal TotalPagas => ItensBase.Where(d => d.DespesaPaga).Sum(d => d.Valor);
-    private decimal TotalPendentes => TotalDespesas - TotalPagas;
+    // Totais cached fields
+    private int _qtdDespesas;
+    private decimal _totalDespesas;
+    private decimal _totalPagas;
+
+    // Totais properties returning cached values
+    private int QtdDespesas => _qtdDespesas;
+    private decimal TotalDespesas => _totalDespesas;
+    private decimal TotalPagas => _totalPagas;
+    private decimal TotalPendentes => _totalDespesas - _totalPagas;
+
+    /// <summary>
+    /// Recalculates totals in a single pass to optimize performance (O(N) instead of multiple O(N) passes).
+    /// </summary>
+    private void RecalculateTotals()
+    {
+        var items = ItensBase;
+        int count = 0;
+        decimal total = 0;
+        decimal pagas = 0;
+
+        // Iterate once over the collection
+        foreach (var item in items)
+        {
+            count++;
+            total += item.Valor;
+            if (item.DespesaPaga)
+            {
+                pagas += item.Valor;
+            }
+        }
+
+        _qtdDespesas = count;
+        _totalDespesas = total;
+        _totalPagas = pagas;
+    }
 
     private static readonly IReadOnlyDictionary<string, Func<sDespesaStruct, IComparable?>> SortSelectors
         = new Dictionary<string, Func<sDespesaStruct, IComparable?>>
@@ -214,6 +245,11 @@
         DespesaService.OnDataChanged += AtualizarDadosDaPagina;
         await CarregarDependencias();
         ConfigurarFiltros();
+    }
+
+    protected override void OnParametersSet()
+    {
+        RecalculateTotals();
     }
 
     private async void AtualizarDadosDaPagina()
@@ -241,6 +277,8 @@
             Despesas = await DespesaService.ObterDespesasAsync(whereClause);
         else
             listaTodasDespesas = await DespesaService.ObterTodasDespesasAsync();
+
+        RecalculateTotals();
     }
 
     private async Task CarregarOpcoes()
@@ -268,6 +306,7 @@
                     || d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                .ToList();
         }
+        RecalculateTotals();
         StateHasChanged();
         return Task.CompletedTask;
     }
@@ -275,6 +314,7 @@
     private async Task AplicarFiltros(List<Filtro> filtros)
     {
         Despesas = JT_Servicos.DespesaService.Filter(filtros);
+        RecalculateTotals();
         StateHasChanged();
     }
 
