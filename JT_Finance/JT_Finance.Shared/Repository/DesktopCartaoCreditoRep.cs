@@ -10,7 +10,7 @@ namespace JT_Finance.Shared.Repository
 {
     public class DesktopCartaoCreditoRep : ICartaoCreditoRep
     {
-     
+
 
         public Task<CartaoCredito> GetByIdAsync(int id)
         {

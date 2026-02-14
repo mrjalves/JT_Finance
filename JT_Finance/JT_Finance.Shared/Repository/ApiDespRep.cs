@@ -114,6 +114,6 @@ namespace JT_Finance.Shared.Repository
             throw new NotImplementedException();
         }
 
-        
+
     }
 }

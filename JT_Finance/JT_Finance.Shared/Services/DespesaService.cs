@@ -123,6 +123,6 @@ namespace JT_Finance.Shared.Services
         }
 
         private void NotifyDataChanged() => OnDataChanged?.Invoke();
-    
+
     }
 }

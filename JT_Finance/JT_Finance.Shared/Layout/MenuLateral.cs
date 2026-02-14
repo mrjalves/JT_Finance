@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace JT_Finance.Shared.Layout
 {
-    public  static class MenuLateral
+    public static class MenuLateral
     {
         // Corrigido: propriedade somente leitura com getter correto        
         public static List<SItemMenu> ItensMenu { get; } = GetItensMenu();
@@ -34,6 +34,6 @@ namespace JT_Finance.Shared.Layout
             };
         }
 
-        
+
     }
 }

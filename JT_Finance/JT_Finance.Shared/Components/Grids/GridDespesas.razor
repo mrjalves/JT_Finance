@@ -1,4 +1,4 @@
-﻿@using JT_Aplicacao
+@using JT_Aplicacao
 @using JT_Classes
 @using JT_Classes.Financeiro
 @using JT_Classes.Financeiro.structs
@@ -17,56 +17,56 @@
           SortSelectors="SortSelectors"
           ViewportMaxHeight="calc(100vh - 17rem)">
     <SortableHeaderTemplate Context="ctx">
-        <th role="button" @onclick="() => ctx.SortBy(KeyDescricao)">
+        <th role="button" tabindex="0" @onkeydown="@(e => HandleHeaderKeyDown(e, () => ctx.SortBy(KeyDescricao)))" @onclick="() => ctx.SortBy(KeyDescricao)" aria-sort="@(ctx.IsSortedBy(KeyDescricao) ? (ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc ? "ascending" : "descending") : "none")">
             Descrição
             @if (ctx.IsSortedBy(KeyDescricao))
             {
                 <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyValor)">
+        <th role="button" tabindex="0" @onkeydown="@(e => HandleHeaderKeyDown(e, () => ctx.SortBy(KeyValor)))" @onclick="() => ctx.SortBy(KeyValor)" aria-sort="@(ctx.IsSortedBy(KeyValor) ? (ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc ? "ascending" : "descending") : "none")">
             Valor
             @if (ctx.IsSortedBy(KeyValor))
             {
                 <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyData)">
+        <th role="button" tabindex="0" @onkeydown="@(e => HandleHeaderKeyDown(e, () => ctx.SortBy(KeyData)))" @onclick="() => ctx.SortBy(KeyData)" aria-sort="@(ctx.IsSortedBy(KeyData) ? (ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc ? "ascending" : "descending") : "none")">
             Data
             @if (ctx.IsSortedBy(KeyData))
             {
                 <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyVencimento)">
+        <th role="button" tabindex="0" @onkeydown="@(e => HandleHeaderKeyDown(e, () => ctx.SortBy(KeyVencimento)))" @onclick="() => ctx.SortBy(KeyVencimento)" aria-sort="@(ctx.IsSortedBy(KeyVencimento) ? (ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc ? "ascending" : "descending") : "none")">
             Data Vencimento
             @if (ctx.IsSortedBy(KeyVencimento))
             {
                 <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyCategoria)">
+        <th role="button" tabindex="0" @onkeydown="@(e => HandleHeaderKeyDown(e, () => ctx.SortBy(KeyCategoria)))" @onclick="() => ctx.SortBy(KeyCategoria)" aria-sort="@(ctx.IsSortedBy(KeyCategoria) ? (ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc ? "ascending" : "descending") : "none")">
             Categoria
             @if (ctx.IsSortedBy(KeyCategoria))
             {
                 <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyTipo)">
+        <th role="button" tabindex="0" @onkeydown="@(e => HandleHeaderKeyDown(e, () => ctx.SortBy(KeyTipo)))" @onclick="() => ctx.SortBy(KeyTipo)" aria-sort="@(ctx.IsSortedBy(KeyTipo) ? (ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc ? "ascending" : "descending") : "none")">
             Tipo
             @if (ctx.IsSortedBy(KeyTipo))
             {
                 <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyCartaoParcela)">
+        <th role="button" tabindex="0" @onkeydown="@(e => HandleHeaderKeyDown(e, () => ctx.SortBy(KeyCartaoParcela)))" @onclick="() => ctx.SortBy(KeyCartaoParcela)" aria-sort="@(ctx.IsSortedBy(KeyCartaoParcela) ? (ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc ? "ascending" : "descending") : "none")">
             Cartão / Parcela
             @if (ctx.IsSortedBy(KeyCartaoParcela))
             {
                 <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyPaga)">
+        <th role="button" tabindex="0" @onkeydown="@(e => HandleHeaderKeyDown(e, () => ctx.SortBy(KeyPaga)))" @onclick="() => ctx.SortBy(KeyPaga)" aria-sort="@(ctx.IsSortedBy(KeyPaga) ? (ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc ? "ascending" : "descending") : "none")">
             Paga
             @if (ctx.IsSortedBy(KeyPaga))
             {
@@ -121,26 +121,26 @@
                 {
                     @if (!despesa.DespesaPaga)
                     {
-                        <button class="btn btn-sm btn-success me-2" title="Marcar como paga" @onclick="() => PagarDespesaAsync(despesa)" @onclick:stopPropagation="true">
+                        <button class="btn btn-sm btn-success me-2" title="Marcar como paga" aria-label="Marcar como paga" @onclick="() => PagarDespesaAsync(despesa)" @onclick:stopPropagation="true">
                             <i class="bi bi-check2-circle"></i>
                         </button>
                     }
-                    <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Despesa" @onclick="() => OnDuplicar.InvokeAsync(despesa)" @onclick:stopPropagation="true">
+                    <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Despesa" aria-label="Duplicar Despesa" @onclick="() => OnDuplicar.InvokeAsync(despesa)" @onclick:stopPropagation="true">
                         <i class="bi bi-copy"></i>
                     </button>
                 }
                 else
                 {
-                    <button class="btn btn-sm btn-outline-primary me-2" title="Ver fatura desta despesa" @onclick="() => AbrirFaturaDoCartao(despesa)" @onclick:stopPropagation="true">
+                    <button class="btn btn-sm btn-outline-primary me-2" title="Ver fatura desta despesa" aria-label="Ver fatura desta despesa" @onclick="() => AbrirFaturaDoCartao(despesa)" @onclick:stopPropagation="true">
                         <i class="bi bi-receipt"></i>
                     </button>
                 }
         @if (!HideActions)
         {
-                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(despesa.Id)" @onclick:stopPropagation="true">
+                <button class="btn btn-sm btn-outline-primary me-2" title="Editar Despesa" aria-label="Editar Despesa" @onclick="() => OnEditar.InvokeAsync(despesa.Id)" @onclick:stopPropagation="true">
                     <i class="bi bi-pencil-fill"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(despesa.Id)" @onclick:stopPropagation="true">
+                <button class="btn btn-sm btn-outline-danger" title="Remover Despesa" aria-label="Remover Despesa" @onclick="() => OnRemover.InvokeAsync(despesa.Id)" @onclick:stopPropagation="true">
                     <i class="bi bi-trash-fill"></i>
                 </button>
         }
@@ -295,6 +295,14 @@
         {
             var dv = despesa.DespCartaoCredito.DataVencimento;
             NavigationManager.NavigateTo($"/fatura/{despesa.DespCartaoCredito.IdCartao}/{dv.Year}-{dv.Month}");
+        }
+    }
+
+    private void HandleHeaderKeyDown(KeyboardEventArgs e, Action sortAction)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            sortAction();
         }
     }
 }

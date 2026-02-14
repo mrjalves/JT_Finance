@@ -75,6 +75,6 @@ namespace JT_Finance.Shared.Repository
             return Task.FromResult(Despesa.GetDespesasPorMes(mesReferencia));
         }
 
-     
+
     }
 }

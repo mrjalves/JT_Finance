@@ -9,7 +9,7 @@ namespace JT_Finance.Shared.Services.Interfaces
         Task<CartaoCredito> ObterCartaoPorId(int id);
         Task<bool> SalvarCartaoAsync(CartaoCredito cartao);
         Task<bool> RemoverCartaoAsync(int id);
-        Task<List<Despesa>> ObterDespesas(int id);   
+        Task<List<Despesa>> ObterDespesas(int id);
         void NotificarErro(string titulo, string mensagem);
         void NotificarSucesso(string titulo, string mensagem);
         Task CarregarDadosAsync();
