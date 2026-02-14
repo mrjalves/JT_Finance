@@ -57,7 +57,7 @@ namespace JT_Finance.Shared.Repository
 
         public async Task<List<Despesa>> FindAsync(string condicao)
         {
-            return await _httpClient.GetFromJsonAsync<List<Despesa>>($"/api/despesas/find?condicao={condicao}");
+            return await _httpClient.GetFromJsonAsync<List<Despesa>>($"/api/despesas/find?condicao={Uri.EscapeDataString(condicao)}");
         }
 
         public async Task<List<TotalPorTipo>> GetDespesasAgrupadasPorTipoAsync(DateTime mes)

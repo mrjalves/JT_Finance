@@ -4,6 +4,9 @@
 @using System.Globalization
 @using JT_Finance.Shared.Models
 @using JT_UserInterface.Shared.Models
+@using JT_Finance.Shared.Services.Interfaces
+@inject IDespesaService DespesaService
+@inject IReceitaService ReceitaService
 
 <div class="calendar-container card shadow-sm">
     <div class="calendar-header">
@@ -139,8 +142,8 @@
     private async Task CarregarDadosDoMes()
     {
         await Task.Delay(50);
-        var despesas = JT_Servicos.DespesaService.Find($" WHERE MONTH(DataDespesa) = {dataReferencia.Month} AND YEAR(DataDespesa) = {dataReferencia.Year}");
-        var receitas = JT_Servicos.ReceitaService.Find($" WHERE MONTH(DataReceita) = {dataReferencia.Month} AND YEAR(DataReceita) = {dataReferencia.Year}");
+        var despesas = await DespesaService.ObterDespesasMesAsync(dataReferencia);
+        var receitas = await ReceitaService.ObterReceitasMesAsync(dataReferencia);
 
         eventosDoMes = new List<EventoCalendario>();
         eventosDoMes.AddRange(despesas.Select(d => new EventoCalendario { Data = d.DataDespesa, Descricao = d.Descricao, Valor = d.Valor, Tipo = TipoEvento.Despesa }));

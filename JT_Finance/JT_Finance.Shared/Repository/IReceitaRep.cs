@@ -16,6 +16,7 @@ namespace JT_Finance.Shared.Repository
         Task<bool> DeleteAsync(int id);
         Task<bool> DuplicateAsync(int id);
         Task<decimal> GetTotalMesAsync(DateTime mes);
+        Task<List<Receita>> GetReceitasPorMesAsync(DateTime mes);
         Task<List<Receita>> FindAsync(string condicao);
     }
 }

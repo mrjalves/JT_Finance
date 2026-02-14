@@ -59,9 +59,16 @@ namespace JT_Finance.Shared.Repository
             return await _httpClient.GetFromJsonAsync<decimal>($"api/receitas/total/mes?mes={mes:yyyy-MM-dd}");
         }
 
+        public async Task<List<Receita>> GetReceitasPorMesAsync(DateTime mes)
+        {
+            // Construct safe SQL using integers to prevent injection
+            string sql = $" WHERE MONTH(DataReceita) = {mes.Month} AND YEAR(DataReceita) = {mes.Year}";
+            return await FindAsync(sql);
+        }
+
         public async Task<List<Receita>> FindAsync(string condicao)
         {
-            return await _httpClient.GetFromJsonAsync<List<Receita>>($"api/receitas/find?condicao={condicao}");
+            return await _httpClient.GetFromJsonAsync<List<Receita>>($"api/receitas/find?condicao={Uri.EscapeDataString(condicao)}");
         }
     }
 }

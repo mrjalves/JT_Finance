@@ -44,6 +44,12 @@ namespace JT_Finance.Shared.Repository
             return Task.FromResult(Receita.GetTotalReceitasMes(mes));
         }
 
+        public Task<List<Receita>> GetReceitasPorMesAsync(DateTime mes)
+        {
+            string sql = $" WHERE MONTH(DataReceita) = {mes.Month} AND YEAR(DataReceita) = {mes.Year}";
+            return Task.FromResult(ReceitaService.Find(sql));
+        }
+
         public Task<List<Receita>> FindAsync(string condicao)
         {
             return Task.FromResult(ReceitaService.Find(condicao));

@@ -41,6 +41,11 @@ namespace JT_Finance.Shared.Services
             return _receitas;
         }
 
+        public async Task<List<Receita>> ObterReceitasMesAsync(DateTime mes)
+        {
+            return await _repository.GetReceitasPorMesAsync(mes);
+        }
+
         public async Task<Receita> ObterReceitaPorIdAsync(int id)
         {
             return await _repository.GetByIdAsync(id);

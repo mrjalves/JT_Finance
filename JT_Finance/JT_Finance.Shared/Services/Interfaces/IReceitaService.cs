@@ -8,6 +8,7 @@ namespace JT_Finance.Shared.Services.Interfaces
     public interface IReceitaService
     {
         Task<List<Receita>> ObterTodasReceitasAsync();
+        Task<List<Receita>> ObterReceitasMesAsync(DateTime mes);
         Task<List<Receita>> ObterReceitasAsync(string condicao);
         Task<Receita> ObterReceitaPorIdAsync(int id);
         Task<bool> SalvarReceitaAsync(Receita receita);
