@@ -57,7 +57,16 @@ namespace JT_Finance.Shared.Repository
 
         public async Task<List<Despesa>> FindAsync(string condicao)
         {
-            return await _httpClient.GetFromJsonAsync<List<Despesa>>($"/api/despesas/find?condicao={condicao}");
+            // WARNING: This parameter is passed directly to the backend.
+            // If the backend uses this string directly in a SQL query, it is vulnerable to SQL injection.
+            // Consider validating the input or using parameterized queries on the backend.
+            if (string.IsNullOrEmpty(condicao))
+            {
+                condicao = string.Empty;
+            }
+
+            var encodedCondicao = Uri.EscapeDataString(condicao);
+            return await _httpClient.GetFromJsonAsync<List<Despesa>>($"/api/despesas/find?condicao={encodedCondicao}");
         }
 
         public async Task<List<TotalPorTipo>> GetDespesasAgrupadasPorTipoAsync(DateTime mes)
