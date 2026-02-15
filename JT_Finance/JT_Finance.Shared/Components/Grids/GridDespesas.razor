@@ -187,10 +187,39 @@
         (Despesas ?? listaTodasDespesas) ?? Enumerable.Empty<sDespesaStruct>();
 
     // Totais
-    private int QtdDespesas => ItensBase.Count();
-    private decimal TotalDespesas => ItensBase.Sum(d => d.Valor);
-    private decimal TotalPagas => ItensBase.Where(d => d.DespesaPaga).Sum(d => d.Valor);
-    private decimal TotalPendentes => TotalDespesas - TotalPagas;
+    private int _qtdDespesas;
+    private decimal _totalDespesas;
+    private decimal _totalPagas;
+    private decimal _totalPendentes;
+
+    private int QtdDespesas => _qtdDespesas;
+    private decimal TotalDespesas => _totalDespesas;
+    private decimal TotalPagas => _totalPagas;
+    private decimal TotalPendentes => _totalPendentes;
+
+    private void RecalculateTotals()
+    {
+        _qtdDespesas = 0;
+        _totalDespesas = 0;
+        _totalPagas = 0;
+
+        foreach (var d in ItensBase)
+        {
+            _qtdDespesas++;
+            _totalDespesas += d.Valor;
+            if (d.DespesaPaga)
+            {
+                _totalPagas += d.Valor;
+            }
+        }
+        _totalPendentes = _totalDespesas - _totalPagas;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        RecalculateTotals();
+    }
 
     private static readonly IReadOnlyDictionary<string, Func<sDespesaStruct, IComparable?>> SortSelectors
         = new Dictionary<string, Func<sDespesaStruct, IComparable?>>
@@ -241,6 +270,8 @@
             Despesas = await DespesaService.ObterDespesasAsync(whereClause);
         else
             listaTodasDespesas = await DespesaService.ObterTodasDespesasAsync();
+
+        RecalculateTotals();
     }
 
     private async Task CarregarOpcoes()
@@ -268,6 +299,7 @@
                     || d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                .ToList();
         }
+        RecalculateTotals();
         StateHasChanged();
         return Task.CompletedTask;
     }
@@ -275,6 +307,7 @@
     private async Task AplicarFiltros(List<Filtro> filtros)
     {
         Despesas = JT_Servicos.DespesaService.Filter(filtros);
+        RecalculateTotals();
         StateHasChanged();
     }
 
