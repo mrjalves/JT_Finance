@@ -1,6 +1,10 @@
 ﻿
 
-using JT_Finance.Services;
+using JT_Aplicacao;
+
+using JT_Classes.Acessos;
+
+
 using JT_Finance.Shared.Layout;
 using JT_Finance.Shared.Repository;
 using JT_Finance.Shared.Services;
@@ -10,7 +14,11 @@ using JT_UserInterface.Shared.Models;
 using JT_UserInterface.Shared.Services;
 using JT_UserInterface.Shared.Services.Interfaces;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+using System.Reflection;
 
 namespace JT_Finance
 {
@@ -18,37 +26,88 @@ namespace JT_Finance
     {
         public static MauiApp CreateMauiApp()
         {
-            var builder = MauiApp.CreateBuilder();
-            builder
-                .UseMauiApp<App>()
-                .ConfigureFonts(fonts =>
+            try
+            {
+
+                var builder = MauiApp.CreateBuilder();
+
+                builder
+                    .UseMauiApp<App>()
+                    .ConfigureFonts(fonts =>
+                    {
+                        fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                    });
+
+                builder.Services.AddMauiBlazorWebView();
+
+                // 1. Carregamento do appsettings.json
+                var assembly = Assembly.GetExecutingAssembly();
+                // IMPORTANTE: Verifique se o nome do recurso está correto (Namespace.Arquivo)
+                using var stream = assembly.GetManifestResourceStream("JT_Finance.appsettings.json");
+
+                if (stream != null)
                 {
-                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                    var configRoot = new ConfigurationBuilder().AddJsonStream(stream).Build();
+                    builder.Configuration.AddConfiguration(configRoot);
+
+                    var secaoConfig = configRoot.GetSection("Config");
+                    var dadosConfig = secaoConfig.Get<Config>();
+
+                    if (dadosConfig != null)
+                    {
+                        Config.SetInstancia(dadosConfig);
+                        builder.Services.AddSingleton(Config.Instancia);
+                    }
+
+                }
+                else
+                {
+                    Console.WriteLine("AVISO: appsettings.json não encontrado.");
+                }
+
+                // 2. Configuração do Firebase via IOptions
+                var secaoFConfig = builder.Configuration.GetSection("FirebaseConfig");
+                var dadosFConfig = secaoFConfig.Get<FirebaseConfig>();
+
+                if (dadosFConfig != null)
+                {
+                    FirebaseConfig.SetInstancia(dadosFConfig);
+                    builder.Services.AddSingleton(FirebaseConfig.Instancia);
+                }
+                // 5. HttpClient com ajuste para Android Localhost
+                builder.Services.AddScoped(sp =>
+                {
+                    var baseAddressUrl = FirebaseConfig.Instancia.BaseApiUrl ?? "https://localhost:7166";
+
+                    if (DeviceInfo.Platform == DevicePlatform.Android && baseAddressUrl.Contains("localhost"))
+                    {
+                        baseAddressUrl = baseAddressUrl.Replace("localhost", "10.0.2.2");
+                    }
+
+                    return new HttpClient { BaseAddress = new Uri(baseAddressUrl) };
                 });
 
-            builder.Services.AddScoped<IDespesaRep, DesktopDespRep>();
-            builder.Services.AddScoped<ICartaoCreditoRep, DesktopCartaoCreditoRep>();
-            builder.Services.AddScoped<IReceitaRep, DesktopReceitaRep>();
-            builder.Services.AddSingleton<IFormFactor, FormFactor>();
-            builder.Services.AddSingleton<ToastService>();
-            builder.Services.AddSingleton<FiltroService>();
-            builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
-            builder.Services.AddScoped<ICategoriaService, CategoriaService>();
-            builder.Services.AddScoped<IReceitaService, ReceitaService>();
-            builder.Services.AddScoped<IDespesaService, DespesaService>();
-            builder.Services.AddSingleton<INotificationService, NotificationService>();
-            builder.Services.AddSingleton<IThemeService, ThemeService>();
-            builder.Services.AddSingleton<CurrentUserState>();
-            builder.Services.AddScoped<FirebaseAuthService>();
-            builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
-            builder.Services.AddMauiBlazorWebView();
+
+                // 3. Serviços Singleton
+                JT_UserInterface.Shared.DependencyInjection.AddJTUserInterface(builder.Services);
+
+                // 4. Serviços Scoped
+                builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
+
+
 
 #if DEBUG
-            builder.Services.AddBlazorWebViewDeveloperTools();
-            builder.Logging.AddDebug();
+                builder.Services.AddBlazorWebViewDeveloperTools();
+                builder.Logging.AddDebug();
 #endif
 
-            return builder.Build();
+                return builder.Build();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao criar o MauiApp: {ex.Message}");
+                throw; // Re-throw para não mascarar o erro
+            }
         }
     }
 }

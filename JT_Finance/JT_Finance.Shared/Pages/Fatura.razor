@@ -3,7 +3,7 @@
 @using System.Linq
 @using JT_Aplicacao
 @using JT_Classes.Financeiro
-@using JT_Classes.Financeiro.structs
+@using JT_Classes.structs
 @using JT_Finance.Shared.Components.Modais
 @using static JT_UserInterface.Shared.Components.Modal
 @using Microsoft.AspNetCore.Components
@@ -240,7 +240,7 @@ else
         public decimal ValorPago => Lancamentos.Where(l => l.DespesaCartaoCredito.ParcelaPaga == true).Sum(l => l.Despesa.Valor);
         public decimal ValorEmAberto => ValorTotal - ValorPago;
         public int QuantidadeLancamentos => Lancamentos.Count;
-        public List<sCartaoDespesaStruct> Lancamentos { get; set; } = new();
+        public List<sCartaoDespesa> Lancamentos { get; set; } = new();
         public bool EstaExpandida { get; set; } = false;
         public bool EstaPaga => Lancamentos.All(l => l.DespesaCartaoCredito.ParcelaPaga == true);
     }
@@ -402,7 +402,7 @@ else
     {
         if (cartao != null && cartao.Id > 0)
         {
-            var todasDespesas = CartaoCredito.ObterDespesas(cartao.Id) ?? new List<sCartaoDespesaStruct>();
+            var todasDespesas = CartaoCredito.ObterDespesas(cartao.Id) ?? new List<sCartaoDespesa>();
 
             faturas = todasDespesas
                 .GroupBy(d =>

@@ -8,7 +8,6 @@
 @using JT_Finance.Shared.Services.Interfaces
 @using JT_UserInterface.Shared.Services.Interfaces
 @inject IReceitaService ReceitaService
-@inject ICategoriaService CategoriaService
 @implements IDisposable 
 @inject FiltroService FiltroService
 @inject IJSRuntime JSRuntime
@@ -67,7 +66,7 @@
             await SetPageTitleAsync.Invoke("Receitas");
         }
         ReceitaService.OnDataChanged += AtualizarDadosDaPagina;
-        CategoriaService.OnDataChanged += AtualizarDadosDaPagina;
+        // CategoriaService.OnDataChanged += AtualizarDadosDaPagina;
         
         await CarregarDependencias();
     }
@@ -150,7 +149,7 @@
     public void Dispose()
     {
         ReceitaService.OnDataChanged -= AtualizarDadosDaPagina;
-        CategoriaService.OnDataChanged -= AtualizarDadosDaPagina;
+        // CategoriaService.OnDataChanged -= AtualizarDadosDaPagina;
         try { _ = JSRuntime.InvokeVoidAsync("JTHotkeys.disableFilterHotkeys"); } catch { }
         try { _ = JSRuntime.InvokeVoidAsync("JTHotkeys.disableSearchHotkeys"); } catch { }
         try { _ = JSRuntime.InvokeVoidAsync("JTHotkeys.disableNewHotkeys"); } catch { }

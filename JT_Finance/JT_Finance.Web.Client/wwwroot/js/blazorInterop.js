@@ -1,4 +1,4 @@
-// Objeto para armazenar as instâncias dos gráficos criados
+﻿// Objeto para armazenar as instâncias dos gráficos criados
 window.blazorCharts = {};
 
 // Função para criar ou atualizar um gráfico com estilo moderno
@@ -63,9 +63,8 @@ window.blazorCharts.createChart = (chartId, type, labels, datasets, title) => {
                     weight: 'bold'
                 },
                 // Esconde labels muito pequenos para não poluir o gráfico
-                display: function(context) {
+                display: function (context) {
                     var dataset = context.dataset;
-                    var count = dataset.data.length;
                     var value = dataset.data[context.dataIndex];
                     return value > 0; // Ou um percentual do total
                 }
@@ -93,7 +92,7 @@ window.blazorCharts.createChart = (chartId, type, labels, datasets, title) => {
                 },
                 ticks: {
                     // Formata os ticks do eixo Y como moeda
-                    callback: function(value, index, values) {
+                    callback: function (value, index, values) {
                         return new Intl.NumberFormat('pt-BR', {
                             style: 'currency',
                             currency: 'BRL',
@@ -114,7 +113,7 @@ window.blazorCharts.createChart = (chartId, type, labels, datasets, title) => {
     if (window.blazorCharts[chartId]) {
         window.blazorCharts[chartId].destroy();
     }
-    
+
     // Registra o plugin globalmente (necessário apenas uma vez, mas seguro de chamar aqui)
     Chart.register(ChartDataLabels);
 
@@ -127,4 +126,172 @@ window.blazorCharts.createChart = (chartId, type, labels, datasets, title) => {
         },
         options: options
     });
+};
+
+// Atalhos globais para filtros e pesquisa
+window.JTHotkeys = (function () {
+    let handler = null;
+    let filterEnabled = false;
+    let searchEnabled = false;
+
+    function isTypingContext() {
+        const ae = document.activeElement;
+        if (!ae) return false;
+        const tag = ae.tagName;
+        const isFormField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+        return isFormField || ae.isContentEditable === true;
+    }
+
+    function matchesFilterHotkey(e) {
+        if (e.key === 'F3') return true;
+        if (e.altKey && (e.key === 'f' || e.key === 'F')) return true;
+        if (e.ctrlKey && e.shiftKey && (e.key === 'f' || e.key === 'F')) return true;
+        return false;
+    }
+
+    function matchesSearchHotkey(e) {
+        // Ctrl+K e "/"
+        if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) return true;
+        if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key === '/') return true;
+        return false;
+    }
+
+    function tryFocus(el) {
+        if (!el) return false;
+        try {
+            el.focus();
+            el.select?.();
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function isVisible(el) {
+        if (!el) return false;
+        const rects = el.getClientRects();
+        return !!(el.offsetWidth || el.offsetHeight || rects.length);
+    }
+
+    function focusSearchInput() {
+        // Tenta achar o input
+        const inputSel = 'input[data-role="search-filter"], input#searchFilterInput, .search-container .search-input, input[type="search"]';
+        let input = document.querySelector(inputSel);
+
+        // Se não houver input ou não estiver visível, clica no ícone primeiro
+        if (!input || !isVisible(input)) {
+            const icon = document.querySelector('.search-container i.bi-search.action-icon');
+            if (icon) {
+                icon.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+                setTimeout(() => {
+                    input = document.querySelector(inputSel);
+                    tryFocus(input);
+                }, 50);
+                return true;
+            }
+        }
+
+        // Se já estiver visível, apenas focar
+        return tryFocus(input);
+    }
+
+    return {
+        registerFilterHotkeys: function (dotnetRef) {
+            if (handler) {
+                document.removeEventListener('keydown', handler, true);
+                handler = null;
+            }
+
+            handler = function (e) {
+                if (isTypingContext()) return;
+
+                if (matchesSearchHotkey(e) && searchEnabled) {
+                    e.preventDefault();
+                    try {
+                        dotnetRef.invokeMethodAsync('HandleSearchHotkey');
+                    } catch (err) {
+                        console.error('Falha ao invocar HandleSearchHotkey:', err);
+                    }
+                    return;
+                }
+
+                if (matchesFilterHotkey(e) && filterEnabled) {
+                    e.preventDefault();
+                    try {
+                        dotnetRef.invokeMethodAsync('HandleFilterHotkey');
+                    } catch (err) {
+                        console.error('Falha ao invocar HandleFilterHotkey:', err);
+                    }
+                }
+            };
+
+            document.addEventListener('keydown', handler, true);
+        },
+
+        unregisterFilterHotkeys: function () {
+            if (handler) {
+                document.removeEventListener('keydown', handler, true);
+                handler = null;
+            }
+        },
+
+        enableFilterHotkeys: function () { filterEnabled = true; },
+        disableFilterHotkeys: function () { filterEnabled = false; },
+
+        enableSearchHotkeys: function () { searchEnabled = true; },
+        disableSearchHotkeys: function () { searchEnabled = false; },
+
+        focusSearchInput: function () { return focusSearchInput(); }
+    };
+})();
+
+window.BlazorInterop = window.BlazorInterop || {};
+
+window.BlazorInterop.goBack = function (fallbackUrl) {
+    try {
+        if (history.length > 1 && document.referrer) {
+            history.back();
+        } else if (fallbackUrl) {
+            window.location.href = fallbackUrl;
+        }
+    } catch {
+        if (fallbackUrl) window.location.href = fallbackUrl;
+    }
+};
+
+// Namespace de atalhos do app
+window.JTHotkeys = window.JTHotkeys || {
+    _novoHandler: null
+};
+
+// Habilita atalhos para o botão "Novo" (Alt+N). Evita Ctrl+N (atalho do navegador).
+window.JTHotkeys.enableNewHotkeys = function (dotNetRef) {
+    const handler = (e) => {
+        const active = document.activeElement;
+        const isTyping =
+            active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+
+        const key = (e.key || '').toLowerCase();
+        const isAltN = e.altKey && key === 'n';
+
+        if (!isTyping && isAltN) {
+            e.preventDefault();
+            try {
+                dotNetRef.invokeMethodAsync('OnNovoHotkey');
+            } catch { /* no-op */ }
+        }
+    };
+
+    if (window.JTHotkeys._novoHandler) {
+        window.removeEventListener('keydown', window.JTHotkeys._novoHandler, true);
+    }
+    window.JTHotkeys._novoHandler = handler;
+    window.addEventListener('keydown', handler, true);
+};
+
+window.JTHotkeys.disableNewHotkeys = function () {
+    if (window.JTHotkeys._novoHandler) {
+        window.removeEventListener('keydown', window.JTHotkeys._novoHandler, true);
+        window.JTHotkeys._novoHandler = null;
+    }
 };

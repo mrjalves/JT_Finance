@@ -1,5 +1,5 @@
 ﻿using JT_Classes.Financeiro;
-using JT_Classes.Financeiro.structs;
+using JT_Classes.structs;
 
 using JT_Finance.Shared.Repository;
 using JT_Finance.Shared.Services.Interfaces;
@@ -27,7 +27,7 @@ namespace JT_Finance.Shared.Services
         {
         }
 
-        public async Task<List<sDespesaStruct>> ObterTodasDespesasAsync()
+        public async Task<List<sDespesa>> ObterTodasDespesasAsync()
         {
             // A implementação original tinha uma cache local "_despesas".
             // Removi para sempre buscar os dados mais recentes do repositório.
@@ -77,12 +77,12 @@ namespace JT_Finance.Shared.Services
         }
 
 
-        public async Task<List<sDespesaStruct>> ObterDespesasAsync(string condicao)
+        public async Task<List<sDespesa>> ObterDespesasAsync(string condicao)
         {
             return await _repository.FindAsync(condicao);
         }
 
-        public async Task<List<sDespesaStruct>> ObterDespesasMesAsync(DateTime mesReferencia)
+        public async Task<List<sDespesa>> ObterDespesasMesAsync(DateTime mesReferencia)
         {
             return await _repository.GetDespesasPorMesAsync(mesReferencia);
         }
@@ -102,12 +102,12 @@ namespace JT_Finance.Shared.Services
             return await _repository.GetTotalDespesaMesAsync(mes);
         }
 
-        public async Task<List<sDespesaStruct>> ObterDespesasAVencerAsync()
+        public async Task<List<sDespesa>> ObterDespesasAVencerAsync()
         {
             return await _repository.GetDespesasProximasAoVencimentoAsync();
         }
 
-        public async Task<List<sDespesaStruct>> ObterDespesasVencidasAsync()
+        public async Task<List<sDespesa>> ObterDespesasVencidasAsync()
         {
             return await _repository.GetDespesasVencidasAsync();
         }

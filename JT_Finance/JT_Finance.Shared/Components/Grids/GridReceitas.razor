@@ -4,7 +4,6 @@
 @using JT_Finance.Shared.Models
 @using JT_Finance.Shared.Services.Interfaces
 @using JT_UserInterface.Shared.Services.Interfaces
-@inject ICategoriaService CategoriaService
 @inject IReceitaService ReceitaService
 @inject FiltroService FiltroService
 
@@ -204,8 +203,8 @@
 
     private async Task CarregarOpcoes()
     {
-        TiposReceita = await CategoriaService.GetTipoCategoriasReceitas();
-        CategoriasReceita = await CategoriaService.GetCategoriasReceitas();
+        // TiposReceita = await CategoriaService.GetTipoCategoriasReceitas();
+        // CategoriasReceita = await CategoriaService.GetCategoriasReceitas();
     }
 
     private void ConfigurarFiltros()

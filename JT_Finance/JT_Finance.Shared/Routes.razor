@@ -1,4 +1,4 @@
-﻿<Router AppAssembly="@typeof(JT_Finance.Shared._Imports).Assembly">
+﻿<Router AppAssembly="@typeof(JT_Finance.Shared._Imports).Assembly" AdditionalAssemblies="new[] { typeof(JT_UserInterface.Shared.Layout.MainLayout).Assembly }">
     <Found Context="routeData">
         <RouteView RouteData="routeData" DefaultLayout="typeof(JT_UserInterface.Shared.Layout.MainLayout)" />
         <FocusOnNavigate RouteData="routeData" Selector="h1" />

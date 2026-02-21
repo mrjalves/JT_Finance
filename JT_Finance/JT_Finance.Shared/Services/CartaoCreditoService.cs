@@ -1,5 +1,5 @@
 ﻿using JT_Classes.Financeiro;
-using JT_Classes.Financeiro.structs;
+using JT_Classes.structs;
 
 using JT_Finance.Shared.Repository; // Importe a interface
 using JT_Finance.Shared.Services.Interfaces;
@@ -18,7 +18,7 @@ namespace JT_Finance.Shared.Services
         private readonly ToastService _toastService;
         private readonly ICartaoCreditoRep _repository; // Dependência da interface
         private List<CartaoCredito> _cartoes;
-        private List<sCartaoStruct> _scartoes;
+        private List<sCartao> _scartoes;
         public event Action OnDataChanged;
 
         public CartaoCreditoService(ToastService toastService, ICartaoCreditoRep repository)
@@ -26,7 +26,7 @@ namespace JT_Finance.Shared.Services
             _toastService = toastService;
             _repository = repository;
             _cartoes = new List<CartaoCredito>();
-            _scartoes = new List<sCartaoStruct>();
+            _scartoes = new List<sCartao>();
         }
 
         // Carrega (ou recarrega) os dados usando o repositório
@@ -36,7 +36,7 @@ namespace JT_Finance.Shared.Services
             _scartoes = await _repository.GetAllAsync();
         }
 
-        public async Task<List<sCartaoStruct>> ObterTodosCartoesAsync()
+        public async Task<List<sCartao>> ObterTodosCartoesAsync()
         {
             // Use a lista correta para a cache
             if (!_scartoes.Any())

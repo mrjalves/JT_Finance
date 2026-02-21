@@ -1,7 +1,7 @@
 ﻿@page "/cartoes-credito"
 @using JT_Aplicacao
 @using JT_Classes.Financeiro
-@using JT_Classes.Financeiro.structs
+@using JT_Classes.structs
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Components.Modais
 @using JT_Finance.Shared.Services
@@ -50,7 +50,7 @@
     [CascadingParameter]
     public Func<string, Task>? SetPageTitleAsync { get; set; }
 
-    private List<sCartaoStruct> listaCartoes = new();
+    private List<sCartao> listaCartoes = new();
     private CartaoCredito cartaoAtual;
     private bool isLoading = true;
 
@@ -119,7 +119,7 @@
     private void AbrirModalParaEditarCartao(int id)
     {
         var item = listaCartoes.FirstOrDefault(c => c.Id == id);
-        cartaoAtual = sCartaoStruct.ToEntity(item);
+        cartaoAtual = sCartao.ToEntity(item);
         cartaoAtual.Status = StatusObjeto.EmEdicao;
         modalCartao.Title = "Editar Cartão de Crédito";
         modalCartao.Open();

@@ -1,5 +1,5 @@
 ﻿using JT_Classes.Financeiro;
-using JT_Classes.Financeiro.structs;
+using JT_Classes.structs;
 
 using System.Collections.Generic;
 using System.Net.Http;
@@ -55,7 +55,7 @@ namespace JT_Finance.Shared.Repository
             return await _httpClient.GetFromJsonAsync<List<Despesa>>($"api/cartoescredito/{cartaoId}/despesas");
         }
 
-        Task<List<sCartaoStruct>> ICartaoCreditoRep.GetAllAsync()
+        Task<List<sCartao>> ICartaoCreditoRep.GetAllAsync()
         {
             throw new NotImplementedException();
         }

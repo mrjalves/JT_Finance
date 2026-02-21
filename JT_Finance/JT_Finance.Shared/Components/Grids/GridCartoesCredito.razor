@@ -1,11 +1,11 @@
 ﻿@using JT_Classes.Financeiro
-@using JT_Classes.Financeiro.structs
+@using JT_Classes.structs
 @using JT_Finance.Shared.Services.Interfaces
 @inject ICartaoCreditoService CartaoService
 @inject NavigationManager NavigationManager
 
 <div class="card border-left-success shadow h-80 py-2">
-    <DataGrid TItem="sCartaoStruct"
+    <DataGrid TItem="sCartao"
               Items="Cartoes"
               IsLoading="IsLoading"
               SortSelectors="SortSelectors"
@@ -15,42 +15,42 @@
                 Nome
                 @if (ctx.IsSortedBy(KeyNome))
                 {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartao>.SortDirection.Asc) ? "▲" : "▼")</span>
                 }
             </th>
             <th role="button" @onclick="() => ctx.SortBy(KeyLimite)">
                 Limite
                 @if (ctx.IsSortedBy(KeyLimite))
                 {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartao>.SortDirection.Asc) ? "▲" : "▼")</span>
                 }
             </th>
             <th role="button" @onclick="() => ctx.SortBy(KeyVencimento)">
                 Vencimento
                 @if (ctx.IsSortedBy(KeyVencimento))
                 {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartao>.SortDirection.Asc) ? "▲" : "▼")</span>
                 }
             </th>
             <th role="button" @onclick="() => ctx.SortBy(KeyFechamento)">
                 Fechamento
                 @if (ctx.IsSortedBy(KeyFechamento))
                 {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartao>.SortDirection.Asc) ? "▲" : "▼")</span>
                 }
             </th>
             <th role="button" @onclick="() => ctx.SortBy(KeyStatus)">
                 Status
                 @if (ctx.IsSortedBy(KeyStatus))
                 {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartao>.SortDirection.Asc) ? "▲" : "▼")</span>
                 }
             </th>
             <th role="button" @onclick="() => ctx.SortBy(KeyFaturaMes)">
                 Fatura (mês)
                 @if (ctx.IsSortedBy(KeyFaturaMes))
                 {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartaoStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                    <span class="ms-1">@((ctx.Direction == DataGrid<sCartao>.SortDirection.Asc) ? "▲" : "▼")</span>
                 }
             </th>
             <th>Totais</th>
@@ -127,7 +127,7 @@
 </div>
 @code {
     [Parameter]
-    public List<sCartaoStruct> Cartoes { get; set; } = new();
+    public List<sCartao> Cartoes { get; set; } = new();
 
     [Parameter]
     public bool IsLoading { get; set; }
@@ -138,16 +138,16 @@
     [Parameter]
     public EventCallback<int> OnRemover { get; set; }
 
-    private const string KeyNome = nameof(sCartaoStruct.Nome);
-    private const string KeyLimite = nameof(sCartaoStruct.Limite);
+    private const string KeyNome = nameof(sCartao.Nome);
+    private const string KeyLimite = nameof(sCartao.Limite);
     private const string KeyVencimento = "Vencimento";
     private const string KeyFechamento = "Fechamento";
     private const string KeyStatus = "Status";
     private const string KeyFaturaMes = "FaturaMes";
 
 
-    private IReadOnlyDictionary<string, Func<sCartaoStruct, IComparable?>> SortSelectors => 
-        new Dictionary<string, Func<sCartaoStruct, IComparable?>>
+    private IReadOnlyDictionary<string, Func<sCartao, IComparable?>> SortSelectors => 
+        new Dictionary<string, Func<sCartao, IComparable?>>
         {
             [KeyNome] = c => c.Nome,
             [KeyLimite] = c => c.Limite,
@@ -189,7 +189,7 @@
 
         foreach (var c in Cartoes)
         {
-            var lanc = CartaoCredito.ObterDespesas(c.Id) ?? new List<sCartaoDespesaStruct>();
+            var lanc = CartaoCredito.ObterDespesas(c.Id) ?? new List<sCartaoDespesa>();
             var totalMes = lanc
                 .Where(l => l.DespesaCartaoCredito != null
                             && l.DespesaCartaoCredito.DataVencimento >= inicio
@@ -208,7 +208,7 @@
 
         foreach (var c in Cartoes)
         {
-            var lanc = CartaoCredito.ObterDespesas(c.Id) ?? new List<sCartaoDespesaStruct>();
+            var lanc = CartaoCredito.ObterDespesas(c.Id) ?? new List<sCartaoDespesa>();
             var totalAberto = lanc
                 .Where(l => l.DespesaCartaoCredito.ParcelaPaga != true)
                 .Sum(l => l.Despesa != null ? l.Despesa.Valor : 0m);

@@ -1,5 +1,5 @@
 ﻿using JT_Classes.Financeiro;
-using JT_Classes.Financeiro.structs;
+using JT_Classes.structs;
 
 using System;
 using System.Collections.Generic;
@@ -11,19 +11,19 @@ namespace JT_Finance.Shared.Repository
 {
     public interface IDespesaRep
     {
-        Task<List<sDespesaStruct>> GetAllAsync();
+        Task<List<sDespesa>> GetAllAsync();
         Task<Despesa> GetByIdAsync(int id);
         Task<bool> SaveAsync(Despesa despesa);
         Task<bool> DeleteAsync(int id);
         Task<bool> DuplicarAsync(Despesa despesa);
-        Task<List<sDespesaStruct>> FindAsync(string condicao);
+        Task<List<sDespesa>> FindAsync(string condicao);
 
         // Métodos de agregação e consulta específica
         Task<List<TotalPorTipo>> GetDespesasAgrupadasPorTipoAsync(DateTime mes);
         Task<List<TotalPorCategoria>> GetDespesasAgrupadasPorCategoriaAsync(DateTime mes);
         Task<decimal> GetTotalDespesaMesAsync(DateTime mes);
-        Task<List<sDespesaStruct>> GetDespesasProximasAoVencimentoAsync();
-        Task<List<sDespesaStruct>> GetDespesasVencidasAsync();
-        Task<List<sDespesaStruct>> GetDespesasPorMesAsync(DateTime mesReferencia);
+        Task<List<sDespesa>> GetDespesasProximasAoVencimentoAsync();
+        Task<List<sDespesa>> GetDespesasVencidasAsync();
+        Task<List<sDespesa>> GetDespesasPorMesAsync(DateTime mesReferencia);
     }
 }

@@ -1,17 +1,16 @@
 ﻿@using JT_Aplicacao
 @using JT_Classes
 @using JT_Classes.Financeiro
-@using JT_Classes.Financeiro.structs
+@using JT_Classes.structs
 @using JT_Finance.Shared.Models
 @using JT_Finance.Shared.Services.Interfaces
 @using JT_UserInterface.Shared.Services.Interfaces
 @inject IDespesaService DespesaService
-@inject ICategoriaService CategoriaService
 @inject FiltroService FiltroService
 @inject NavigationManager NavigationManager
 
 <div class="card border-left-success shadow h-80 py-2">
-<DataGrid TItem="sDespesaStruct"
+<DataGrid TItem="sDespesa"
           Items="ItensBase"
           IsLoading="IsLoading"
           SortSelectors="SortSelectors"
@@ -21,56 +20,56 @@
             Descrição
             @if (ctx.IsSortedBy(KeyDescricao))
             {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
         <th role="button" @onclick="() => ctx.SortBy(KeyValor)">
             Valor
             @if (ctx.IsSortedBy(KeyValor))
             {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
         <th role="button" @onclick="() => ctx.SortBy(KeyData)">
             Data
             @if (ctx.IsSortedBy(KeyData))
             {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
         <th role="button" @onclick="() => ctx.SortBy(KeyVencimento)">
             Data Vencimento
             @if (ctx.IsSortedBy(KeyVencimento))
             {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
         <th role="button" @onclick="() => ctx.SortBy(KeyCategoria)">
             Categoria
             @if (ctx.IsSortedBy(KeyCategoria))
             {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
         <th role="button" @onclick="() => ctx.SortBy(KeyTipo)">
             Tipo
             @if (ctx.IsSortedBy(KeyTipo))
             {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
         <th role="button" @onclick="() => ctx.SortBy(KeyCartaoParcela)">
             Cartão / Parcela
             @if (ctx.IsSortedBy(KeyCartaoParcela))
             {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
         <th role="button" @onclick="() => ctx.SortBy(KeyPaga)">
             Paga
             @if (ctx.IsSortedBy(KeyPaga))
             {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesaStruct>.SortDirection.Asc) ? "▲" : "▼")</span>
+                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
             }
         </th>
        @*  @if(!HideActions){ *@
@@ -164,27 +163,27 @@
 </div>
 @code {
     [Parameter] public bool IsLoading { get; set; }
-    [Parameter] public EventCallback<sDespesaStruct> OnDuplicar { get; set; }
+    [Parameter] public EventCallback<sDespesa> OnDuplicar { get; set; }
     [Parameter] public EventCallback<int> OnEditar { get; set; }
     [Parameter] public EventCallback<int> OnRemover { get; set; }
     [Parameter] public bool HideActions { get; set; } = false;
-    [Parameter] public List<sDespesaStruct>? Despesas { get; set; }
+    [Parameter] public List<sDespesa>? Despesas { get; set; }
 
-    private List<sDespesaStruct> listaTodasDespesas = new();
+    private List<sDespesa> listaTodasDespesas = new();
     private List<Categoria> TiposDespesa = new();
     private List<Categoria> CategoriasDespesa = new();
 
-    private const string KeyDescricao = nameof(sDespesaStruct.Descricao);
-    private const string KeyValor = nameof(sDespesaStruct.Valor);
-    private const string KeyData = nameof(sDespesaStruct.DataDespesa);
+    private const string KeyDescricao = nameof(sDespesa.Descricao);
+    private const string KeyValor = nameof(sDespesa.Valor);
+    private const string KeyData = nameof(sDespesa.DataDespesa);
     private const string KeyVencimento = "Vencimento";
     private const string KeyCategoria = "Categoria";
     private const string KeyTipo = "Tipo";
     private const string KeyCartaoParcela = "CartaoParcela";
     private const string KeyPaga = "Paga";
 
-    private IEnumerable<sDespesaStruct> ItensBase =>
-        (Despesas ?? listaTodasDespesas) ?? Enumerable.Empty<sDespesaStruct>();
+    private IEnumerable<sDespesa> ItensBase =>
+        (Despesas ?? listaTodasDespesas) ?? Enumerable.Empty<sDespesa>();
 
     // Totais
     private int QtdDespesas => ItensBase.Count();
@@ -192,8 +191,8 @@
     private decimal TotalPagas => ItensBase.Where(d => d.DespesaPaga).Sum(d => d.Valor);
     private decimal TotalPendentes => TotalDespesas - TotalPagas;
 
-    private static readonly IReadOnlyDictionary<string, Func<sDespesaStruct, IComparable?>> SortSelectors
-        = new Dictionary<string, Func<sDespesaStruct, IComparable?>>
+    private static readonly IReadOnlyDictionary<string, Func<sDespesa, IComparable?>> SortSelectors
+        = new Dictionary<string, Func<sDespesa, IComparable?>>
     {
         [KeyDescricao] = d => d.Descricao,
         [KeyValor] = d => d.Valor,
@@ -245,8 +244,9 @@
 
     private async Task CarregarOpcoes()
     {
-        TiposDespesa = await CategoriaService.GetTipoCategoriasDespesa();
-        CategoriasDespesa = await CategoriaService.GetCategoriasDespesa();
+        //     TiposDespesa = await CategoriaService.GetTipoCategoriasDespesa();
+        //     CategoriasDespesa = await CategoriaService.GetCategoriasDespesa();
+
     }
 
     private void ConfigurarFiltros()
@@ -259,7 +259,7 @@
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
-            Despesas = new List<sDespesaStruct>(listaTodasDespesas);
+            Despesas = new List<sDespesa>(listaTodasDespesas);
         }
         else
         {
@@ -279,7 +279,7 @@
     }
 
     // --- Ações adicionadas ---
-    private async Task PagarDespesaAsync(sDespesaStruct despesa)
+    private async Task PagarDespesaAsync(sDespesa despesa)
     {
         var entidade = despesa.ToEntity();
         entidade.DespesaPaga = true;
@@ -289,7 +289,7 @@
         await DespesaService.SalvarDespesaAsync(entidade);
     }
 
-    private void AbrirFaturaDoCartao(sDespesaStruct despesa)
+    private void AbrirFaturaDoCartao(sDespesa despesa)
     {
         if (despesa.EhDespesaCartaoCredito && despesa.DespCartaoCredito.IdCartao > 0)
         {
