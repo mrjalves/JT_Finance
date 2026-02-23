@@ -16,6 +16,13 @@ builder.Services.AddSingleton<IFormFactor, FormFactor>();
 // Register ToastService
 builder.Services.AddScoped<ToastService>();
 
+// Register HttpClient and ReceitaService
+builder.Services.AddHttpClient<IReceitaService, ReceitaService>(client =>
+{
+    // Em um cenário real, o endereço viria de uma configuração
+    client.BaseAddress = new Uri("https://localhost:5001");
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

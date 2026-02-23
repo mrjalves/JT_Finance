@@ -10,4 +10,8 @@ builder.Services.AddSingleton<IFormFactor, FormFactor>();
 // Register ToastService
 builder.Services.AddScoped<ToastService>();
 
+// Register HttpClient and ReceitaService
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+builder.Services.AddScoped<IReceitaService, ReceitaService>();
+
 await builder.Build().RunAsync();

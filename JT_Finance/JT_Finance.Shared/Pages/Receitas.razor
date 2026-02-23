@@ -6,6 +6,7 @@
 @using static JT_Finance.Shared.Components.Modal
 
 @inject ToastService ToastService 
+@inject IReceitaService ReceitaService
 
 <h3>Receitas</h3>
 
@@ -105,7 +106,8 @@
         if (isNew)
         {
             receita.Id = Guid.NewGuid();
-            listaReceitas.Add(receita); // TODO: Salvar via serviço
+            await ReceitaService.AddReceitaAsync(receita);
+            listaReceitas.Add(receita);
             ToastService.ShowSuccess("Sucesso!", "Nova receita adicionada.");
         }
         else
@@ -113,7 +115,8 @@
             var index = listaReceitas.FindIndex(r => r.Id == receita.Id);
             if (index != -1)
             {
-                listaReceitas[index] = receita; // TODO: Atualizar via serviço
+                await ReceitaService.UpdateReceitaAsync(receita);
+                listaReceitas[index] = receita;
                 ToastService.ShowSuccess("Sucesso!", "Receita atualizada.");
             }
             else
@@ -148,14 +151,15 @@
         );
     }
 
-    private void EfetuarRemocaoReceita()
+    private async Task EfetuarRemocaoReceita()
     {
         if (idReceitaParaRemover.HasValue)
         {
             var receitaParaRemover = listaReceitas.FirstOrDefault(r => r.Id == idReceitaParaRemover.Value);
             if (receitaParaRemover != null)
             {
-                listaReceitas.Remove(receitaParaRemover); // TODO: Remover via serviço
+                await ReceitaService.DeleteReceitaAsync(idReceitaParaRemover.Value);
+                listaReceitas.Remove(receitaParaRemover);
                 ToastService.ShowSuccess("Removida!", $"Receita \"{receitaParaRemover.Descricao}\" foi removida.");
                 StateHasChanged();
             }
@@ -165,36 +169,5 @@
             }
             idReceitaParaRemover = null;
         }
-    }
-
-    public class ReceitaModel
-    {
-        public Guid Id { get; set; }
-
-        [Required(ErrorMessage = "A descrição é obrigatória.")]
-        [StringLength(100, ErrorMessage = "A descrição deve ter no máximo 100 caracteres.")]
-        public string Descricao { get; set; }
-
-        [Required(ErrorMessage = "O valor é obrigatório.")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "O valor deve ser maior que zero.")]
-        public decimal Valor { get; set; }
-
-        public string ValorAsString
-        {
-            get => Valor.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            set
-            {
-                if (decimal.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var decimalValue))
-                {
-                    Valor = decimalValue;
-                }
-            }
-        }
-
-        [Required(ErrorMessage = "A data é obrigatória.")]
-        public DateTime Data { get; set; } = DateTime.Now;
-
-        [StringLength(50, ErrorMessage = "A fonte deve ter no máximo 50 caracteres.")]
-        public string Fonte { get; set; }
     }
 }

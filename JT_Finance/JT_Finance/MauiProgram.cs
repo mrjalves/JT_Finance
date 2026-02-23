@@ -22,6 +22,13 @@ namespace JT_Finance
             // Register ToastService
             builder.Services.AddSingleton<ToastService>();
 
+            // Register HttpClient and ReceitaService
+            builder.Services.AddSingleton(sp => new HttpClient
+            {
+                BaseAddress = new Uri("https://localhost:5001") // Placeholder para MAUI
+            });
+            builder.Services.AddSingleton<IReceitaService, ReceitaService>();
+
             builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG
