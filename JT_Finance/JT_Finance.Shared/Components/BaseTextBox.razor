@@ -25,8 +25,9 @@
     // Value and ValueChanged are effectively handled by InputText's CurrentValue and CurrentValueChanged
     // CssClass is inherited from InputBase and will include validation classes like "modified invalid"
 
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
+        base.OnInitialized();
         if (string.IsNullOrWhiteSpace(Id))
         {
             Id = Guid.NewGuid().ToString("N");
