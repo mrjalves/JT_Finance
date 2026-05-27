@@ -2,24 +2,37 @@ using JT_Aplicacao;
 
 using JT_Classes.Acessos;
 
-using JT_Finance.Shared.Layout;
-using JT_Finance.Shared.Models;
-using JT_Finance.Shared.Repository;
-using JT_Finance.Shared.Services;
-using JT_Finance.Shared.Services.Interfaces;
-
 using JT_UserInterface.Shared;
 using JT_UserInterface.Shared.Models;
 using JT_UserInterface.Shared.Services;
 using JT_UserInterface.Shared.Services.Interfaces;
 
+using JT_Finance.Shared.Layout;
+using JT_Finance.Shared.Services;
+
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.Configuration; 
+using Microsoft.Extensions.Configuration; // Necessário para AddJsonStream
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+// 1. Localiza a seção "Config" dentro do JSON
+var secaoConfig = builder.Configuration.GetSection("Config");
 
+// 2. Converte essa seção para um objeto da classe Config
+var dadosConfig = secaoConfig.Get<Config>();
+
+if (dadosConfig != null)
+{
+    // 3. Define a instância estática para uso global (Config.Instancia)
+    Config.SetInstancia(dadosConfig);
+}
+
+// 4. Registra no container de serviços para injeção (Opcional, mas boa prática)
+builder.Services.AddSingleton(Config.Instancia);
+// ===================================================================================
+// 1. CARREGAMENTO MANUAL DE CONFIGURAÇÃO (A CORREÇÃO)
+// ===================================================================================
 var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
 builder.Services.AddScoped(sp => http); // Registra esse http client para uso geral
 
@@ -52,20 +65,7 @@ builder.Services.AddJTUserInterface();
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
 
 
-// 1. Localiza a seção "Config" dentro do JSON
-var secaoConfig = builder.Configuration.GetSection("Config");
 
-// 2. Converte essa seção para um objeto da classe Config
-var dadosConfig = secaoConfig.Get<Config>();
-
-if (dadosConfig != null)
-{
-    // 3. Define a instância estática para uso global (Config.Instancia)
-    Config.SetInstancia(dadosConfig);
-}
-
-// 4. Registra no container de serviços para injeção (Opcional, mas boa prática)
-builder.Services.AddSingleton(Config.Instancia);
 
 
 await builder.Build().RunAsync();

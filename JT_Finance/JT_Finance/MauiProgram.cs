@@ -10,6 +10,7 @@ using JT_Finance.Shared.Repository;
 using JT_Finance.Shared.Services;
 using JT_Finance.Shared.Services.Interfaces;
 
+
 using JT_UserInterface.Shared.Models;
 using JT_UserInterface.Shared.Services;
 using JT_UserInterface.Shared.Services.Interfaces;
@@ -19,6 +20,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using System.Reflection;
+
+using CartaoCreditoService = JT_Finance.Shared.Services.CartaoCreditoService;
+using ReceitaService = JT_Finance.Shared.Services.ReceitaService;
 
 namespace JT_Finance
 {
@@ -94,6 +98,12 @@ namespace JT_Finance
                 // 4. Serviços Scoped
                 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
 
+                builder.Services.AddScoped<IDespesaRep, DesktopDespRep>();
+                builder.Services.AddScoped<ICartaoCreditoRep, DesktopCartaoCreditoRep>();
+                builder.Services.AddScoped<IReceitaRep, DesktopReceitaRep>();
+                builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
+                builder.Services.AddScoped<IReceitaService, ReceitaService>();
+                builder.Services.AddScoped<IDespesaService, DespesaService>();
 
 
 #if DEBUG

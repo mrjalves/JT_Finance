@@ -30,7 +30,9 @@ builder.Services.AddJTUserInterface();
 
 // 4. Serviços Específicos deste Projeto
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
-
+builder.Services.AddScoped<IDespesaRep, ApiDespRep>();
+builder.Services.AddScoped<ICartaoCreditoRep, ApiCartaoCreditoRep>();
+builder.Services.AddScoped<IReceitaRep, ApiReceitaRep>();
 // 1. Localiza a seção "Config" dentro do JSON
 var secaoConfig = builder.Configuration.GetSection("Config");
 
@@ -60,8 +62,8 @@ builder.Services.AddScoped(sp =>
 {
     // No Server, BaseApiUrl geralmente é a própria URL onde o site está rodando ou vazia,
     // já que o Repository usa URLs absolutas do Firebase.
-    //var baseUrl = builder.Configuration["FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
-    return new HttpClient { BaseAddress = new Uri(FirebaseConfig.Instancia.BaseApiUrl) };
+    var baseUrl = builder.Configuration["FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
+    return new HttpClient { BaseAddress = new Uri(baseUrl) };
 });
 
 var app = builder.Build();
