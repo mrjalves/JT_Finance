@@ -1,6 +1,8 @@
 ﻿using JT_Classes.Financeiro;
 using JT_Classes.structs;
 
+using JT_Infra_Data.Repositories;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,32 +49,32 @@ namespace JT_Finance.Shared.Repository
         // Implementar os outros métodos da interface da mesma forma
         public Task<List<TotalPorTipo>> GetDespesasAgrupadasPorTipoAsync(DateTime mes)
         {
-            return Task.FromResult(Despesa.GetDespesasAgrupadasPorTipo(mes));
+            return Task.FromResult(DespesaRepository.GetDespesasAgrupadasPorTipo(mes));
         }
 
         public Task<List<TotalPorCategoria>> GetDespesasAgrupadasPorCategoriaAsync(DateTime mes)
         {
-            return Task.FromResult(Despesa.GetDespesasAgrupadasPorCategoria(mes));
+            return Task.FromResult(DespesaRepository.GetDespesasAgrupadasPorCategoria(mes));
         }
 
         public Task<decimal> GetTotalDespesaMesAsync(DateTime mes)
         {
-            return Task.FromResult(Despesa.GetTotalDespesaMes(mes));
+            return Task.FromResult(DespesaRepository.GetTotalDespesaMes(mes));
         }
 
         public Task<List<sDespesa>> GetDespesasProximasAoVencimentoAsync()
         {
-            return Task.FromResult(Despesa.GetDespesasProximasAoVencimento());
+            return Task.FromResult(DespesaRepository.GetDespesasProximasAoVencimento());
         }
 
         public Task<List<sDespesa>> GetDespesasVencidasAsync()
         {
-            return Task.FromResult(Despesa.GetDespesasVencidas());
+            return Task.FromResult(DespesaRepository.GetDespesasVencidas());
         }
 
         public Task<List<sDespesa>> GetDespesasPorMesAsync(DateTime mesReferencia)
         {
-            return Task.FromResult(Despesa.GetDespesasPorMes(mesReferencia));
+            return Task.FromResult(DespesaRepository.GetDespesasPorMes(mesReferencia));
         }
 
      
