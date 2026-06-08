@@ -20,9 +20,9 @@ namespace JT_Finance.Shared.Repository
             _httpClient = httpClient;
         }
 
-        public async Task<List<Despesa>> GetAllAsync()
+        public async Task<List<sDespesa>> GetAllAsync()
         {
-            return await _httpClient.GetFromJsonAsync<List<Despesa>>("/api/despesas");
+            return await _httpClient.GetFromJsonAsync<List<sDespesa>>("/api/despesas");
         }
 
         public async Task<Despesa> GetByIdAsync(int id)
@@ -56,9 +56,9 @@ namespace JT_Finance.Shared.Repository
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<List<Despesa>> FindAsync(string condicao)
+        public async Task<List<sDespesa>> FindAsync(string condicao)
         {
-            return await _httpClient.GetFromJsonAsync<List<Despesa>>($"/api/despesas/find?condicao={condicao}");
+            return await _httpClient.GetFromJsonAsync<List<sDespesa>>($"/api/despesas/find?condicao={condicao}");
         }
 
         public async Task<List<TotalPorTipo>> GetDespesasAgrupadasPorTipoAsync(DateTime mes)
@@ -82,10 +82,20 @@ namespace JT_Finance.Shared.Repository
             return await _httpClient.GetFromJsonAsync<decimal>($"/api/despesas/total/mes?mes={mes:yyyy-MM-dd}");
         }
 
-        public async Task<List<Despesa>> GetDespesasProximasAoVencimentoAsync()
+        public async Task<List<sDespesa>> GetDespesasProximasAoVencimentoAsync()
         {
-            // Endpoint sugerido: GET despesas/avencer
-            return await _httpClient.GetFromJsonAsync<List<Despesa>>("/api/despesas/avencer");
+            try
+            {
+                var response = await _httpClient.GetAsync("/api/despesas/proximas-vencimento");
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<List<sDespesa>>() ?? new List<sDespesa>();
+            }
+            catch (Exception ex)
+            {
+                // Pode logar o erro ou tratar conforme a necessidade
+                Console.WriteLine($"Erro ao buscar despesas próximas ao vencimento: {ex.Message}");
+                return new List<sDespesa>();
+            }
         }
 
         public async Task<List<sDespesa>> GetDespesasVencidasAsync()
@@ -99,22 +109,30 @@ namespace JT_Finance.Shared.Repository
             // Endpoint sugerido: GET despesas/pormes?mesReferencia=...
             return await _httpClient.GetFromJsonAsync<List<sDespesa>>($"/api/despesas/mes?mes={mes:yyyy-MM-dd}");
         }
+   
 
-        Task<List<sDespesa>> IDespesaRep.GetAllAsync()
-        {
-            throw new NotImplementedException();
-        }
+      
 
-        Task<List<sDespesa>> IDespesaRep.FindAsync(string condicao)
-        {
-            throw new NotImplementedException();
-        }
+      
+        //Task<List<sDespesa>> IDespesaRep.GetDespesasProximasAoVencimentoAsync()
+        //{
+        //    return await _httpClient.GetFromJsonAsync<List<sDespesa>>("/api/despesas/avencer");
+        //}
+        //public async Task<List<Despesa>> GetDespesasProximasAoVencimentoAsync()
+        //{
+        //    try
+        //    {
+        //        var response = await _httpClient.GetAsync("/api/despesas/proximas-vencimento");
+        //        response.EnsureSuccessStatusCode();
+        //        return await response.Content.ReadFromJsonAsync<List<Despesa>>() ?? new List<Despesa>();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Pode logar o erro ou tratar conforme a necessidade
+        //        Console.WriteLine($"Erro ao buscar despesas próximas ao vencimento: {ex.Message}");
+        //        return new List<Despesa>();
+        //    }
+        //}
 
-        Task<List<sDespesa>> IDespesaRep.GetDespesasProximasAoVencimentoAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        
     }
 }

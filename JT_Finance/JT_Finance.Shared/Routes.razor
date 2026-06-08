@@ -1,6 +1,15 @@
-﻿<Router AppAssembly="@typeof(JT_Finance.Shared._Imports).Assembly" AdditionalAssemblies="new[] { typeof(JT_UserInterface.Shared.Layout.MainLayout).Assembly }">
+@using Microsoft.AspNetCore.Components.Routing
+@using JT_UserInterface.Shared.Layout
+
+<Router AppAssembly="typeof(JT_Finance.Shared._Imports).Assembly" AdditionalAssemblies="new[] { typeof(JT_UserInterface.Shared._Imports).Assembly }">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(JT_UserInterface.Shared.Layout.MainLayout)" />
+        <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)" />
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
+    <NotFound>
+        <PageTitle>Página não encontrada</PageTitle>
+        <LayoutView Layout="typeof(MainLayout)">
+            <p role="alert">Desculpe, não há nada neste endereço.</p>
+        </LayoutView>
+    </NotFound>
 </Router>

@@ -2,21 +2,24 @@ using JT_Aplicacao;
 
 using JT_Classes.Acessos;
 
+using JT_Finance.Shared.Layout;
+using JT_Finance.Shared.Repository;
+using JT_Finance.Shared.Services;
+using JT_Finance.Shared.Services.Interfaces;
+
 using JT_UserInterface.Shared;
 using JT_UserInterface.Shared.Models;
 using JT_UserInterface.Shared.Services;
 using JT_UserInterface.Shared.Services.Interfaces;
 
-using JT_Finance.Shared.Layout;
-using JT_Finance.Shared.Services;
-
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.Configuration; // Necessário para AddJsonStream
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
-// 1. Localiza a seção "Config" dentro do JSON
+
+/// 1.Localiza a seção "Config" dentro do JSON
 var secaoConfig = builder.Configuration.GetSection("Config");
 
 // 2. Converte essa seção para um objeto da classe Config
@@ -28,44 +31,36 @@ if (dadosConfig != null)
     Config.SetInstancia(dadosConfig);
 }
 
-// 4. Registra no container de serviços para injeção (Opcional, mas boa prática)
-builder.Services.AddSingleton(Config.Instancia);
-// ===================================================================================
-// 1. CARREGAMENTO MANUAL DE CONFIGURAÇÃO (A CORREÇÃO)
-// ===================================================================================
-var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
-builder.Services.AddScoped(sp => http); // Registra esse http client para uso geral
+secaoConfig = builder.Configuration.GetSection("FirebaseConfig");
+var dadosFConfig = secaoConfig.Get<FirebaseConfig>();
 
-try
+if (dadosFConfig != null)
 {
-    // Tenta baixar o arquivo appsettings.json "na força"
-    using var response = await http.GetAsync("appsettings.json");
-    using var stream = await response.Content.ReadAsStreamAsync();
-
-    // Adiciona o conteúdo do arquivo baixado à configuração do Builder
-    builder.Configuration.AddJsonStream(stream);
-
-    // Debug: Imprime no console do navegador o que ele leu (para você conferir no F12)
-    var dbUrl = builder.Configuration["FirebaseConfig:DatabaseUrl"];
-    Console.WriteLine($"[DEBUG LOAD] DatabaseUrl lida: {dbUrl ?? "NULO"}");
+    // 3. Define a instância estática para uso global (Config.Instancia)
+    FirebaseConfig.SetInstancia(dadosFConfig);
+    // 4. Registra no container de serviços para injeção (Opcional, mas boa prática)
+    builder.Services.AddSingleton(FirebaseConfig.Instancia);
 }
-catch (Exception ex)
+
+// 5. HttpClient (Necessário para o Repository e Auth)
+builder.Services.AddScoped(sp =>
 {
-    Console.WriteLine($"[ERRO CRÍTICO] Falha ao baixar appsettings.json: {ex.Message}");
-}
-// ===================================================================================
-
-// 2. Configura a classe tipada (Agora o builder.Configuration já tem os dados)
-//builder.Services.Configure<FirebaseConfig>(builder.Configuration.GetSection("FirebaseConfig"));
-
-// 3. Serviços Singleton (Globais)
+    // No Server, BaseApiUrl geralmente é a própria URL onde o site está rodando ou vazia,
+    // já que o Repository usa URLs absolutas do Firebase.
+    var baseUrl = builder.Configuration["FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
+    return new HttpClient { BaseAddress = new Uri(baseUrl) };
+});
+// 4. Serviços Globais
 builder.Services.AddJTUserInterface();
 
-// 4. Serviços Scoped
+// 5. Serviços Scoped (Repositórios e Serviços)
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
+builder.Services.AddScoped<IDespesaRep, ApiDespRep>();
+builder.Services.AddScoped<ICartaoCreditoRep, ApiCartaoCreditoRep>();
+builder.Services.AddScoped<IReceitaRep, ApiReceitaRep>();
 
-
-
-
+builder.Services.AddScoped<IDespesaService, DespesaService>();
+builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
+builder.Services.AddScoped<IReceitaService, ReceitaService>();
 
 await builder.Build().RunAsync();
