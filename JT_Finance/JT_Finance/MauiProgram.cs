@@ -101,6 +101,11 @@ namespace JT_Finance
                 builder.Services.AddScoped<IDespesaRep, DesktopDespRep>();
                 builder.Services.AddScoped<ICartaoCreditoRep, DesktopCartaoCreditoRep>();
                 builder.Services.AddScoped<IReceitaRep, DesktopReceitaRep>();
+
+                //builder.Services.AddScoped<IDespesaRep, ApiDespRep>();
+                //builder.Services.AddScoped<ICartaoCreditoRep, ApiCartaoCreditoRep>();
+                //builder.Services.AddScoped<IReceitaRep, ApiReceitaRep>();
+
                 builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
                 builder.Services.AddScoped<IReceitaService, ReceitaService>();
                 builder.Services.AddScoped<IDespesaService, DespesaService>();

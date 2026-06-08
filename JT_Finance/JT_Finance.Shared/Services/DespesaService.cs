@@ -15,6 +15,7 @@ namespace JT_Finance.Shared.Services
     {
         private readonly ToastService _toastService;
         private readonly IDespesaRep _repository;
+        private List<sDespesa> _despesas = new();
         public event Action OnDataChanged;
 
         public DespesaService(ToastService toastService, IDespesaRep repository)
@@ -27,12 +28,20 @@ namespace JT_Finance.Shared.Services
         {
         }
 
+        // OPTIMIZATION: Re-enable caching for improved performance
+        private async Task CarregarDadosAsync()
+        {
+            _despesas = await _repository.GetAllAsync();
+        }
+
         public async Task<List<sDespesa>> ObterTodasDespesasAsync()
         {
-            // A implementação original tinha uma cache local "_despesas".
-            // Removi para sempre buscar os dados mais recentes do repositório.
-            // Se a cache for necessária, a lógica pode ser readicionada aqui.
-            return await _repository.GetAllAsync();
+            // OPTIMIZATION: Use cache if available
+            if (!_despesas.Any())
+            {
+                await CarregarDadosAsync();
+            }
+            return _despesas;
         }
 
         public async Task<bool> DuplicarDespesaAsync(Despesa despesa)

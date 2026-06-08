@@ -58,8 +58,23 @@ namespace JT_Finance.Shared.Services
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Cartão salvo com sucesso!");
-                await CarregarDadosAsync();     // recarrega dados
-                NotifyDataChanged();            // agora sim, notifica
+                // OPTIMIZATION: Use selective cache update instead of full reload
+                // This significantly reduces network calls
+                var cartaoComId = await _repository.GetByIdAsync(cartao.Id);
+                if (cartaoComId != null)
+                {
+                    var existing = _scartoes.FirstOrDefault(c => c.Id == cartao.Id);
+                    if (existing != null)
+                    {
+                        var index = _scartoes.IndexOf(existing);
+                        _scartoes[index] = new sCartao { Id = cartaoComId.Id, Nome = cartaoComId.Nome, Limite = cartaoComId.Limite };
+                    }
+                    else if (_scartoes.Any())
+                    {
+                        _scartoes.Add(new sCartao { Id = cartaoComId.Id, Nome = cartaoComId.Nome, Limite = cartaoComId.Limite });
+                    }
+                }
+                NotifyDataChanged();
             }
             else
             {
@@ -76,8 +91,11 @@ namespace JT_Finance.Shared.Services
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Cartão removido com sucesso!");
-                await CarregarDadosAsync();     // recarrega dados
-                NotifyDataChanged();            // notifica após recarregar
+                // OPTIMIZATION: Remove from cache instead of full reload
+                var toRemove = _scartoes.FirstOrDefault(c => c.Id == id);
+                if (toRemove != null)
+                    _scartoes.Remove(toRemove);
+                NotifyDataChanged();
             }
             else
             {

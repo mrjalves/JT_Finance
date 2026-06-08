@@ -52,7 +52,24 @@ namespace JT_Finance.Shared.Services
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Receita salva com sucesso!");
-                await CarregarDadosAsync(); // Recarrega a lista
+                // OPTIMIZATION: Use selective cache update instead of full reload
+                if (receita.Id == 0 || !_receitas.Any(r => r.Id == receita.Id))
+                {
+                    // New item - add to cache if cached
+                    if (_receitas.Any() && receita.Id > 0)
+                        _receitas.Add(receita);
+                }
+                else
+                {
+                    // Existing item - update in cache
+                    var existing = _receitas.FirstOrDefault(r => r.Id == receita.Id);
+                    if (existing != null)
+                    {
+                        var index = _receitas.IndexOf(existing);
+                        _receitas[index] = receita;
+                    }
+                }
+                NotifyDataChanged();
             }
             else
             {
@@ -67,7 +84,11 @@ namespace JT_Finance.Shared.Services
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Receita removida com sucesso!");
-                await CarregarDadosAsync(); // Recarrega a lista
+                // OPTIMIZATION: Remove from cache instead of full reload
+                var toRemove = _receitas.FirstOrDefault(r => r.Id == id);
+                if (toRemove != null)
+                    _receitas.Remove(toRemove);
+                NotifyDataChanged();
             }
             else
             {
@@ -82,7 +103,9 @@ namespace JT_Finance.Shared.Services
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Receita duplicada com sucesso!");
-                await CarregarDadosAsync(); // Recarrega a lista
+                // OPTIMIZATION: Reload only on complex operation (duplicate)
+                // This is acceptable since duplicate creates a new item with potentially modified fields
+                await CarregarDadosAsync();
             }
             else
             {
