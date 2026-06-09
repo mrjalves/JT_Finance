@@ -12,6 +12,7 @@ namespace JT_Finance.Shared.Repository
         Task<CartaoCredito> GetByIdAsync(int id);
         Task<bool> SaveAsync(CartaoCredito cartao);
         Task<bool> DeleteAsync(int id);
-        Task<List<Despesa>> GetDespesasAsync(int cartaoId);
+        Task<List<sCartaoDespesa>> ObterDespesasAsync(int cartaoId);
+        Task<bool> PagarFatura(List<sCartaoDespesa> despesas, DateTime dataPagamento);
     }
 }

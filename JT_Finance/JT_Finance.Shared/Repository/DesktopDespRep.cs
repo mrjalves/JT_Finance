@@ -15,12 +15,12 @@ namespace JT_Finance.Shared.Repository
     {
         public Task<List<sDespesa>> GetAllAsync()
         {
-            return Task.FromResult(JT_Servicos.DespesaService.GetAll());
+            return Task.FromResult(new JT_Servicos.DespesaService().GetAll());
         }
 
         public Task<bool> DeleteAsync(int id)
         {
-            return Task.FromResult(JT_Servicos.DespesaService.Delete(id));
+            return Task.FromResult(new JT_Servicos.DespesaService().Delete(id));
         }
 
         public Task<bool> DuplicarAsync(Despesa despesa)
@@ -32,18 +32,18 @@ namespace JT_Finance.Shared.Repository
         {
             // A lógica original buscava tudo e filtrava na memória. 
             // Podemos manter ou otimizar para buscar direto pelo ID se o serviço permitir.
-            var despesa = JT_Servicos.DespesaService.GetById(id); // Supondo que exista um GetById
+            var despesa = new JT_Servicos.DespesaService().GetById(id); // Supondo que exista um GetById
             return Task.FromResult(despesa);
         }
 
         public Task<bool> SaveAsync(Despesa despesa)
         {
-            return Task.FromResult(JT_Servicos.DespesaService.Save(despesa));
+            return Task.FromResult(new JT_Servicos.DespesaService().Save(despesa));
         }
 
         public Task<List<sDespesa>> FindAsync(string condicao)
         {
-            return Task.FromResult(JT_Servicos.DespesaService.Find(condicao));
+            return Task.FromResult(new JT_Servicos.DespesaService().Find(condicao));
         }
 
         // Implementar os outros métodos da interface da mesma forma

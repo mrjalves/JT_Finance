@@ -38,7 +38,7 @@ if (dadosConfig != null)
     Config.SetInstancia(dadosConfig);
 }
 
-secaoConfig = builder.Configuration.GetSection("FirebaseConfig");
+secaoConfig = builder.Configuration.GetSection("Config:FirebaseConfig");
 var dadosFConfig = secaoConfig.Get<FirebaseConfig>();
 
 if (dadosFConfig != null)
@@ -55,7 +55,7 @@ builder.Services.AddScoped(sp =>
 {
     // No Server, BaseApiUrl geralmente é a própria URL onde o site está rodando ou vazia,
     // já que o Repository usa URLs absolutas do Firebase.
-    var baseUrl = builder.Configuration["FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
+    var baseUrl = builder.Configuration["Config:FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
     return new HttpClient { BaseAddress = new Uri(baseUrl) };
 });
 
@@ -110,7 +110,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(
         typeof(JT_Finance.Shared._Imports).Assembly,
-        //typeof(JT_Finance.Web.Client._Imports).Assembly,
+        typeof(JT_Finance.Web.Client._Imports).Assembly,
         typeof(JT_UserInterface.Shared._Imports).Assembly
     );
 

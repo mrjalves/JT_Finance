@@ -139,8 +139,8 @@
     private async Task CarregarDadosDoMes()
     {
         await Task.Delay(50);
-        var despesas = JT_Servicos.DespesaService.Find($" WHERE MONTH(DataDespesa) = {dataReferencia.Month} AND YEAR(DataDespesa) = {dataReferencia.Year}");
-        var receitas = JT_Servicos.ReceitaService.Find($" WHERE MONTH(DataReceita) = {dataReferencia.Month} AND YEAR(DataReceita) = {dataReferencia.Year}");
+        var despesas = new JT_Servicos.DespesaService().Find($" WHERE MONTH(DataDespesa) = {dataReferencia.Month} AND YEAR(DataDespesa) = {dataReferencia.Year}");
+        var receitas = new JT_Servicos.ReceitaService().Find($" WHERE MONTH(DataReceita) = {dataReferencia.Month} AND YEAR(DataReceita) = {dataReferencia.Year}");
 
         eventosDoMes = new List<EventoCalendario>();
         eventosDoMes.AddRange(despesas.Select(d => new EventoCalendario { Data = d.DataDespesa, Descricao = d.Descricao, Valor = d.Valor, Tipo = TipoEvento.Despesa }));

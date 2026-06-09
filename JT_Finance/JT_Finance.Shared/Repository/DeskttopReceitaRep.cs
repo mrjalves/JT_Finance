@@ -12,28 +12,28 @@ namespace JT_Finance.Shared.Repository
     {
         public Task<List<Receita>> GetAllAsync()
         {
-            return Task.FromResult(ReceitaService.GetAll());
+            return Task.FromResult(new JT_Servicos.ReceitaService().GetAll());
         }
 
         public Task<Receita> GetByIdAsync(int id)
         {
             // Assumindo que seu serviço estático tenha um método GetById
-            return Task.FromResult(ReceitaService.GetById(id));
+            return Task.FromResult(new JT_Servicos.ReceitaService().GetById(id));
         }
 
         public Task<bool> SaveAsync(Receita receita)
         {
-            return Task.FromResult(ReceitaService.Save(receita));
+            return Task.FromResult(new JT_Servicos.ReceitaService().Save(receita));
         }
 
         public Task<bool> DeleteAsync(int id)
         {
-            return Task.FromResult(ReceitaService.Delete(id));
+            return Task.FromResult(new JT_Servicos.ReceitaService().Delete(id));
         }
 
         public Task<bool> DuplicateAsync(int id)
         {
-            var receita = ReceitaService.GetById(id);
+            var receita = new JT_Servicos.ReceitaService().GetById(id);
             if (receita == null) return Task.FromResult(false);
 
             return Task.FromResult(receita.Duplicar());
@@ -46,7 +46,7 @@ namespace JT_Finance.Shared.Repository
 
         public Task<List<Receita>> FindAsync(string condicao)
         {
-            return Task.FromResult(ReceitaService.Find(condicao));
+            return Task.FromResult(new JT_Servicos.ReceitaService().Find(condicao));
         }
     }
 }

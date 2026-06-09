@@ -105,9 +105,9 @@ namespace JT_Finance.Shared.Services
             return sucesso;
         }
 
-        public async Task<List<Despesa>> ObterDespesas(int id)
+        public async Task<List<sCartaoDespesa>> ObterDespesas(int id)
         {
-            return await _repository.GetDespesasAsync(id);
+            return await _repository.ObterDespesasAsync(id);
         }
 
         public void NotificarErro(string titulo, string mensagem)
@@ -121,5 +121,24 @@ namespace JT_Finance.Shared.Services
         }
 
         private void NotifyDataChanged() => OnDataChanged?.Invoke();
+
+        public async Task<bool> PagarFatura(List<sCartaoDespesa> despesas, DateTime dataPagamento)
+        {
+            if (dataPagamento == DateTime.MinValue)return await Task.FromResult(false);
+            if (despesas == null || !despesas.Any()) return await Task.FromResult(false);
+            bool sucesso = _repository.PagarFatura(despesas, dataPagamento).Result;
+            if (sucesso)
+            {
+                NotificarSucesso("Sucesso", "Fatura paga com sucesso!");
+                NotifyDataChanged();
+
+            }
+            else
+            {
+                NotificarErro("Erro", "Falha ao pagar a fatura."); 
+                NotifyDataChanged();
+            }
+            return sucesso;
+        }
     }
 }

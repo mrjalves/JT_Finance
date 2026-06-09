@@ -49,15 +49,22 @@ namespace JT_Finance.Shared.Repository
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<List<Despesa>> GetDespesasAsync(int cartaoId)
-        {
-            // Endpoint para buscar um recurso aninhado (despesas de um cartão)
-            return await _httpClient.GetFromJsonAsync<List<Despesa>>($"api/cartoescredito/{cartaoId}/despesas");
-        }
+    
 
         Task<List<sCartao>> ICartaoCreditoRep.GetAllAsync()
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<List<sCartaoDespesa>> ObterDespesasAsync(int cartaoId)
+        {
+            return await _httpClient.GetFromJsonAsync<List<sCartaoDespesa>>($"api/cartoescredito/{cartaoId}/despesas");
+        }
+
+        public async Task<bool> PagarFatura(List<sCartaoDespesa> despesas, DateTime dataPagamento)
+        {
+            return await _httpClient.PostAsJsonAsync("api/cartoescredito/pagarfatura", new { Despesas = despesas, DataPagamento = dataPagamento })
+                .ContinueWith(response => response.Result.IsSuccessStatusCode);
         }
     }
 }

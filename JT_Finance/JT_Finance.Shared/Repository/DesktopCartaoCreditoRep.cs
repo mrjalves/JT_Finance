@@ -14,27 +14,32 @@ namespace JT_Finance.Shared.Repository
 
         public Task<CartaoCredito> GetByIdAsync(int id)
         {
-            return Task.FromResult(CartaoCreditoService.GetById(id));
+            return Task.FromResult(new JT_Servicos.CartaoCreditoService().GetById(id));
         }
 
         public Task<bool> SaveAsync(CartaoCredito cartao)
         {
-            return Task.FromResult(CartaoCreditoService.Save(cartao));
+            return Task.FromResult(new JT_Servicos.CartaoCreditoService().Save(cartao));
         }
 
         public Task<bool> DeleteAsync(int id)
         {
-            return Task.FromResult(CartaoCreditoService.Delete(id));
-        }
-
-        public Task<List<Despesa>> GetDespesasAsync(int cartaoId)
-        {
-            return Task.FromResult(CartaoCreditoService.ObterDespesas(cartaoId));
+            return Task.FromResult(new JT_Servicos.CartaoCreditoService().Delete(id));
         }
 
         Task<List<sCartao>> ICartaoCreditoRep.GetAllAsync()
         {
-            return Task.FromResult(CartaoCreditoService.GetAll());
+            return Task.FromResult(new JT_Servicos.CartaoCreditoService().GetAll());
+        }
+
+        public Task<List<sCartaoDespesa>> ObterDespesasAsync(int cartaoId)
+        {
+            return Task.FromResult(new JT_Servicos.CartaoCreditoService().ObterDespesas(cartaoId));
+        }
+
+        public Task<bool> PagarFatura(List<sCartaoDespesa> despesas, DateTime dataPagamento)
+        {
+            return Task.FromResult(new JT_Servicos.CartaoCreditoService().PagarFatura(despesas, dataPagamento));
         }
     }
 }

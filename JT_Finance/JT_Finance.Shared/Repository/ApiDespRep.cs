@@ -76,9 +76,6 @@ namespace JT_Finance.Shared.Repository
 
         public async Task<decimal> GetTotalDespesaMesAsync(DateTime mes)
         {
-            // Endpoint sugerido: GET despesas/total/mes?mes=...
-            // Este endpoint deve retornar um valor decimal diretamente.
-            // DEPOIS (Correto)
             return await _httpClient.GetFromJsonAsync<decimal>($"/api/despesas/total/mes?mes={mes:yyyy-MM-dd}");
         }
 
