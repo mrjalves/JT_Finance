@@ -124,7 +124,7 @@ namespace JT_Finance.Shared.Components.Grids
 
         private async Task AplicarFiltros(List<Filtro> filtros)
         {
-            Despesas = new JT_Servicos.DespesaService().Filter(filtros);
+            Despesas = await new JT_Servicos.DespesaService().Filter(filtros);
             StateHasChanged();
         }
 

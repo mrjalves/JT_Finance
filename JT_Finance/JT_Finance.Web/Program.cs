@@ -2,7 +2,6 @@
 
 using JT_Finance.Shared.Layout;
 using JT_Finance.Shared.Models;
-using JT_Finance.Shared.Repository;
 using JT_Finance.Shared.Services;
 using JT_Finance.Shared.Services.Interfaces;
 using JT_Finance.Web.Components;
@@ -65,13 +64,21 @@ builder.Services.AddJTUserInterface();
 
 // 4. Serviços Específicos deste Projeto
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
-builder.Services.AddScoped<IDespesaRep, ApiDespRep>();
-builder.Services.AddScoped<ICartaoCreditoRep, ApiCartaoCreditoRep>();
-builder.Services.AddScoped<IReceitaRep, ApiReceitaRep>();
 
+// Registros dos Wrappers/Interfaces do Frontend
 builder.Services.AddScoped<IDespesaService, DespesaService>();
 builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
 builder.Services.AddScoped<IReceitaService, ReceitaService>();
+
+
+builder.Services.AddScoped<JT_Servicos.CartaoCreditoService>();
+builder.Services.AddScoped<JT_Servicos.ReceitaService>();
+builder.Services.AddScoped<JT_Servicos.DespesaService>(); 
+
+builder.Services.AddScoped<JT_Servicos.CategoriaService>();
+builder.Services.AddScoped<JT_Servicos.LogService>();
+builder.Services.AddScoped<JT_Servicos.ConfiguracaoService>();
+builder.Services.AddScoped<JT_Servicos.UsuarioService>();
 var app = builder.Build();
 
 

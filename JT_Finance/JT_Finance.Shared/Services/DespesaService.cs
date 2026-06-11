@@ -1,42 +1,40 @@
 ﻿using JT_Classes.Financeiro;
 using JT_Classes.structs;
 
-using JT_Finance.Shared.Repository;
 using JT_Finance.Shared.Services.Interfaces;
 
 using JT_UserInterface.Shared.Services;
 
+using System;
 using System.Collections.Generic;
+using System.Linq; // Necessário para o .Any()
 using System.Threading.Tasks;
+
+using static SQLite.SQLite3;
 
 namespace JT_Finance.Shared.Services
 {
     public class DespesaService : IDespesaService
     {
         private readonly ToastService _toastService;
-        private readonly IDespesaRep _repository;
         private List<sDespesa> _despesas = new();
         public event Action OnDataChanged;
+        public JT_Servicos.DespesaService service { get; set; }
 
-        public DespesaService(ToastService toastService, IDespesaRep repository)
+        public DespesaService(ToastService toastService, JT_Servicos.DespesaService repository)
         {
             _toastService = toastService;
-            _repository = repository;
+            service = repository;
         }
+         
 
-        public DespesaService()
-        {
-        }
-
-        // OPTIMIZATION: Re-enable caching for improved performance
         private async Task CarregarDadosAsync()
         {
-            _despesas = await _repository.GetAllAsync();
+            _despesas = await service.GetAllStruct();
         }
 
         public async Task<List<sDespesa>> ObterTodasDespesasAsync()
         {
-            // OPTIMIZATION: Use cache if available
             if (!_despesas.Any())
             {
                 await CarregarDadosAsync();
@@ -46,7 +44,9 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> DuplicarDespesaAsync(Despesa despesa)
         {
-            bool sucesso = await _repository.DuplicarAsync(despesa);
+            // Adicionado 'await' para esperar a duplicação na API
+            bool sucesso = await service.Duplicar(despesa);
+
             if (sucesso)
                 NotificarSucesso("Duplicada!", "A Despesa foi duplicada.");
             else
@@ -58,12 +58,13 @@ namespace JT_Finance.Shared.Services
 
         public async Task<Despesa> ObterDespesaPorIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            return await service.GetById(id);
+
         }
 
         public async Task<bool> RemoverDespesaAsync(int id)
         {
-            bool sucesso = await _repository.DeleteAsync(id);
+            bool sucesso = await service.Delete(id);
             if (sucesso)
                 NotificarSucesso("Sucesso", "despesa removida com sucesso!");
             else
@@ -75,7 +76,7 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> SalvarDespesaAsync(Despesa despesa)
         {
-            bool sucesso = await _repository.SaveAsync(despesa);
+            bool sucesso = await service.Save(despesa);
             if (sucesso)
                 NotificarSucesso("Sucesso", "Despesa salva com sucesso!");
             else
@@ -85,40 +86,40 @@ namespace JT_Finance.Shared.Services
             return sucesso;
         }
 
-
         public async Task<List<sDespesa>> ObterDespesasAsync(string condicao)
         {
-            return await _repository.FindAsync(condicao);
+            return await service.Find(condicao);
         }
 
         public async Task<List<sDespesa>> ObterDespesasMesAsync(DateTime mesReferencia)
         {
-            return await _repository.GetDespesasPorMesAsync(mesReferencia);
+            return await service.GetDespesasPorMes(mesReferencia);
         }
 
         public async Task<List<TotalPorTipo>> GetDespesaPorTipo(DateTime mes)
         {
-            return await _repository.GetDespesasAgrupadasPorTipoAsync(mes);
+            return await service.GetDespesasAgrupadasPorTipo(mes);
         }
 
         public async Task<List<TotalPorCategoria>> GetDespesaPorCategoria(DateTime mes)
         {
-            return await _repository.GetDespesasAgrupadasPorCategoriaAsync(mes);
+            // Adicionado 'await'
+            return await service.GetDespesasAgrupadasPorCategoria(mes);
         }
 
         public async Task<decimal> GetTotalMes(DateTime mes)
         {
-            return await _repository.GetTotalDespesaMesAsync(mes);
+            return await service.GetTotalDespesaMes(mes);
         }
 
         public async Task<List<sDespesa>> ObterDespesasAVencerAsync()
         {
-            return await _repository.GetDespesasProximasAoVencimentoAsync();
+            return await service.GetDespesasProximasAoVencimento();
         }
 
         public async Task<List<sDespesa>> ObterDespesasVencidasAsync()
         {
-            return await _repository.GetDespesasVencidasAsync();
+            return await service.GetDespesasVencidas();
         }
 
         public void NotificarErro(string titulo, string mensagem)
@@ -132,6 +133,5 @@ namespace JT_Finance.Shared.Services
         }
 
         private void NotifyDataChanged() => OnDataChanged?.Invoke();
-    
     }
 }

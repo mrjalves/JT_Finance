@@ -1,6 +1,7 @@
-﻿using JT_Classes.Financeiro;
+﻿using Google.Api;
 
-using JT_Finance.Shared.Repository; // Importe a nova interface
+using JT_Classes.Financeiro;
+
 using JT_Finance.Shared.Services.Interfaces;
 
 using JT_UserInterface.Shared.Services;
@@ -15,11 +16,11 @@ namespace JT_Finance.Shared.Services
     public class ReceitaService : IReceitaService
     {
         private readonly ToastService _toastService;
-        private readonly IReceitaRep _repository; // Dependência da interface
+        private readonly JT_Servicos.ReceitaService _repository; // Dependência da interface
         private List<Receita> _receitas = new();
         public event Action OnDataChanged;
 
-        public ReceitaService(ToastService toastService, IReceitaRep repository)
+        public ReceitaService(ToastService toastService, JT_Servicos.ReceitaService repository)
         {
             _toastService = toastService;
             _repository = repository;
@@ -28,7 +29,8 @@ namespace JT_Finance.Shared.Services
         // Método privado para carregar ou recarregar a cache
         private async Task CarregarDadosAsync()
         {
-            _receitas = await _repository.GetAllAsync();
+            // CORREÇÃO: Adicionado o 'await' porque o GetAll agora é assíncrono
+            _receitas = await _repository.GetAll();
             NotifyDataChanged();
         }
 
@@ -43,25 +45,28 @@ namespace JT_Finance.Shared.Services
 
         public async Task<Receita> ObterReceitaPorIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            // Se o GetById for síncrono na base, não usamos await. 
+            // Como a função tem 'async', o C# embrulha o resultado numa Task automaticamente.
+            return await _repository.GetById(id);
         }
 
         public async Task<bool> SalvarReceitaAsync(Receita receita)
         {
-            bool sucesso = await _repository.SaveAsync(receita);
+            // Save geralmente é síncrono na base
+            bool sucesso = await _repository.Save(receita);
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Receita salva com sucesso!");
-                // OPTIMIZATION: Use selective cache update instead of full reload
+                // OTIMIZAÇÃO: Atualização seletiva da cache em vez de recarga completa
                 if (receita.Id == 0 || !_receitas.Any(r => r.Id == receita.Id))
                 {
-                    // New item - add to cache if cached
+                    // Item novo - adiciona à cache
                     if (_receitas.Any() && receita.Id > 0)
                         _receitas.Add(receita);
                 }
                 else
                 {
-                    // Existing item - update in cache
+                    // Item existente - atualiza na cache
                     var existing = _receitas.FirstOrDefault(r => r.Id == receita.Id);
                     if (existing != null)
                     {
@@ -80,11 +85,12 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> RemoverReceitaAsync(int id)
         {
-            bool sucesso = await _repository.DeleteAsync(id);
+            // Delete geralmente é síncrono na base
+            bool sucesso = await _repository.Delete(id);
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Receita removida com sucesso!");
-                // OPTIMIZATION: Remove from cache instead of full reload
+                // OTIMIZAÇÃO: Remove da cache em vez de recarga completa
                 var toRemove = _receitas.FirstOrDefault(r => r.Id == id);
                 if (toRemove != null)
                     _receitas.Remove(toRemove);
@@ -97,14 +103,13 @@ namespace JT_Finance.Shared.Services
             return sucesso;
         }
 
-        public async Task<bool> DuplicarReceitaAsync(int id)
+        public async Task<bool> DuplicarReceitaAsync(Receita receita)
         {
-            bool sucesso = await _repository.DuplicateAsync(id);
+            // CORREÇÃO: Adicionado 'await' pois Duplicar agora é uma chamada à API assíncrona
+            bool sucesso = await _repository.Duplicar(receita);
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Receita duplicada com sucesso!");
-                // OPTIMIZATION: Reload only on complex operation (duplicate)
-                // This is acceptable since duplicate creates a new item with potentially modified fields
                 await CarregarDadosAsync();
             }
             else
@@ -116,17 +121,26 @@ namespace JT_Finance.Shared.Services
 
         public async Task<decimal> GetTotalMes(DateTime mes)
         {
-            return await _repository.GetTotalMesAsync(mes);
+            return await _repository.GetTotalReceitaMes(mes);
         }
 
         public async Task<List<Receita>> ObterReceitasAsync(string condicao)
         {
-            return await _repository.FindAsync(condicao);
+            // CORREÇÃO: Adicionado 'await'
+            return await _repository.Find(condicao);
+        }
+
+        public async Task<List<Receita>> ObterReceitasMesAsync(DateTime mesReferencia)
+        {
+            // Usamos o método GetByMonth que construímos no JT_Servicos
+            return await _repository.GetByMonth(mesReferencia);
         }
 
         // Métodos de notificação
         public void NotificarErro(string titulo, string mensagem) => _toastService.ShowError(titulo, mensagem);
         public void NotificarSucesso(string titulo, string mensagem) => _toastService.ShowSuccess(titulo, mensagem);
         private void NotifyDataChanged() => OnDataChanged?.Invoke();
+
+      
     }
 }

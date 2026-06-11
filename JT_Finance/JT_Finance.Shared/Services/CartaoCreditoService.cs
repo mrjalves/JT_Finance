@@ -1,7 +1,6 @@
 ﻿using JT_Classes.Financeiro;
 using JT_Classes.structs;
 
-using JT_Finance.Shared.Repository; // Importe a interface
 using JT_Finance.Shared.Services.Interfaces;
 
 using JT_UserInterface.Shared.Services;
@@ -16,24 +15,23 @@ namespace JT_Finance.Shared.Services
     public class CartaoCreditoService : ICartaoCreditoService
     {
         private readonly ToastService _toastService;
-        private readonly ICartaoCreditoRep _repository; // Dependência da interface
-        private List<CartaoCredito> _cartoes;
         private List<sCartao> _scartoes;
         public event Action OnDataChanged;
+        public JT_Servicos.CartaoCreditoService cartaoCreditoService { get; set; }
 
-        public CartaoCreditoService(ToastService toastService, ICartaoCreditoRep repository)
+        public CartaoCreditoService(ToastService toastService, JT_Servicos.CartaoCreditoService cartaoCreditoService)
         {
             _toastService = toastService;
-            _repository = repository;
-            _cartoes = new List<CartaoCredito>();
             _scartoes = new List<sCartao>();
+            this.cartaoCreditoService = cartaoCreditoService;
         }
 
         // Carrega (ou recarrega) os dados usando o repositório
         // NÃO dispara evento aqui para evitar loops
         public async Task CarregarDadosAsync()
         {
-            _scartoes = await _repository.GetAllAsync();
+            // CORREÇÃO: Adicionado o 'await'
+            _scartoes = await cartaoCreditoService.GetAll();
         }
 
         public async Task<List<sCartao>> ObterTodosCartoesAsync()
@@ -48,19 +46,18 @@ namespace JT_Finance.Shared.Services
 
         public async Task<CartaoCredito> ObterCartaoPorId(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            // O GetById geralmente mantém-se síncrono na classe JTServiceBase
+            return await cartaoCreditoService.GetById(id);
         }
 
         public async Task<bool> SalvarCartaoAsync(CartaoCredito cartao)
         {
-            bool sucesso = await _repository.SaveAsync(cartao);
+            bool sucesso = await cartaoCreditoService.Save(cartao);
 
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Cartão salvo com sucesso!");
-                // OPTIMIZATION: Use selective cache update instead of full reload
-                // This significantly reduces network calls
-                var cartaoComId = await _repository.GetByIdAsync(cartao.Id);
+                var cartaoComId = sCartao.FromEntity( await cartaoCreditoService.GetById(cartao.Id));
                 if (cartaoComId != null)
                 {
                     var existing = _scartoes.FirstOrDefault(c => c.Id == cartao.Id);
@@ -86,12 +83,12 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> RemoverCartaoAsync(int id)
         {
-            bool sucesso = await _repository.DeleteAsync(id);
+            bool sucesso = await cartaoCreditoService.Delete(id);
 
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Cartão removido com sucesso!");
-                // OPTIMIZATION: Remove from cache instead of full reload
+                // OTIMIZAÇÃO: Remove from cache instead of full reload
                 var toRemove = _scartoes.FirstOrDefault(c => c.Id == id);
                 if (toRemove != null)
                     _scartoes.Remove(toRemove);
@@ -107,7 +104,8 @@ namespace JT_Finance.Shared.Services
 
         public async Task<List<sCartaoDespesa>> ObterDespesas(int id)
         {
-            return await _repository.ObterDespesasAsync(id);
+            // CORREÇÃO: Adicionado o 'await'
+            return await cartaoCreditoService.ObterDespesas(id);
         }
 
         public void NotificarErro(string titulo, string mensagem)
@@ -124,18 +122,21 @@ namespace JT_Finance.Shared.Services
 
         public async Task<bool> PagarFatura(List<sCartaoDespesa> despesas, DateTime dataPagamento)
         {
-            if (dataPagamento == DateTime.MinValue)return await Task.FromResult(false);
-            if (despesas == null || !despesas.Any()) return await Task.FromResult(false);
-            bool sucesso = _repository.PagarFatura(despesas, dataPagamento).Result;
+            // Removido o Task.FromResult(false) desnecessário, o compilador infere o tipo com 'async'
+            if (dataPagamento == DateTime.MinValue) return false;
+            if (despesas == null || !despesas.Any()) return false;
+
+            // CORREÇÃO: Adicionado o 'await'
+            bool sucesso = await cartaoCreditoService.PagarFatura(despesas, dataPagamento);
+
             if (sucesso)
             {
                 NotificarSucesso("Sucesso", "Fatura paga com sucesso!");
                 NotifyDataChanged();
-
             }
             else
             {
-                NotificarErro("Erro", "Falha ao pagar a fatura."); 
+                NotificarErro("Erro", "Falha ao pagar a fatura.");
                 NotifyDataChanged();
             }
             return sucesso;

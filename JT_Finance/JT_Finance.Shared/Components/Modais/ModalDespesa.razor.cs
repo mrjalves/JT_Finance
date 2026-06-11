@@ -42,16 +42,7 @@ namespace JT_Finance.Shared.Components.Modais
         {
             CartoesCredito = await CartoesService.ObterTodosCartoesAsync();
         }
-        public void Dispose()
-        {
-        }
-
-        private async void AtualizarOpcoes()
-        {
-            await CarregarOpcoes();
-
-        }
-
+      
         private async Task CarregarOpcoes()
         {
             try

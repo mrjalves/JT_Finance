@@ -1,9 +1,8 @@
-using JT_Aplicacao;
+Ôªøusing JT_Aplicacao;
 
 using JT_Classes.Acessos;
 
 using JT_Finance.Shared.Layout;
-using JT_Finance.Shared.Repository;
 using JT_Finance.Shared.Services;
 using JT_Finance.Shared.Services.Interfaces;
 
@@ -19,15 +18,15 @@ using Microsoft.Extensions.Options;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-/// 1.Localiza a seÁ„o "Config" dentro do JSON
+/// 1.Localiza a se√ß√£o "Config" dentro do JSON
 var secaoConfig = builder.Configuration.GetSection("Config");
 
-// 2. Converte essa seÁ„o para um objeto da classe Config
+// 2. Converte essa se√ß√£o para um objeto da classe Config
 var dadosConfig = secaoConfig.Get<Config>();
 
 if (dadosConfig != null)
 {
-    // 3. Define a inst‚ncia est·tica para uso global (Config.Instancia)
+    // 3. Define a inst√¢ncia est√°tica para uso global (Config.Instancia)
     Config.SetInstancia(dadosConfig);
 }
 
@@ -36,31 +35,40 @@ var dadosFConfig = secaoConfig.Get<FirebaseConfig>();
 
 if (dadosFConfig != null)
 {
-    // 3. Define a inst‚ncia est·tica para uso global (Config.Instancia)
+    // 3. Define a inst√¢ncia est√°tica para uso global (Config.Instancia)
     FirebaseConfig.SetInstancia(dadosFConfig);
-    // 4. Registra no container de serviÁos para injeÁ„o (Opcional, mas boa pr·tica)
+    // 4. Registra no container de servi√ßos para inje√ß√£o (Opcional, mas boa pr√°tica)
     builder.Services.AddSingleton(FirebaseConfig.Instancia);
 }
 
-// 5. HttpClient (Necess·rio para o Repository e Auth)
+// 5. HttpClient (Necess√°rio para o Repository e Auth)
 builder.Services.AddScoped(sp =>
 {
-    // No Server, BaseApiUrl geralmente È a prÛpria URL onde o site est· rodando ou vazia,
-    // j· que o Repository usa URLs absolutas do Firebase.
+    // No Server, BaseApiUrl geralmente √© a pr√≥pria URL onde o site est√° rodando ou vazia,
+    // j√° que o Repository usa URLs absolutas do Firebase.
     var baseUrl = builder.Configuration["Config:FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
     return new HttpClient { BaseAddress = new Uri(baseUrl) };
 });
-// 4. ServiÁos Globais
+// 4. Servi√ßos Globais
 builder.Services.AddJTUserInterface();
 
-// 5. ServiÁos Scoped (RepositÛrios e ServiÁos)
+// 5. Servi√ßos Scoped (Reposit√≥rios e Servi√ßos)
+// 4. Servi√ßos Espec√≠ficos deste Projeto
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
-builder.Services.AddScoped<IDespesaRep, ApiDespRep>();
-builder.Services.AddScoped<ICartaoCreditoRep, ApiCartaoCreditoRep>();
-builder.Services.AddScoped<IReceitaRep, ApiReceitaRep>();
 
+// Registros dos Wrappers/Interfaces do Frontend
 builder.Services.AddScoped<IDespesaService, DespesaService>();
 builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
 builder.Services.AddScoped<IReceitaService, ReceitaService>();
+
+builder.Services.AddScoped<JT_Servicos.CartaoCreditoService>();
+builder.Services.AddScoped<JT_Servicos.ReceitaService>();
+builder.Services.AddScoped<JT_Servicos.DespesaService>(); // Adicione este tamb√©m para evitar o mesmo erro!
+
+// Os que voc√™ j√° tinha colocado:
+builder.Services.AddScoped<JT_Servicos.CategoriaService>();
+builder.Services.AddScoped<JT_Servicos.LogService>();
+builder.Services.AddScoped<JT_Servicos.ConfiguracaoService>();
+builder.Services.AddScoped<JT_Servicos.UsuarioService>();
 
 await builder.Build().RunAsync();
