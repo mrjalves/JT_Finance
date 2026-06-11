@@ -24,8 +24,8 @@ namespace JT_Finance.Shared.Components.Modais
         [Parameter] public EventCallback OnClose { get; set; }
         [Parameter] public EventCallback OnCancel { get; set; }
 
-        private List<Categoria> TiposDespesa = new();
-        private List<Categoria> CategoriasDespesa = new();
+        private List<sCategoria> TiposDespesa = new();
+        private List<sCategoria> CategoriasDespesa = new();
         private List<sCartao> CartoesCredito = new();
         private bool showNewTipoForm = false;
         private bool showNewCategoriaForm = false;
@@ -41,20 +41,21 @@ namespace JT_Finance.Shared.Components.Modais
         private async Task CarregarCartoesDeCredito()
         {
             CartoesCredito = await CartoesService.ObterTodosCartoesAsync();
+            Console.WriteLine("DEspesa: " + Despesa);
         }
       
         private async Task CarregarOpcoes()
         {
             try
             {
-                TiposDespesa = new JT_Servicos.CategoriaService().ListarPorPapel("Despesa", "TipoDespesa");
-                CategoriasDespesa = new JT_Servicos.CategoriaService().ListarPorPapel("Despesa", "Categoria");
+                TiposDespesa = await CategoriaService.ListarPorPapelAsync("Despesa", "TipoDespesa");
+                CategoriasDespesa = await CategoriaService.ListarPorPapelAsync("Despesa", "Categoria");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao carregar opções: {ex.Message}");
-                TiposDespesa = new List<Categoria>();
-                CategoriasDespesa = new List<Categoria>();
+                TiposDespesa = new List<sCategoria>();
+                CategoriasDespesa = new List<sCategoria>();
             }
         }
 
@@ -85,7 +86,7 @@ namespace JT_Finance.Shared.Components.Modais
                 Status = StatusObjeto.Novo
             };
 
-            var categoriasalva = await new JT_Servicos.CategoriaService().SaveAsync(novaCategoria);
+            var categoriasalva = await CategoriaService.SalvarCategoriaAsync(novaCategoria);
             if (categoriasalva != null)
             {
                 if (tipo == "tipodespesa")

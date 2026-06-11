@@ -2,6 +2,7 @@
 
 using JT_Classes;
 using JT_Classes.Financeiro;
+using JT_Classes.structs;
 
 using JT_Servicos;
 
@@ -22,8 +23,8 @@ namespace JT_Finance.Shared.Components.Modais
         [Parameter] public EventCallback OnClose { get; set; }
         [Parameter] public EventCallback OnCancel { get; set; }
 
-        private List<Categoria> TiposReceita = new();
-        private List<Categoria> CategoriasReceita = new();
+        private List<sCategoria> TiposReceita = new();
+        private List<sCategoria> CategoriasReceita = new();
         private bool showNewTipoForm = false;
         private bool showNewCategoriaForm = false;
         private string novaCategoriaDescricao = string.Empty;
@@ -48,14 +49,14 @@ namespace JT_Finance.Shared.Components.Modais
         {
             try
             {
-                TiposReceita = new JT_Servicos.CategoriaService().ListarPorPapel("Receita", "TipoReceita");
-                CategoriasReceita = new JT_Servicos.CategoriaService().ListarPorPapel("Receita", "Categoria");
+                TiposReceita = await CategoriaService.ListarPorPapelAsync("Receita", "TipoReceita");
+                CategoriasReceita = await CategoriaService.ListarPorPapelAsync("Receita", "Categoria");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao carregar opções: {ex.Message}");
-                TiposReceita = new List<Categoria>();
-                CategoriasReceita = new List<Categoria>();
+                TiposReceita = new List<sCategoria>();
+                CategoriasReceita = new List<sCategoria>();
             }
         }
 
@@ -116,7 +117,7 @@ namespace JT_Finance.Shared.Components.Modais
                 Status = StatusObjeto.Novo
             };
 
-            var categoriaSalva = await new JT_Servicos.CategoriaService().SaveAsync(novaCategoria);
+            var categoriaSalva = await CategoriaService.SalvarCategoriaAsync(novaCategoria);
             if (categoriaSalva != null)
             {
                 if (tipo == "TipoReceita")

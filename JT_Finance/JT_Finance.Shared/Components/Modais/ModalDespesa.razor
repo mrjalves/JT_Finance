@@ -7,7 +7,7 @@
 @using static JT_UserInterface.Shared.Components.Modal
 @inject IDespesaService DespesaService
 @inject ICartaoCreditoService CartoesService
-
+@inject ICategoriaService CategoriaService
 <Modal @ref="ModalRef" Title="@Title" OnClose="OnClose" Size="ModalSize.Large" CloseOnBackdropClick="false">
     <BodyContent>
         @if (Despesa != null)

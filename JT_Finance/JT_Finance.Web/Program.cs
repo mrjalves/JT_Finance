@@ -69,6 +69,7 @@ builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
 builder.Services.AddScoped<IDespesaService, DespesaService>();
 builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
 builder.Services.AddScoped<IReceitaService, ReceitaService>();
+builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 
 
 builder.Services.AddScoped<JT_Servicos.CartaoCreditoService>();
