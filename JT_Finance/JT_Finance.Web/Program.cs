@@ -69,17 +69,8 @@ builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
 builder.Services.AddScoped<IDespesaService, DespesaService>();
 builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
 builder.Services.AddScoped<IReceitaService, ReceitaService>();
-builder.Services.AddScoped<ICategoriaService, CategoriaService>();
-
-
-builder.Services.AddScoped<JT_Servicos.CartaoCreditoService>();
-builder.Services.AddScoped<JT_Servicos.ReceitaService>();
-builder.Services.AddScoped<JT_Servicos.DespesaService>(); 
-
-builder.Services.AddScoped<JT_Servicos.CategoriaService>();
-builder.Services.AddScoped<JT_Servicos.LogService>();
-builder.Services.AddScoped<JT_Servicos.ConfiguracaoService>();
-builder.Services.AddScoped<JT_Servicos.UsuarioService>();
+builder.Services.AddScoped<IMConfiguracaoService, MConfiguracaoService>();
+builder.Services.AddScoped<IConfiguracaoTabProvider, FinanceConfigTabProvider>();
 var app = builder.Build();
 
 

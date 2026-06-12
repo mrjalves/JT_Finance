@@ -41,7 +41,6 @@ namespace JT_Finance.Shared.Components.Modais
         private async Task CarregarCartoesDeCredito()
         {
             CartoesCredito = await CartoesService.ObterTodosCartoesAsync();
-            Console.WriteLine("DEspesa: " + Despesa);
         }
       
         private async Task CarregarOpcoes()

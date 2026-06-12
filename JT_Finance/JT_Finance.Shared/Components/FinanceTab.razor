@@ -1,0 +1,48 @@
+﻿@using JT_Classes.Comum
+@using Microsoft.AspNetCore.Components.Forms
+@using JT_Finance.Shared.Models
+
+@if (Model is MConfiguracao financeConfig)
+{
+    <h5 class="card-title text-primary mb-3">
+        <i class="bi bi-wallet2 me-2"></i>Configurações Financeiras
+    </h5>
+    
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Moeda Padrão</label>
+            <InputText class="form-control" @bind-Value="financeConfig.MoedaPadrao" placeholder="Ex: BRL, EUR, USD" />
+            <div class="form-text">A moeda que será exibida nos seus relatórios.</div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Dia de Fechamento da Fatura</label>
+            <InputNumber class="form-control" @bind-Value="financeConfig.DiaFechamentoFatura" min="1" max="31" />
+            <div class="form-text">Dia padrão em que as faturas dos cartões são fechadas.</div>
+        </div>
+    </div>
+    
+    <div class="row mt-2">
+        <div class="col-md-12 mb-3">
+            <div class="form-check form-switch fs-5">
+                <InputCheckbox class="form-check-input" id="switchAlertaSaldo" @bind-Value="financeConfig.AlertaSaldoNegativo" />
+                <label class="form-check-label fs-6 mt-1 ms-2" for="switchAlertaSaldo">Ativar Alerta de Saldo Negativo</label>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2"></i>
+        <div>
+            As configurações financeiras não estão disponíveis para este modelo de dados.
+        </div>
+    </div>
+}
+
+@code {
+    // Recebe o objeto do 'CascadingValue' do teu 'Configuracoes.razor'
+    [CascadingParameter]
+    public Configuracao? Model { get; set; }
+}

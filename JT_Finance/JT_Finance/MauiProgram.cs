@@ -102,16 +102,8 @@ namespace JT_Finance
                 builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
                 builder.Services.AddScoped<IReceitaService, ReceitaService>();
                 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
-
-                builder.Services.AddScoped<JT_Servicos.CartaoCreditoService>();
-                builder.Services.AddScoped<JT_Servicos.ReceitaService>();
-                builder.Services.AddScoped<JT_Servicos.DespesaService>();
-
-                builder.Services.AddScoped<JT_Servicos.CategoriaService>();
-                builder.Services.AddScoped<JT_Servicos.LogService>();
-                builder.Services.AddScoped<JT_Servicos.ConfiguracaoService>();
-                builder.Services.AddScoped<JT_Servicos.UsuarioService>();
-
+                builder.Services.AddScoped<IMConfiguracaoService, MConfiguracaoService>();
+                builder.Services.AddScoped<IConfiguracaoTabProvider, FinanceConfigTabProvider>();
 
 #if DEBUG
                 builder.Services.AddBlazorWebViewDeveloperTools();

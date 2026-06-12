@@ -50,7 +50,7 @@ namespace JT_Finance.Shared.Components.Modais
             try
             {
                 TiposReceita = await CategoriaService.ListarPorPapelAsync("Receita", "TipoReceita");
-                CategoriasReceita = await CategoriaService.ListarPorPapelAsync("Receita", "Categoria");
+                CategoriasReceita = await CategoriaService.ListarPorPapelAsync("Receita", "CategoriaReceita");
             }
             catch (Exception ex)
             {
