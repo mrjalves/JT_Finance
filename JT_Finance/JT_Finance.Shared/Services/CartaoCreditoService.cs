@@ -1,7 +1,8 @@
-﻿using JT_Classes.Financeiro;
+﻿using JT_Finance.Shared.Services.Interfaces;
+using JT_Classes.Financeiro;
 using JT_Classes.structs;
 
-using JT_Finance.Shared.Services.Interfaces;
+using JT_Servicos.Interfaces;
 
 using JT_UserInterface.Shared.Services;
 
@@ -17,9 +18,9 @@ namespace JT_Finance.Shared.Services
         private readonly ToastService _toastService;
         private List<sCartao> _scartoes;
         public event Action OnDataChanged;
-        public JT_Servicos.CartaoCreditoService cartaoCreditoService { get; set; }
+        public JT_Servicos.Financeiro.CartaoCreditoService cartaoCreditoService { get; set; }
 
-        public CartaoCreditoService(ToastService toastService, JT_Servicos.CartaoCreditoService cartaoCreditoService)
+        public CartaoCreditoService(ToastService toastService, JT_Servicos.Financeiro.CartaoCreditoService cartaoCreditoService)
         {
             _toastService = toastService;
             _scartoes = new List<sCartao>();
@@ -143,3 +144,5 @@ namespace JT_Finance.Shared.Services
         }
     }
 }
+
+

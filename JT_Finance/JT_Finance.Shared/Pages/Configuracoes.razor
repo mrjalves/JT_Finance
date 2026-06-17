@@ -1,9 +1,11 @@
-﻿@page "/configuracoes"
+@page "/configuracoes"
 @using JT_Classes.Comum
+@using JT_Classes.Financeiro
 @using JT_Finance.Shared.Models
 @using JT_Finance.Shared.Services.Interfaces
 @using JT_UserInterface.Shared.Pages
 @using JT_UserInterface.Shared.Services.Interfaces
+@using JT_Servicos.Interfaces
 
 @inherits ConfiguracoesBase
 @inject INotificationService NotificationService
@@ -53,13 +55,13 @@ else
         </div>
     </EditForm>
 }
-@inject IMConfiguracaoService ConfiguracaoService
+@inject IMFinanceiroConfiguracaoService ConfiguracaoService
 @code {
     [Parameter] public RenderFragment? AdditionalTabs { get; set; }
 
     protected override Configuracao CriarNovaConfiguracao()
     {
-        return new MConfiguracao();
+        return new MFinanceiroConfiguracao();
     }
 
     // Carrega com o novo método assíncrono
@@ -68,10 +70,10 @@ else
         configuracaoAtual = await ConfiguracaoService.GetAtivaAsync();
     }
 
-    // CORREÇÃO AQUI: Alterado de 'bool' para 'async Task<bool>'
+    // CORREÇÃƒO AQUI: Alterado de 'bool' para 'async Task<bool>'
     protected override async Task<bool> SalvarConfiguracao(Configuracao configuracao)
     {
-        if (configuracao is MConfiguracao configFinanceiro)
+        if (configuracao is MFinanceiroConfiguracao configFinanceiro)
         {
             // Agora usamos o 'await' diretamente, sem bloquear a thread da UI!
             // O SaveAsync do teu JTServiceBase retorna um int (o ID guardado).
@@ -84,3 +86,5 @@ else
         return false;
     }
 }
+
+

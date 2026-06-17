@@ -2,9 +2,11 @@
 
 using JT_Classes;
 using JT_Classes.Financeiro;
+using JT_Classes.Comum;
 using JT_Classes.structs;
 
 using JT_Servicos;
+using JT_Servicos.Financeiro;
 
 using JT_UserInterface.Shared.Components;
 
@@ -135,3 +137,5 @@ namespace JT_Finance.Shared.Components.Modais
         }
     }
 }
+
+

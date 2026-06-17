@@ -1,7 +1,8 @@
-﻿using JT_Classes.Financeiro;
+﻿using JT_Finance.Shared.Services.Interfaces;
+using JT_Classes.Financeiro;
 using JT_Classes.structs;
 
-using JT_Finance.Shared.Services.Interfaces;
+using JT_Servicos.Interfaces;
 
 using JT_UserInterface.Shared.Services;
 
@@ -19,9 +20,9 @@ namespace JT_Finance.Shared.Services
         private readonly ToastService _toastService;
         private List<sDespesa> _despesas = new();
         public event Action OnDataChanged;
-        public JT_Servicos.DespesaService service { get; set; }
+        public JT_Servicos.Financeiro.DespesaService service { get; set; }
 
-        public DespesaService(ToastService toastService, JT_Servicos.DespesaService repository)
+        public DespesaService(ToastService toastService, JT_Servicos.Financeiro.DespesaService repository)
         {
             _toastService = toastService;
             service = repository;
@@ -135,3 +136,5 @@ namespace JT_Finance.Shared.Services
         private void NotifyDataChanged() => OnDataChanged?.Invoke();
     }
 }
+
+

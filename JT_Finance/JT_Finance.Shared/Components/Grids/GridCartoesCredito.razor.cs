@@ -1,7 +1,7 @@
 ﻿using JT_Classes.Financeiro;
 using JT_Classes.structs;
 
-using JT_Finance.Shared.Services;
+using JT_Servicos.Financeiro;
 
 using Microsoft.AspNetCore.Components;
 
@@ -118,3 +118,4 @@ namespace JT_Finance.Shared.Components.Grids
         }
     }
 }
+

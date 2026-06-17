@@ -21,3 +21,4 @@ namespace JT_Finance.Shared.Models
         public bool EstaPaga => Lancamentos.All(l => l.DetalhesCartaoCredito?.ParcelaPaga == true);
     }
 }
+

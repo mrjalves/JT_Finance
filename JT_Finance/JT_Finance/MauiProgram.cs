@@ -6,8 +6,8 @@ using JT_Classes.Acessos;
 
 
 using JT_Finance.Shared.Layout;
-using JT_Finance.Shared.Services;
-using JT_Finance.Shared.Services.Interfaces;
+using JT_Servicos.Financeiro;
+using JT_Servicos.Interfaces;
 
 
 using JT_UserInterface.Shared.Models;
@@ -98,12 +98,12 @@ namespace JT_Finance
                 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
 
                 // Registros dos Wrappers/Interfaces do Frontend
-                builder.Services.AddScoped<IDespesaService, DespesaService>();
-                builder.Services.AddScoped<ICartaoCreditoService, CartaoCreditoService>();
-                builder.Services.AddScoped<IReceitaService, ReceitaService>();
+                builder.Services.AddScoped<IDespesaService, JT_Finance.Shared.Services.DespesaService>();
+                builder.Services.AddScoped<ICartaoCreditoService, JT_Finance.Shared.Services.CartaoCreditoService>();
+                builder.Services.AddScoped<IReceitaService, JT_Finance.Shared.Services.ReceitaService>();
                 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
-                builder.Services.AddScoped<IMConfiguracaoService, MConfiguracaoService>();
-                builder.Services.AddScoped<IConfiguracaoTabProvider, FinanceConfigTabProvider>();
+                builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
+                builder.Services.AddScoped<IConfiguracaoTabProvider, JT_UserInterface.Shared.Services.Providers.FinanceConfigTabProvider>();
 
 #if DEBUG
                 builder.Services.AddBlazorWebViewDeveloperTools();
@@ -120,3 +120,5 @@ namespace JT_Finance
         }
     }
 }
+
+

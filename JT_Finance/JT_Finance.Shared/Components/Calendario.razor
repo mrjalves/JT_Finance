@@ -1,38 +1,38 @@
-@using JT_Classes.Financeiro
+ï»¿@using JT_Classes.Financeiro
 @using JT_UserInterface.Shared.Models
 @using JT_Finance.Shared.Services.Interfaces
 
-@* 1. Injetamos os serviços que criámos nas refatorações anteriores *@
+@* 1. Injetamos os serviÃ§os que criÃ¡mos nas refatoraÃ§Ãµes anteriores *@
 @inject IDespesaService DespesaService
 
 @* Assumo que tenhas uma interface semelhante para as Receitas.
-   Se usares diretamente o serviço base, podes mudar para: @inject JT_Servicos.ReceitaService ReceitaService *@
+   Se usares diretamente o serviÃ§o base, podes mudar para: @inject JT_Servicos.Financeiro.ReceitaService ReceitaService *@
 @inject IReceitaService ReceitaService
 
 <div class="row mb-4">
     <div class="col-12">
-        @* 2. Magia! Toda a interface complexa foi reduzida a esta única linha.
-              Dizemos ao calendário: "Quando precisares de dados, chama esta função" *@
+        @* 2. Magia! Toda a interface complexa foi reduzida a esta Ãºnica linha.
+              Dizemos ao calendÃ¡rio: "Quando precisares de dados, chama esta funÃ§Ã£o" *@
         <CalendarioBase OnLoadEvents="CarregarEventosFinanceirosAsync" />
     </div>
 </div>
 
 @code {
     /// <summary>
-    /// Este método é acionado pelo CalendarioBase (no OnInitialized e ao mudar de mês).
-    /// Ele recebe a data de referência que o calendário quer mostrar, e devolve a lista de eventos.
+    /// Este mÃ©todo Ã© acionado pelo CalendarioBase (no OnInitialized e ao mudar de mÃªs).
+    /// Ele recebe a data de referÃªncia que o calendÃ¡rio quer mostrar, e devolve a lista de eventos.
     /// </summary>
     private async Task<List<EventoCalendario>> CarregarEventosFinanceirosAsync(DateTime mesReferencia)
     {
         var eventos = new List<EventoCalendario>();
 
-        // 3. Buscamos os dados de forma assíncrona, usando as boas práticas implementadas
+        // 3. Buscamos os dados de forma assÃ­ncrona, usando as boas prÃ¡ticas implementadas
         var despesas = await DespesaService.ObterDespesasMesAsync(mesReferencia);
 
-        // *Nota: Ajusta o nome do método de Receita se for diferente na tua IReceitaService
+        // *Nota: Ajusta o nome do mÃ©todo de Receita se for diferente na tua IReceitaService
         var receitas = await ReceitaService.ObterReceitasMesAsync(mesReferencia);
 
-        // 4. Mapeamos as Despesas para o modelo de Eventos do Calendário
+        // 4. Mapeamos as Despesas para o modelo de Eventos do CalendÃ¡rio
         if (despesas != null && despesas.Any())
         {
             eventos.AddRange(despesas.Select(d => new EventoCalendario
@@ -44,7 +44,7 @@
             }));
         }
 
-        // 5. Mapeamos as Receitas para o modelo de Eventos do Calendário
+        // 5. Mapeamos as Receitas para o modelo de Eventos do CalendÃ¡rio
         if (receitas != null && receitas.Any())
         {
             eventos.AddRange(receitas.Select(r => new EventoCalendario
@@ -59,3 +59,5 @@
         return eventos;
     }
 }
+
+

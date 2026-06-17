@@ -38,9 +38,6 @@
     <Reference Include="JT_Servicos">
       <HintPath>..\..\..\JT_ApplicationLayer\JT_Servicos\bin\Debug\net10.0\JT_Servicos.dll</HintPath>
     </Reference>
-    <Reference Include="JT_UserInterface.Shared">
-      <HintPath>..\..\..\JT_ApplicationLayer\JT_UserInterface.Shared\bin\Debug\net10.0\JT_UserInterface.Shared.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>

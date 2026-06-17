@@ -5,6 +5,7 @@ using JT_Classes.Financeiro;
 using JT_Classes.structs;
 
 using JT_Servicos;
+using JT_Servicos.Financeiro;
 
 using Microsoft.AspNetCore.Components;
 
@@ -124,7 +125,7 @@ namespace JT_Finance.Shared.Components.Grids
 
         private async Task AplicarFiltros(List<Filtro> filtros)
         {
-            Despesas = await new JT_Servicos.DespesaService().Filter(filtros);
+            Despesas = await new JT_Servicos.Financeiro.DespesaService().Filter(filtros);
             StateHasChanged();
         }
 
@@ -149,3 +150,5 @@ namespace JT_Finance.Shared.Components.Grids
         }
     }
 }
+
+

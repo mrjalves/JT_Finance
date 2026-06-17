@@ -1,4 +1,4 @@
-@page "/listacompras"
+﻿@page "/listacompras"
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Services
@@ -189,7 +189,7 @@
     {
         isLoading = true;
         await Task.Yield();
-        listasDeCompra =JT_Servicos.ListaCompraService.GetAll();
+        listasDeCompra =JT_Servicos.Financeiro.ListaCompraService.GetAll();
         if (listaSelecionadaId == 0 && listasDeCompra.Any())
         {
             listaSelecionadaId = listasDeCompra.First().Id;
@@ -207,7 +207,7 @@
         await Task.Yield();
         if (listaSelecionadaId > 0)
         {
-            itensDaListaSelecionada = JT_Servicos.ListaCompraService.FindItens($" WHERE IdListaCompra = {listaSelecionadaId}");
+            itensDaListaSelecionada = JT_Servicos.Financeiro.ListaCompraService.FindItens($" WHERE IdListaCompra = {listaSelecionadaId}");
         }
         isLoading = false;
     }
@@ -309,3 +309,4 @@
         idListaParaRemover = null;
     }
 }
+

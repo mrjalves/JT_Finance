@@ -1,8 +1,9 @@
-﻿using Google.Api;
+﻿using JT_Finance.Shared.Services.Interfaces;
+using Google.Api;
 
 using JT_Classes.Financeiro;
 
-using JT_Finance.Shared.Services.Interfaces;
+using JT_Servicos.Interfaces;
 
 using JT_UserInterface.Shared.Services;
 
@@ -16,11 +17,11 @@ namespace JT_Finance.Shared.Services
     public class ReceitaService : IReceitaService
     {
         private readonly ToastService _toastService;
-        private readonly JT_Servicos.ReceitaService _repository; // Dependência da interface
+        private readonly JT_Servicos.Financeiro.ReceitaService _repository; // Dependência da interface
         private List<Receita> _receitas = new();
         public event Action OnDataChanged;
 
-        public ReceitaService(ToastService toastService, JT_Servicos.ReceitaService repository)
+        public ReceitaService(ToastService toastService, JT_Servicos.Financeiro.ReceitaService repository)
         {
             _toastService = toastService;
             _repository = repository;
@@ -144,3 +145,5 @@ namespace JT_Finance.Shared.Services
       
     }
 }
+
+

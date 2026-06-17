@@ -1,4 +1,5 @@
-﻿using JT_Aplicacao;
+﻿using JT_Classes.Comum;
+using JT_Aplicacao;
 
 using JT_Classes;
 using JT_Classes.Financeiro;
@@ -161,3 +162,4 @@ namespace JT_Finance.Shared.Components.Grids
         }
     }
 }
+

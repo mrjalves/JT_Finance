@@ -1,4 +1,5 @@
-﻿using JT_Classes.Financeiro;
+﻿using JT_Finance.Shared.Services.Interfaces;
+using JT_Classes.Financeiro;
 using JT_Classes.structs;
 
 namespace JT_Finance.Shared.Services.Interfaces
@@ -17,3 +18,5 @@ namespace JT_Finance.Shared.Services.Interfaces
         event Action OnDataChanged;
     }
 }
+
+
