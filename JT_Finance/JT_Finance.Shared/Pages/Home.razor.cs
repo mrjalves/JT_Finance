@@ -1,7 +1,9 @@
-Ôªøusing JT_Classes.structs;
+using JT_UserInterface.Shared.Components.Core;
+using JT_Classes.structs;
 
 using JT_UserInterface.Shared.Components;
-using JT_UserInterface.Shared.Components.Charts;
+using JT_UserInterface.Shared.Components.Core.Charts;
+using JT_UserInterface.Shared.Components.Core.Charts;
 
 using Microsoft.AspNetCore.Components;
 
@@ -16,7 +18,7 @@ namespace JT_Finance.Shared.Pages
         [CascadingParameter]
         public Func<string, Task>? SetPageTitleAsync { get; set; }
 
-        // --- Estado da P√°gina ---
+        // --- Estado da P·gina ---
         private DateTime mesReferencia = DateTime.Now;
         private bool isLoading = true;
 
@@ -25,7 +27,7 @@ namespace JT_Finance.Shared.Pages
         private decimal totalDespesas;
         private decimal saldoAtual;
 
-        // --- Dados para os Gr√°ficos ---
+        // --- Dados para os Gr·ficos ---
         private List<string> despesaTiposLabels = new();
         private List<ChartDataset> datasetsGraficoPorTipo = new();
         private List<string> despesaCategoriasLabels = new();
@@ -49,7 +51,7 @@ namespace JT_Finance.Shared.Pages
             isLoading = true;
             await InvokeAsync(StateHasChanged);
 
-            // Usar Task.Run para n√£o bloquear a UI enquanto os dados s√£o buscados
+            // Usar Task.Run para n„o bloquear a UI enquanto os dados s„o buscados
             await Task.Run(async () =>
             {
                 // --- CARREGA DADOS DOS CARDS ---
@@ -60,7 +62,7 @@ namespace JT_Finance.Shared.Pages
 
                 DespesaMes = await DespesaService.ObterDespesasMesAsync(mesReferencia);
 
-                // --- GR√ÅFICO DE TIPO (BARRAS) ---
+                // --- GR¡FICO DE TIPO (BARRAS) ---
                 var despesasPorTipo = await DespesaService.GetDespesaPorTipo(mesReferencia);
                 despesaTiposLabels = despesasPorTipo.Select(d => d.Tipo).ToList();
                 datasetsGraficoPorTipo = new List<ChartDataset>
@@ -71,7 +73,7 @@ namespace JT_Finance.Shared.Pages
                 }
             };
 
-                // --- GR√ÅFICO DE CATEGORIA (ROSCA) ---
+                // --- GR¡FICO DE CATEGORIA (ROSCA) ---
                 var despesasPorCategoria = await DespesaService.GetDespesaPorCategoria(mesReferencia);
                 despesaCategoriasLabels = despesasPorCategoria.Select(d => d.Categoria).ToList();
                 datasetsGraficoPorCategoria = new List<ChartDataset>
@@ -96,7 +98,7 @@ namespace JT_Finance.Shared.Pages
         private async Task MudarMesProximo() => await MudarMes(1);
 
 
-        private Modal modalDetalhes;
+        private JT_UserInterface.Shared.Components.Core.Modal modalDetalhes;
         private List<sDespesa> despesasParaExibir = new();
         private void AbrirModalDetalhes(string titulo, List<sDespesa> despesas)
         {
@@ -106,4 +108,6 @@ namespace JT_Finance.Shared.Pages
         }
     }
 }
+
+
 

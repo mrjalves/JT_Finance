@@ -6,6 +6,7 @@ using JT_Classes.structs;
 using JT_Finance.Shared.Components.Modais;
 
 using JT_UserInterface.Shared.Components;
+using JT_UserInterface.Shared.Components.Core;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;

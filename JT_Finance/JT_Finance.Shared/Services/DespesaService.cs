@@ -12,6 +12,7 @@ using System.Linq; // Necessário para o .Any()
 using System.Threading.Tasks;
 
 using static SQLite.SQLite3;
+using JT_UserInterface.Shared.Services.Comum;
 
 namespace JT_Finance.Shared.Services
 {

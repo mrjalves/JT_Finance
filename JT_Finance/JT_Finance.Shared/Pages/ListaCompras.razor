@@ -2,8 +2,10 @@
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Services
-@using static JT_UserInterface.Shared.Components.Modal
-@inject ToastService ToastService
+@using JT_UserInterface.Shared.Components.Core
+@using static JT_UserInterface.Shared.Components.Core.ConfirmDialog
+@using static JT_UserInterface.Shared.Components.Core.Modal
+@inject JT_UserInterface.Shared.Services.Comum.ToastService ToastService
 
 
 <!-- Seletor de Listas e Botões de Ação -->
@@ -32,7 +34,7 @@
 </div>
 
 <!-- Grid de Itens da Lista Selecionada -->
-<DataGrid TItem="ListaCompraItem" Items="itensDaListaSelecionada" IsLoading="isLoading">
+<JT_UserInterface.Shared.Components.Core.DataGrid TItem="ListaCompraItem" Items="itensDaListaSelecionada" IsLoading="isLoading">
     <HeaderTemplate>
         <th style="width: 80px;">Comprado</th>
         <th>Produto</th>
@@ -69,10 +71,10 @@
     <EmptyTemplate>
         <p class="text-muted mb-0">@(listaSelecionadaId == 0 ? "Selecione uma lista para ver os itens." : "Esta lista está vazia. Adicione um novo item!")</p>
     </EmptyTemplate>
-</DataGrid>
+</JT_UserInterface.Shared.Components.Core.DataGrid>
 
 <!-- Modal para Adicionar/Editar ITENS -->
-<Modal @ref="itemModalRef" Title="@itemModalTitle" OnClose="() => itemAtual = null">
+<JT_UserInterface.Shared.Components.Core.Modal @ref="itemModalRef" Title="@itemModalTitle" OnClose="() => itemAtual = null">
     <BodyContent>
         @if (itemAtual != null)
         {
@@ -120,7 +122,7 @@
             </EditForm>
         }
     </BodyContent>
-</Modal>
+</JT_UserInterface.Shared.Components.Core.Modal>
 
 <!-- Modal para Gerenciar LISTAS -->
 <Modal @ref="listasModalRef" Title="Gerenciar Listas de Compras">

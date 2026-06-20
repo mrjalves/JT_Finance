@@ -1,4 +1,6 @@
-ï»¿using JT_Aplicacao;
+using JT_Aplicacao.Classes;
+using JT_UserInterface.Shared.Services.Comum;
+using JT_Aplicacao;
 
 using JT_Classes;
 using JT_Classes.Financeiro;
@@ -111,7 +113,7 @@ namespace JT_Finance.Shared.Components.Grids
             }
             else
             {
-                // OtimizaÃ§Ã£o: Evitar chamadas desnecessÃ¡rias ao LevenshteinDistance
+                // Otimização: Evitar chamadas desnecessárias ao LevenshteinDistance
                 var lowerSearchTerm = searchTerm.ToLower();
                 Despesas = listaTodasDespesas
                    .Where(d => d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
@@ -129,7 +131,7 @@ namespace JT_Finance.Shared.Components.Grids
             StateHasChanged();
         }
 
-        // --- AÃ§Ãµes adicionadas ---
+        // --- Ações adicionadas ---
         private async Task PagarDespesaAsync(sDespesa despesa)
         {
             var entidade = despesa.ToEntity();
@@ -150,5 +152,6 @@ namespace JT_Finance.Shared.Components.Grids
         }
     }
 }
+
 
 

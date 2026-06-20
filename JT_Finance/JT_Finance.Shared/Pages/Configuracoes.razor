@@ -3,11 +3,11 @@
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Models
 @using JT_Finance.Shared.Services.Interfaces
-@using JT_UserInterface.Shared.Pages
-@using JT_UserInterface.Shared.Services.Interfaces
+@using JT_UserInterface.Shared.Pages.Comum
+@using JT_UserInterface.Shared.Services.Interfaces.Comum
 @using JT_Servicos.Interfaces
 
-@inherits ConfiguracoesBase
+@inherits JT_UserInterface.Shared.Pages.Comum.ConfiguracoesBase
 @inject INotificationService NotificationService
 
 <h3 class="mb-4 text-primary">
@@ -86,5 +86,6 @@ else
         return false;
     }
 }
+
 
 

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using JT_Aplicacao.Classes;
 
 namespace JT_Finance.Shared.Components.Grids
 {

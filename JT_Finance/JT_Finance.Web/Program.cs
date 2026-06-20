@@ -11,9 +11,11 @@ using JT_Finance.Web.Components;
 using JT_UserInterface.Shared;
 using JT_UserInterface.Shared.Models;
 using JT_UserInterface.Shared.Services;
-using JT_UserInterface.Shared.Services.Interfaces;
+using JT_UserInterface.Shared.Services.Interfaces.Comum;
 
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using JT_Aplicacao.Config;
+using JT_Classes.Acessos;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +68,7 @@ builder.Services.AddJTUserInterface();
 
 // 4. Serviços Específicos deste Projeto
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
+builder.Services.AddScoped<IModuloMenuProvider, FinanceMenuProvider>();
 
 // Registros dos Wrappers/Interfaces do Frontend
 builder.Services.AddScoped<IDespesaService, JT_Finance.Shared.Services.DespesaService>();
@@ -73,6 +76,7 @@ builder.Services.AddScoped<ICartaoCreditoService, JT_Finance.Shared.Services.Car
 builder.Services.AddScoped<IReceitaService, JT_Finance.Shared.Services.ReceitaService>();
 builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
 builder.Services.AddScoped<IConfiguracaoTabProvider, JT_UserInterface.Shared.Services.Providers.FinanceConfigTabProvider>();
+builder.Services.AddScoped<ISecureStorageService, JT_Finance.Shared.Services.WebSecureStorageService>();
 var app = builder.Build();
 
 

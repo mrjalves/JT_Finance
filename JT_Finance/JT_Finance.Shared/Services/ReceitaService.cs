@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JT_UserInterface.Shared.Services.Comum;
 
 namespace JT_Finance.Shared.Services
 {

@@ -1,4 +1,4 @@
-﻿using JT_Aplicacao;
+using JT_Aplicacao;
 
 using JT_Classes;
 using JT_Classes.Financeiro;
@@ -15,6 +15,8 @@ using Microsoft.AspNetCore.Components;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using JT_Aplicacao.Classes;
+using JT_UserInterface.Shared.Components.Core;
 
 namespace JT_Finance.Shared.Components.Modais
 {
@@ -33,10 +35,41 @@ namespace JT_Finance.Shared.Components.Modais
         private string novaCategoriaDescricao = string.Empty;
         private Modal ModalRef = new();
 
+        private sCartao cartaoSelecionado;
+
+        private void OnCartaoSelecionado(sCartao cartao)
+        {
+            cartaoSelecionado = cartao;
+            if (cartao.Id > 0)
+            {
+                if (Despesa != null && Despesa.DetalhesCartaoCredito != null)
+                {
+                    Despesa.DetalhesCartaoCredito.IdCartao = cartao.Id;
+                }
+            }
+            else
+            {
+                if (Despesa != null && Despesa.DetalhesCartaoCredito != null)
+                {
+                    Despesa.DetalhesCartaoCredito.IdCartao = 0;
+                }
+            }
+        }
+
         protected override async Task OnInitializedAsync()
         {
             await CarregarOpcoes();
             await CarregarCartoesDeCredito();
+
+            if (Despesa != null && Despesa.DetalhesCartaoCredito != null && Despesa.DetalhesCartaoCredito.IdCartao > 0)
+            {
+                var cartaoExistente = CartoesCredito.FirstOrDefault(c => c.Id == Despesa.DetalhesCartaoCredito.IdCartao);
+                if (cartaoExistente.Id > 0)
+                {
+                    cartaoSelecionado = cartaoExistente;
+                }
+            }
+
             StateHasChanged();
         }
         private async Task CarregarCartoesDeCredito()

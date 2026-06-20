@@ -1,13 +1,14 @@
-﻿@using JT_Aplicacao
+@using JT_Aplicacao
 @using JT_Classes
 @using JT_Classes.Financeiro
 @using JT_Classes.structs
 @using JT_Finance.Shared.Services.Interfaces
+@using JT_UserInterface.Shared.Components.Core
 @using JT_UserInterface.Shared.Services.Interfaces
-@using static JT_UserInterface.Shared.Components.Modal
 @inject IDespesaService DespesaService
 @inject ICartaoCreditoService CartoesService
-@inject ICategoriaService CategoriaService
+@inject JT_UserInterface.Shared.Services.Interfaces.Comum.ICategoriaService CategoriaService
+@using static JT_UserInterface.Shared.Components.Core.Modal
 <Modal @ref="ModalRef" Title="@Title" OnClose="OnClose" Size="ModalSize.Large" CloseOnBackdropClick="false">
     <BodyContent>
         @if (Despesa != null)
@@ -43,14 +44,15 @@
                 {
                     <div class="row p-3 mb-3 bg-light border rounded animate__animated animate__fadeIn">
                         <div class="col-md-6 mb-3">
-                            <label for="cartao" class="form-label">Cartão de Crédito</label>
-                            <InputSelect id="cartao" class="form-select" @bind-Value="Despesa.DetalhesCartaoCredito.IdCartao">
-                                <option value="0">Selecione um cartão...</option>
-                                @foreach (var cartao in CartoesCredito)
-                                {
-                                    <option value="@cartao.Id">@cartao.Nome</option>
-                                }
-                            </InputSelect>
+                            <label class="form-label">Cartão de Crédito</label>
+                            <JT_UserInterface.Shared.Components.Core.SeletorPesquisa TItem="sCartao"
+                                             TituloPesquisa="Selecionar Cartão"
+                                             Itens="CartoesCredito"
+                                             Colunas="@(new Dictionary<string, string> { { "ID", "Id" }, { "Nome do Cartão", "Nome" }, { "Limite", "Limite" } })"
+                                             ObterCodigo="@(c => c.Id.ToString())"
+                                             ObterDescricao="@(c => c.Nome)"
+                                             ValorSelecionado="cartaoSelecionado"
+                                             ValorSelecionadoChanged="OnCartaoSelecionado" />
                             <ValidationMessage For="@(() => Despesa.DetalhesCartaoCredito.IdCartao)" />
                         </div>
                         <div class="col-md-6 mb-3">

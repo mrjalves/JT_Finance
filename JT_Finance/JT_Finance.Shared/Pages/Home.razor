@@ -6,10 +6,8 @@
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Services
 @using JT_Finance.Shared.Services.Interfaces
-@using JT_UserInterface.Shared.Components.Charts
-@using static JT_UserInterface.Shared.Components.Modal
 
-@inject IFormFactor FormFactor
+@inject JT_UserInterface.Shared.Services.Interfaces.Comum.IFormFactor FormFactor
 @inject IDespesaService DespesaService
 @inject IReceitaService ReceitaService
 <PageTitle>Dashboard</PageTitle>
@@ -182,14 +180,14 @@
     </div>
 </div>
 
-<Modal @ref="modalDetalhes" Size="ModalSize.ExtraLarge">
+<JT_UserInterface.Shared.Components.Core.Modal @ref="modalDetalhes" Size="JT_UserInterface.Shared.Components.Core.Modal.ModalSize.ExtraLarge">
     <BodyContent>
         <JT_Finance.Shared.Components.Grids.GridDespesas
            Despesas="despesasParaExibir"
            HideActions="true"
         />
     </BodyContent>
-</Modal>
+</JT_UserInterface.Shared.Components.Core.Modal>
 
 
 

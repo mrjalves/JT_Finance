@@ -5,13 +5,12 @@
 @using JT_Classes.Financeiro
 @using JT_Classes.structs
 @using JT_Finance.Shared.Components.Modais
-@using static JT_UserInterface.Shared.Components.Modal
 @using Microsoft.AspNetCore.Components
 @using Microsoft.JSInterop
 @using JT_Finance.Shared.Services.Interfaces
 @inject NavigationManager NavigationManager
-@inject ToastService ToastService
-@inject FiltroService FiltroService
+@inject JT_UserInterface.Shared.Services.Comum.ToastService ToastService
+@inject JT_UserInterface.Shared.Services.Comum.FiltroService FiltroService
 @inject IJSRuntime JSRuntime
 @inject ICartaoCreditoService CartaoService
 @implements IDisposable
@@ -191,7 +190,7 @@ else
     }
 }
 
-<Modal @ref="pagamentoModal" Title="Confirmar Data de Pagamento" Size="ModalSize.Large" CloseOnBackdropClick="false">
+<Modal @ref="pagamentoModal" Title="Confirmar Data de Pagamento" Size="JT_UserInterface.Shared.Components.Core.Modal.ModalSize.Large" CloseOnBackdropClick="false">
     <BodyContent>
         @if (faturaParaPagar != null)
         {

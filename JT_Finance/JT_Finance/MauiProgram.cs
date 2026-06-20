@@ -1,18 +1,22 @@
-﻿
+
 
 using JT_Aplicacao;
+using JT_Aplicacao.Config;
 
 using JT_Classes.Acessos;
 
 
 using JT_Finance.Shared.Layout;
+using JT_Finance.Shared.Services.Interfaces;
+
 using JT_Servicos.Financeiro;
 using JT_Servicos.Interfaces;
 
 
 using JT_UserInterface.Shared.Models;
 using JT_UserInterface.Shared.Services;
-using JT_UserInterface.Shared.Services.Interfaces;
+using JT_UserInterface.Shared.Services.Comum;
+using JT_UserInterface.Shared.Services.Interfaces.Comum;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
