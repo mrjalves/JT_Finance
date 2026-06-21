@@ -70,7 +70,7 @@ else
         configuracaoAtual = await ConfiguracaoService.GetAtivaAsync();
     }
 
-    // CORREÇÃƒO AQUI: Alterado de 'bool' para 'async Task<bool>'
+    // CORREÇÃO AQUI: Alterado de 'bool' para 'async Task<bool>'
     protected override async Task<bool> SalvarConfiguracao(Configuracao configuracao)
     {
         if (configuracao is MFinanceiroConfiguracao configFinanceiro)
