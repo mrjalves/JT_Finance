@@ -17,7 +17,8 @@
           Items="ItensBase"
           IsLoading="IsLoading"
           SortSelectors="SortSelectors"
-          ViewportMaxHeight="calc(100vh - 17rem)">
+          ViewportMaxHeight="calc(100vh - 17rem)"
+              UseServerPagination="true">
     <SortableHeaderTemplate Context="ctx">
         <th role="button" @onclick="() => ctx.SortBy(KeyDescricao)">
             Descrição
