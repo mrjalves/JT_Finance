@@ -1,4 +1,4 @@
-using JT_Aplicacao.Interface;
+using JT_Aplicacao.UserInterface;
 
 namespace JT_Finance.Shared.Layout
 {

@@ -1,5 +1,5 @@
 using JT_Aplicacao.Classes;
-using JT_Aplicacao.Interface;
+using JT_Aplicacao.UserInterface;
 using JT_UserInterface.Shared.Services.Interfaces.Comum;
 
 namespace JT_Finance.Shared.Layout
@@ -35,9 +35,11 @@ namespace JT_Finance.Shared.Layout
                     NomeModulo = "Gestão",
                     Icone      = "bi-sliders",
                     Modulo     = eModuloSistema.Gestao,
-                    Itens      = new List<SItemMenu>
+                       Itens = new List<SItemMenu>
                     {
-                        new SItemMenu { Url = "gerenciar-categorias", Texto = "Categorias", Icone = "bi-tags-fill", Titulo = "Gerenciar Categorias" },
+                        new SItemMenu { Titulo = "Pessoas",Texto = "Pessoas", Url = "/pessoas", Icone = "bi-people-fill" },
+                         new SItemMenu { Url = "gerenciar-categorias", Texto = "Categorias", Icone = "bi-tags-fill", Titulo = "Gerenciar Categorias" },
+                        new SItemMenu { Titulo = "Regras Negócio", Texto = "Regras Negócio", Url = "/regras", Icone = "bi-airplane-engines-fill" },
                     }
                 }
                 

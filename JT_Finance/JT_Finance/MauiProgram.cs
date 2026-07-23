@@ -81,7 +81,7 @@ namespace JT_Finance
                     FirebaseConfig.SetInstancia(dadosFConfig);
                     builder.Services.AddSingleton(FirebaseConfig.Instancia);
                 }
-                // 5. HttpClient com ajuste para Android Localhost
+                // 5. HttpClient com ajuste para Android Localhost e Header de Configuração Cliente
                 builder.Services.AddScoped(sp =>
                 {
                     var baseAddressUrl = FirebaseConfig.Instancia.BaseApiUrl ?? "https://localhost:7166";
@@ -91,7 +91,15 @@ namespace JT_Finance
                         baseAddressUrl = baseAddressUrl.Replace("localhost", "10.0.2.2");
                     }
 
-                    return new HttpClient { BaseAddress = new Uri(baseAddressUrl) };
+                    var httpClient = new HttpClient { BaseAddress = new Uri(baseAddressUrl) };
+
+                    // Envia o ClientId para a API
+                    var configPayload = new ClientConfigPayload { ClientId = "JT_Finance" };
+                    var json = System.Text.Json.JsonSerializer.Serialize(configPayload);
+                    var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+                    httpClient.DefaultRequestHeaders.Add("X-Client-Config", encoded);
+
+                    return httpClient;
                 });
 
 
@@ -100,6 +108,7 @@ namespace JT_Finance
                 
                 // 4. Serviços Específicos deste Projeto
                 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
+                builder.Services.AddScoped<IModuloMenuProvider, FinanceMenuProvider>();
 
                 // Registros dos Wrappers/Interfaces do Frontend
                 builder.Services.AddScoped<IDespesaService, JT_Finance.Shared.Services.DespesaService>();
@@ -114,7 +123,10 @@ namespace JT_Finance
                 builder.Logging.AddDebug();
 #endif
 
-                return builder.Build();
+                var app = builder.Build();
+
+
+                return app;
             }
             catch (Exception ex)
             {

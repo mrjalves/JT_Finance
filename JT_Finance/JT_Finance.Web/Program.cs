@@ -6,7 +6,6 @@ using JT_Finance.Shared.Services.Interfaces;
 using JT_Classes.Financeiro;
 using JT_Servicos.Financeiro;
 using JT_Servicos.Interfaces;
-using JT_Finance.Web.Components;
 
 using JT_UserInterface.Shared;
 using JT_UserInterface.Shared.Models;
@@ -84,13 +83,15 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     // 🔥 ESTA LINHA É OBRIGATÓRIA PARA DEPURAR O CLIENTE
-    app.UseWebAssemblyDebugging();
+    //app.UseWebAssemblyDebugging();
 }
 else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
+
+app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 app.Use(async (context, next) =>
 {

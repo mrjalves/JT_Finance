@@ -1,4 +1,5 @@
 ﻿using JT_Aplicacao;
+using JT_Aplicacao.Eventos;
 
 using JT_Classes.Financeiro;
 using JT_Classes.structs;
@@ -156,7 +157,7 @@ namespace JT_Finance.Shared.Pages
                 }
                 else
                 {
-                    ToastService.ShowError("Erro!", "Não foi possível pagar a fatura. Verifique os logs.");
+                    ToastService.ShowError("Erro!", "NÃ£o foi possÃ­vel pagar a fatura. Verifique os logs.");
                 }
             }
             catch (Exception ex)
@@ -194,7 +195,7 @@ namespace JT_Finance.Shared.Pages
 
             if (SetPageTitleAsync != null)
             {
-                var titulo = cartao != null ? $"Faturas do Cartão - {cartao.Nome}" : "Faturas do Cartão";
+                var titulo = cartao != null ? $"Faturas do CartÃ£o - {cartao.Nome}" : "Faturas do CartÃ£o";
                 if (Year.HasValue && Month.HasValue)
                     titulo += $" ({new DateTime(Year.Value, Month.Value, 1):MMMM yyyy})";
                 await SetPageTitleAsync.Invoke(titulo);
@@ -207,7 +208,9 @@ namespace JT_Finance.Shared.Pages
         {
             if (cartao != null && cartao.Id > 0)
             {
-                var todasDespesas = await CartaoService.ObterDespesas(cartao.Id) ?? new List<sCartaoDespesa>();
+                var todasDespesas = (await CartaoService.ObterDespesas(cartao.Id) ?? new List<sCartaoDespesa>())
+                    .Where(d => d.DespesaCartaoCredito.IdDespesa > 0 && d.DespesaCartaoCredito.DataVencimento != DateTime.MinValue)
+                    .ToList();
 
                 faturas = todasDespesas
                     .GroupBy(d =>
@@ -217,7 +220,7 @@ namespace JT_Finance.Shared.Pages
                     })
                     .Select(grupo => new FaturaViewModel
                     {
-                        DataVencimento = new DateTime(grupo.Key.Year, grupo.Key.Month, cartao.DiaVencimento),
+                        DataVencimento = new DateTime(grupo.Key.Year, grupo.Key.Month, Math.Clamp(cartao.DiaVencimento, 1, DateTime.DaysInMonth(grupo.Key.Year, grupo.Key.Month))),
                         Lancamentos = grupo.ToList()
                     })
                     .OrderByDescending(f => f.DataVencimento)
@@ -281,3 +284,4 @@ namespace JT_Finance.Shared.Pages
         }
     }
 }
+
