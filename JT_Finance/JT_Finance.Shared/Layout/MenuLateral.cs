@@ -1,5 +1,7 @@
 using JT_Aplicacao.UserInterface;
 
+using JT_UserInterface.Shared.Layout;
+
 namespace JT_Finance.Shared.Layout
 {
     /// <summary>

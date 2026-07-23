@@ -1,4 +1,4 @@
-using JT_Aplicacao;
+﻿using JT_Aplicacao;
 
 using JT_Finance.Shared.Layout;
 using JT_Finance.Web.Components;
@@ -15,28 +15,29 @@ using JT_UserInterface.Shared.Services.Interfaces.Comum;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using JT_Aplicacao.Config;
 using JT_Classes.Acessos;
+using JT_UserInterface.Shared.Layout;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configuração dos Componentes Blazor
+// 1. ConfiguraÃ§Ã£o dos Componentes Blazor
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
-// 2. Configuração (O ASP.NET Core já leu o appsettings.json automaticamente)
-// Apenas mapeamos a seção para a classe.
-builder.Services.Configure<FirebaseConfig>(builder.Configuration.GetSection("FirebaseConfig"));
+// 2. ConfiguraÃ§Ã£o (O ASP.NET Core jÃ¡ leu o appsettings.json automaticamente)
+// Apenas mapeamos a seÃ§Ã£o para a classe.
+builder.Services.Configure<FirebaseConfig>(builder.Configuration.GetSection("Config:FirebaseConfig"));
 
 
-// 1. Localiza a seção "Config" dentro do JSON
+// 1. Localiza a seÃ§Ã£o "Config" dentro do JSON
 var secaoConfig = builder.Configuration.GetSection("Config");
 
-// 2. Converte essa seção para um objeto da classe Config
+// 2. Converte essa seÃ§Ã£o para um objeto da classe Config
 var dadosConfig = secaoConfig.Get<Config>();
 
 if (dadosConfig != null)
 {
-    // 3. Define a instância estática para uso global (Config.Instancia)
+    // 3. Define a instÃ¢ncia estÃ¡tica para uso global (Config.Instancia)
     Config.SetInstancia(dadosConfig);
 }
 
@@ -45,44 +46,58 @@ var dadosFConfig = secaoConfig.Get<FirebaseConfig>();
 
 if (dadosFConfig != null)
 {
-    // 3. Define a instância estática para uso global (Config.Instancia)
+    // 3. Define a instÃ¢ncia estÃ¡tica para uso global (Config.Instancia)
     FirebaseConfig.SetInstancia(dadosFConfig);
-    // 4. Registra no container de serviços para injeção (Opcional, mas boa prática)
+    // 4. Registra no container de serviÃ§os para injeÃ§Ã£o (Opcional, mas boa prÃ¡tica)
     builder.Services.AddSingleton(FirebaseConfig.Instancia);
 }
 
-// 5. HttpClient (Necessário para o Repository e Auth)
+// 5. HttpClient (NecessÃ¡rio para o Repository e Auth)
 builder.Services.AddHttpClient();
 builder.Services.AddScoped(sp =>
 {
-    // No Server, BaseApiUrl geralmente é a própria URL onde o site está rodando ou vazia,
-    // já que o Repository usa URLs absolutas do Firebase.
+    // No Server, BaseApiUrl geralmente Ã© a prÃ³pria URL onde o site estÃ¡ rodando ou vazia,
+    // jÃ¡ que o Repository usa URLs absolutas do Firebase.
     var baseUrl = builder.Configuration["Config:FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
-    return new HttpClient { BaseAddress = new Uri(baseUrl) };
+    var httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
+
+    var configPayload = new JT_Aplicacao.Config.ClientConfigPayload { ClientId = "JT_Finance" };
+    JT_Aplicacao.Config.Config.Instancia.ClientId = configPayload.ClientId;
+    var json = System.Text.Json.JsonSerializer.Serialize(configPayload);
+    var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+    httpClient.DefaultRequestHeaders.Add("X-Client-Config", encoded);
+
+    return httpClient;
 });
 
 
-// 3. Serviços Globais (Via Método de Extensão da Shared)
+// 3. ServiÃ§os Globais (Via MÃ©todo de ExtensÃ£o da Shared)
 builder.Services.AddJTUserInterface();
 
-// 4. Serviços Específicos deste Projeto
+// 4. ServiÃ§os EspecÃ­ficos deste Projeto
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
 builder.Services.AddScoped<IModuloMenuProvider, FinanceMenuProvider>();
 
 // Registros dos Wrappers/Interfaces do Frontend
+builder.Services.AddScoped<JT_Servicos.Financeiro.DespesaService>();
+builder.Services.AddScoped<JT_Servicos.Financeiro.CartaoCreditoService>();
+builder.Services.AddScoped<JT_Servicos.Financeiro.ReceitaService>();
+
 builder.Services.AddScoped<IDespesaService, JT_Finance.Shared.Services.DespesaService>();
 builder.Services.AddScoped<ICartaoCreditoService, JT_Finance.Shared.Services.CartaoCreditoService>();
 builder.Services.AddScoped<IReceitaService, JT_Finance.Shared.Services.ReceitaService>();
 builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
 builder.Services.AddScoped<IConfiguracaoTabProvider, JT_UserInterface.Shared.Services.Providers.FinanceConfigTabProvider>();
 builder.Services.AddScoped<ISecureStorageService, JT_Finance.Shared.Services.WebSecureStorageService>();
+builder.Services.AddScoped<IModuloRegrasProvider, FinanceiroRegrasProvider>();
+builder.Services.AddScoped<IModuloCategoriaProvider, JT_Finance.Shared.Layout.FinanceiroCategoriaProvider>();
 var app = builder.Build();
 
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // 🔥 ESTA LINHA É OBRIGATÓRIA PARA DEPURAR O CLIENTE
+    // ðŸ”¥ ESTA LINHA Ã‰ OBRIGATÃ“RIA PARA DEPURAR O CLIENTE
     //app.UseWebAssemblyDebugging();
 }
 else
@@ -102,10 +117,10 @@ app.Use(async (context, next) =>
     await next();
 });
 // 1. ADICIONE O ROUTING AQUI! 
-// Ele analisa a URL e descobre o destino antes de aplicar a segurança
+// Ele analisa a URL e descobre o destino antes de aplicar a seguranÃ§a
 app.UseRouting();
 
-// 2. Agora o Antiforgery sabe para onde a requisição vai e pode validá-la
+// 2. Agora o Antiforgery sabe para onde a requisiÃ§Ã£o vai e pode validÃ¡-la
 app.UseAntiforgery();
 
 // 3. Nossos mapeamentos de destino
@@ -121,4 +136,5 @@ app.MapRazorComponents<App>()
     );
 
 app.Run();
+
 

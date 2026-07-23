@@ -1,4 +1,4 @@
-
+﻿
 
 using JT_Aplicacao;
 using JT_Aplicacao.Config;
@@ -49,7 +49,7 @@ namespace JT_Finance
 
                 // 1. Carregamento do appsettings.json
                 var assembly = Assembly.GetExecutingAssembly();
-                // IMPORTANTE: Verifique se o nome do recurso está correto (Namespace.Arquivo)
+                // IMPORTANTE: Verifique se o nome do recurso estÃ¡ correto (Namespace.Arquivo)
                 using var stream = assembly.GetManifestResourceStream("JT_Finance.appsettings.json");
 
                 if (stream != null)
@@ -69,19 +69,16 @@ namespace JT_Finance
                 }
                 else
                 {
-                    Console.WriteLine("AVISO: appsettings.json não encontrado.");
+                    Console.WriteLine("AVISO: appsettings.json nÃ£o encontrado.");
                 }
 
-                // 2. Configuração do Firebase via IOptions
-                var secaoFConfig = builder.Configuration.GetSection("FirebaseConfig");
-                var dadosFConfig = secaoFConfig.Get<FirebaseConfig>();
-
-                if (dadosFConfig != null)
+                // 2. ConfiguraÃ§Ã£o do Firebase
+                if (Config.Instancia.FirebaseConfig != null)
                 {
-                    FirebaseConfig.SetInstancia(dadosFConfig);
+                    FirebaseConfig.SetInstancia(Config.Instancia.FirebaseConfig);
                     builder.Services.AddSingleton(FirebaseConfig.Instancia);
                 }
-                // 5. HttpClient com ajuste para Android Localhost e Header de Configuração Cliente
+                // 5. HttpClient com ajuste para Android Localhost e Header de ConfiguraÃ§Ã£o Cliente
                 builder.Services.AddScoped(sp =>
                 {
                     var baseAddressUrl = FirebaseConfig.Instancia.BaseApiUrl ?? "https://localhost:7166";
@@ -95,6 +92,7 @@ namespace JT_Finance
 
                     // Envia o ClientId para a API
                     var configPayload = new ClientConfigPayload { ClientId = "JT_Finance" };
+    JT_Aplicacao.Config.Config.Instancia.ClientId = configPayload.ClientId;
                     var json = System.Text.Json.JsonSerializer.Serialize(configPayload);
                     var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
                     httpClient.DefaultRequestHeaders.Add("X-Client-Config", encoded);
@@ -103,20 +101,26 @@ namespace JT_Finance
                 });
 
 
-                // 3. Serviços Singleton
+                // 3. ServiÃ§os Singleton
                 JT_UserInterface.Shared.DependencyInjection.AddJTUserInterface(builder.Services);
                 
-                // 4. Serviços Específicos deste Projeto
+                // 4. ServiÃ§os EspecÃ­ficos deste Projeto
                 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
                 builder.Services.AddScoped<IModuloMenuProvider, FinanceMenuProvider>();
 
                 // Registros dos Wrappers/Interfaces do Frontend
+                builder.Services.AddScoped<JT_Servicos.Financeiro.DespesaService>();
+                builder.Services.AddScoped<JT_Servicos.Financeiro.CartaoCreditoService>();
+                builder.Services.AddScoped<JT_Servicos.Financeiro.ReceitaService>();
+
                 builder.Services.AddScoped<IDespesaService, JT_Finance.Shared.Services.DespesaService>();
                 builder.Services.AddScoped<ICartaoCreditoService, JT_Finance.Shared.Services.CartaoCreditoService>();
                 builder.Services.AddScoped<IReceitaService, JT_Finance.Shared.Services.ReceitaService>();
                 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
                 builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
                 builder.Services.AddScoped<IConfiguracaoTabProvider, JT_UserInterface.Shared.Services.Providers.FinanceConfigTabProvider>();
+                builder.Services.AddScoped<IModuloRegrasProvider, JT_Finance.Shared.Layout.FinanceiroRegrasProvider>();
+                builder.Services.AddScoped<IModuloCategoriaProvider, JT_Finance.Shared.Layout.FinanceiroCategoriaProvider>();
 
 #if DEBUG
                 builder.Services.AddBlazorWebViewDeveloperTools();
@@ -131,10 +135,11 @@ namespace JT_Finance
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao criar o MauiApp: {ex.Message}");
-                throw; // Re-throw para não mascarar o erro
+                throw; // Re-throw para nÃ£o mascarar o erro
             }
         }
     }
 }
+
 
 

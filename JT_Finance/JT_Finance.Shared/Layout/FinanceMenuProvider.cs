@@ -29,20 +29,7 @@ namespace JT_Finance.Shared.Layout
                         new SItemMenu { Url = "despesas",          Texto = "Despesas",     Icone = "bi-graph-down-arrow", Titulo = "Despesas" },
                         new SItemMenu { Url = "cartoes-credito",   Texto = "Cartões",      Icone = "bi-credit-card-fill", Titulo = "Cartões de Crédito" },
                     }
-                },
-                new SModuloMenu
-                {
-                    NomeModulo = "Gestão",
-                    Icone      = "bi-sliders",
-                    Modulo     = eModuloSistema.Gestao,
-                       Itens = new List<SItemMenu>
-                    {
-                        new SItemMenu { Titulo = "Pessoas",Texto = "Pessoas", Url = "/pessoas", Icone = "bi-people-fill" },
-                         new SItemMenu { Url = "gerenciar-categorias", Texto = "Categorias", Icone = "bi-tags-fill", Titulo = "Gerenciar Categorias" },
-                        new SItemMenu { Titulo = "Regras Negócio", Texto = "Regras Negócio", Url = "/regras", Icone = "bi-airplane-engines-fill" },
-                    }
-                }
-                
+            }
             };
         }
 
