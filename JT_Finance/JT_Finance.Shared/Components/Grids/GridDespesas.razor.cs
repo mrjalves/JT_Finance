@@ -1,4 +1,4 @@
-using JT_Aplicacao.Classes;
+ï»¿using JT_Aplicacao.Classes;
 using JT_UserInterface.Shared.Services.Comum;
 using JT_Aplicacao;
 
@@ -25,6 +25,7 @@ namespace JT_Finance.Shared.Components.Grids
         [Parameter] public EventCallback<int> OnRemover { get; set; }
         [Parameter] public bool HideActions { get; set; } = false;
         [Parameter] public List<sDespesa>? Despesas { get; set; }
+        [Parameter] public int PageSize { get; set; } = 100;
 
         private List<sDespesa> listaTodasDespesas = new();
         
@@ -113,7 +114,7 @@ namespace JT_Finance.Shared.Components.Grids
             }
             else
             {
-                // Otimização: Evitar chamadas desnecessárias ao LevenshteinDistance
+                // Otimizaï¿½ï¿½o: Evitar chamadas desnecessï¿½rias ao LevenshteinDistance
                 var lowerSearchTerm = searchTerm.ToLower();
                 Despesas = listaTodasDespesas
                    .Where(d => d.Descricao.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
@@ -131,7 +132,7 @@ namespace JT_Finance.Shared.Components.Grids
             StateHasChanged();
         }
 
-        // --- Ações adicionadas ---
+        // --- Aï¿½ï¿½es adicionadas ---
         private async Task PagarDespesaAsync(sDespesa despesa)
         {
             var entidade = despesa.ToEntity();

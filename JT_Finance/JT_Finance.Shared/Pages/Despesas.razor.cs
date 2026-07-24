@@ -1,4 +1,4 @@
-﻿using JT_Classes.Financeiro;
+using JT_Classes.Financeiro;
 using JT_Classes.structs;
 using JT_Finance.Shared.Components.Modais;
 using JT_UserInterface.Shared.Components;
@@ -27,12 +27,27 @@ namespace JT_Finance.Shared.Pages
 
         private DotNetObjectReference<Despesas>? _novoHotkeysRef;
 
+        [Inject] public JT_Classes.Acessos.CurrentUserState UserState { get; set; } = default!;
+        [Inject] public JT_Servicos.Comum.ConfiguracaoService ConfiguracaoService { get; set; } = default!;
+
+        private int _pageSize = 10;
+
         protected override async Task OnInitializedAsync()
         {
             if (SetPageTitleAsync != null)
             {
                 await SetPageTitleAsync.Invoke("Despesas");
             }
+
+            if (UserState.Autenticado && UserState.UsuarioID > 0)
+            {
+                var config = await ConfiguracaoService.GetByUsuarioIdAsync(UserState.UsuarioID);
+                if (config != null && config.ItensPorPagina > 0)
+                {
+                    _pageSize = config.ItensPorPagina;
+                }
+            }
+
             DespesaService.OnDataChanged += AtualizarDadosDaPagina;
             await CarregarDependencias();
         }

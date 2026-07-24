@@ -1,4 +1,4 @@
-﻿@page "/receitas"
+@page "/receitas"
 @using JT_Aplicacao
 @using JT_Classes
 @using JT_Classes.Financeiro
@@ -34,6 +34,7 @@
 </div>
 
 <GridReceitas
+    PageSize="_pageSize"
     Receitas="listaReceitas"
     IsLoading="isLoading"
     OnEditar="AbrirModalParaEditarReceita"
@@ -56,6 +57,10 @@
     private ModalReceita modalReceita;
     private ConfirmDialog confirmDeleteDialog;
     private int? idReceitaParaRemover;
+    
+    [Inject] public JT_Classes.Acessos.CurrentUserState UserState { get; set; } = default!;
+    [Inject] public JT_Servicos.Comum.ConfiguracaoService ConfiguracaoService { get; set; } = default!;
+    private int _pageSize = 10;
 
     private DotNetObjectReference<Receitas>? _novoHotkeysRef;
 
@@ -65,6 +70,16 @@
         {
             await SetPageTitleAsync.Invoke("Receitas");
         }
+        
+        if (UserState.Autenticado && UserState.UsuarioID > 0)
+        {
+            var config = await ConfiguracaoService.GetByUsuarioIdAsync(UserState.UsuarioID);
+            if (config != null && config.ItensPorPagina > 0)
+            {
+                _pageSize = config.ItensPorPagina;
+            }
+        }
+
         ReceitaService.OnDataChanged += AtualizarDadosDaPagina;
         // CategoriaService.OnDataChanged += AtualizarDadosDaPagina;
         

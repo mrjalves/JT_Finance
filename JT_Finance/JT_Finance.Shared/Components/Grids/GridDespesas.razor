@@ -1,4 +1,4 @@
-﻿@using JT_Aplicacao
+@using JT_Aplicacao
 @using JT_Classes
 @using JT_Classes.Financeiro
 @using JT_Classes.structs
@@ -15,141 +15,12 @@
 <div class="card border-left-success shadow h-80 py-2">
 <DataGrid TItem="sDespesa"
           Items="ItensBase"
+          Columns="gridColumns"
           IsLoading="IsLoading"
           SortSelectors="SortSelectors"
           ViewportMaxHeight="calc(100vh - 17rem)"
-              UseServerPagination="true">
-    <SortableHeaderTemplate Context="ctx">
-        <th role="button" @onclick="() => ctx.SortBy(KeyDescricao)">
-            Descrição
-            @if (ctx.IsSortedBy(KeyDescricao))
-            {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
-            }
-        </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyValor)">
-            Valor
-            @if (ctx.IsSortedBy(KeyValor))
-            {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
-            }
-        </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyData)">
-            Data
-            @if (ctx.IsSortedBy(KeyData))
-            {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
-            }
-        </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyVencimento)">
-            Data Vencimento
-            @if (ctx.IsSortedBy(KeyVencimento))
-            {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
-            }
-        </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyCategoria)">
-            Categoria
-            @if (ctx.IsSortedBy(KeyCategoria))
-            {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
-            }
-        </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyTipo)">
-            Tipo
-            @if (ctx.IsSortedBy(KeyTipo))
-            {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
-            }
-        </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyCartaoParcela)">
-            Cartão / Parcela
-            @if (ctx.IsSortedBy(KeyCartaoParcela))
-            {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
-            }
-        </th>
-        <th role="button" @onclick="() => ctx.SortBy(KeyPaga)">
-            Paga
-            @if (ctx.IsSortedBy(KeyPaga))
-            {
-                <span class="ms-1">@((ctx.Direction == DataGrid<sDespesa>.SortDirection.Asc) ? "▲" : "▼")</span>
-            }
-        </th>
-       @*  @if(!HideActions){ *@
-            <th>Ações</th>
-    </SortableHeaderTemplate>
-
-    <RowTemplate Context="despesa">
-        <td>@despesa.Descricao</td>
-        <td>@despesa.Valor.ToString("C")</td>
-        <td>@despesa.DataDespesa.ToShortDateString()</td>
-        <td>
-            @if (despesa.EhDespesaCartaoCredito && despesa.DespCartaoCredito.DataVencimento != default)
-            {
-                @despesa.DespCartaoCredito.DataVencimento.ToShortDateString()
-            }
-            else
-            {
-                <span class="text-muted">—</span>
-            }
-        </td>
-        <td>@despesa.CategoriaStruct.Nome</td>
-        <td>@despesa.TipoStruct.Nome</td>
-        <td>
-            @if (despesa.EhDespesaCartaoCredito && despesa.DespCartaoCredito.DataVencimento != default)
-            {
-                <span class="d-block">@despesa.Cartao.Nome</span>
-                <small class="text-muted">@despesa.DespCartaoCredito.NumeroParcela</small>
-            }
-            else
-            {
-                <span class="text-muted">—</span>
-            }
-        </td>
-        <td>
-            @if (despesa.DespesaPaga)
-            {
-                <span class="badge bg-success">Sim</span>
-            }
-            else
-            {
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-danger">Não</span>
-                </div>
-            }
-        </td>
-            <td>
-                @if (!despesa.EhDespesaCartaoCredito)
-                {
-                    @if (!despesa.DespesaPaga)
-                    {
-                        <button class="btn btn-sm btn-success me-2" title="Marcar como paga" @onclick="() => PagarDespesaAsync(despesa)" @onclick:stopPropagation="true">
-                            <i class="bi bi-check2-circle"></i>
-                        </button>
-                    }
-                    <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Despesa" @onclick="() => OnDuplicar.InvokeAsync(despesa)" @onclick:stopPropagation="true">
-                        <i class="bi bi-copy"></i>
-                    </button>
-                }
-                else
-                {
-                    <button class="btn btn-sm btn-outline-primary me-2" title="Ver fatura desta despesa" @onclick="() => AbrirFaturaDoCartao(despesa)" @onclick:stopPropagation="true">
-                        <i class="bi bi-receipt"></i>
-                    </button>
-                }
-        @if (!HideActions)
-        {
-                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(despesa.Id)" @onclick:stopPropagation="true">
-                    <i class="bi bi-pencil-fill"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(despesa.Id)" @onclick:stopPropagation="true">
-                    <i class="bi bi-trash-fill"></i>
-                </button>
-        }
-            </td>
-    </RowTemplate>
-
+          PageSize="PageSize"
+          UseServerPagination="true">
     <EmptyTemplate>
         <p class="text-muted mb-0">Nenhuma despesa encontrada. Tente ajustar os filtros ou cadastre uma nova despesa.</p>
     </EmptyTemplate>
@@ -166,4 +37,73 @@
 </div>
 </div>
 
+@code {
+    private List<DataGridColumn<sDespesa>> gridColumns = new();
 
+    protected override void OnInitialized()
+    {
+        gridColumns.Add(new DataGridColumn<sDespesa>(KeyDescricao, "Descrição") { CellTemplate = d => @<text>@d.Descricao</text> });
+        gridColumns.Add(new DataGridColumn<sDespesa>(KeyValor, "Valor") { CellTemplate = d => @<text>@d.Valor.ToString("C")</text> });
+        gridColumns.Add(new DataGridColumn<sDespesa>(KeyData, "Data") { CellTemplate = d => @<text>@d.DataDespesa.ToShortDateString()</text> });
+        
+        gridColumns.Add(new DataGridColumn<sDespesa>(KeyVencimento, "Data Vencimento") { 
+            CellTemplate = d => (d.EhDespesaCartaoCredito && d.DespCartaoCredito.DataVencimento != default) 
+                ? @<text>@d.DespCartaoCredito.DataVencimento.ToShortDateString()</text> 
+                : @<span class="text-muted">—</span> 
+        });
+        
+        gridColumns.Add(new DataGridColumn<sDespesa>(KeyCategoria, "Categoria") { CellTemplate = d => @<text>@d.CategoriaStruct.Nome</text> });
+        gridColumns.Add(new DataGridColumn<sDespesa>(KeyTipo, "Tipo") { CellTemplate = d => @<text>@d.TipoStruct.Nome</text> });
+        
+        gridColumns.Add(new DataGridColumn<sDespesa>(KeyCartaoParcela, "Cartão / Parcela") { 
+            CellTemplate = d => {
+                if (d.EhDespesaCartaoCredito && d.DespCartaoCredito.DataVencimento != default)
+                {
+                    return @<text><span class="d-block">@d.Cartao.Nome</span><small class="text-muted">@d.DespCartaoCredito.NumeroParcela</small></text>;
+                }
+                else
+                {
+                    return @<span class="text-muted">—</span>;
+                }
+            }
+        });
+        
+        gridColumns.Add(new DataGridColumn<sDespesa>(KeyPaga, "Paga") { 
+            CellTemplate = d => d.DespesaPaga ? @<span class="badge bg-success">Sim</span> : @<div class="d-flex align-items-center gap-2"><span class="badge bg-danger">Não</span></div>
+        });
+        
+        gridColumns.Add(new DataGridColumn<sDespesa>("Acoes", "Ações", sortable: false) { 
+            CellTemplate = d => @<text>
+                @if (!d.EhDespesaCartaoCredito)
+                {
+                    @if (!d.DespesaPaga)
+                    {
+                        <button class="btn btn-sm btn-success me-2" title="Marcar como paga" @onclick="() => PagarDespesaAsync(d)" @onclick:stopPropagation="true">
+                            <i class="bi bi-check2-circle"></i>
+                        </button>
+                    }
+                    <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Despesa" @onclick="() => OnDuplicar.InvokeAsync(d)" @onclick:stopPropagation="true">
+                        <i class="bi bi-copy"></i>
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-sm btn-outline-primary me-2" title="Ver fatura desta despesa" @onclick="() => AbrirFaturaDoCartao(d)" @onclick:stopPropagation="true">
+                        <i class="bi bi-receipt"></i>
+                    </button>
+                }
+                @if (!HideActions)
+                {
+                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(d.Id)" @onclick:stopPropagation="true">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(d.Id)" @onclick:stopPropagation="true">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                }
+            </text> 
+        });
+        
+        base.OnInitialized();
+    }
+}

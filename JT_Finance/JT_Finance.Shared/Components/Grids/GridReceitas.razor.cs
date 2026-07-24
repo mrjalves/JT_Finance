@@ -18,6 +18,7 @@ namespace JT_Finance.Shared.Components.Grids
         #region PARAMETROS
         [Parameter]
         public List<Receita> Receitas { get; set; } = new();
+        [Parameter] public int PageSize { get; set; } = 100;
 
         [Parameter]
         public bool IsLoading { get; set; }
@@ -34,7 +35,6 @@ namespace JT_Finance.Shared.Components.Grids
         private List<Categoria> TiposReceita = new();
         private List<Categoria> CategoriasReceita = new();
         private List<Receita> listaTodasReceitas = new();
-
         private const string KeyDescricao = nameof(Receita.Descricao);
         private const string KeyValor = nameof(Receita.Valor);
         private const string KeyData = nameof(Receita.DataReceita);

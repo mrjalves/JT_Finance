@@ -1,4 +1,4 @@
-﻿@page "/despesas"
+@page "/despesas"
 @using JT_Classes
 @using JT_Classes.Financeiro
 @using JT_Classes.structs
@@ -38,7 +38,7 @@
 
     <ChildContent>
         <GridDespesas 
-
+            PageSize="_pageSize"
             Despesas="despesasFiltradas"
             IsLoading="isLoading"
             OnEditar="AbrirModalParaEditarDespesa"
