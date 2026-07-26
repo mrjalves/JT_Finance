@@ -68,6 +68,10 @@ else
     protected override async Task CarregarConfiguracoes()
     {
         configuracaoAtual = await ConfiguracaoService.GetAtivaAsync();
+        if (configuracaoAtual != null && configuracaoAtual.IdUsuario == 0 && UserState != null && UserState.UsuarioID > 0)
+        {
+            configuracaoAtual.IdUsuario = UserState.UsuarioID;
+        }
     }
 
     // CORREÇÃO AQUI: Alterado de 'bool' para 'async Task<bool>'

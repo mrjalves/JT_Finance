@@ -1,4 +1,4 @@
-﻿using JT_Aplicacao;
+using JT_Aplicacao;
 
 using JT_Finance.Shared.Layout;
 using JT_Finance.Web.Components;
@@ -89,7 +89,7 @@ builder.Services.AddScoped<IReceitaService, JT_Finance.Shared.Services.ReceitaSe
 builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
 builder.Services.AddScoped<IConfiguracaoTabProvider, JT_UserInterface.Shared.Services.Providers.FinanceConfigTabProvider>();
 builder.Services.AddScoped<ISecureStorageService, JT_Finance.Shared.Services.WebSecureStorageService>();
-builder.Services.AddScoped<IModuloRegrasProvider, FinanceiroRegrasProvider>();
+
 builder.Services.AddScoped<IModuloCategoriaProvider, JT_Finance.Shared.Layout.FinanceiroCategoriaProvider>();
 var app = builder.Build();
 

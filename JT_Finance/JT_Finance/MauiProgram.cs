@@ -1,4 +1,4 @@
-﻿
+
 
 using JT_Aplicacao;
 using JT_Aplicacao.Config;
@@ -119,7 +119,7 @@ namespace JT_Finance
                 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
                 builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
                 builder.Services.AddScoped<IConfiguracaoTabProvider, JT_UserInterface.Shared.Services.Providers.FinanceConfigTabProvider>();
-                builder.Services.AddScoped<IModuloRegrasProvider, JT_Finance.Shared.Layout.FinanceiroRegrasProvider>();
+
                 builder.Services.AddScoped<IModuloCategoriaProvider, JT_Finance.Shared.Layout.FinanceiroCategoriaProvider>();
 
 #if DEBUG

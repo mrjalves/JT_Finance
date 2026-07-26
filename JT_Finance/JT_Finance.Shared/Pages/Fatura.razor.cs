@@ -1,4 +1,4 @@
-﻿using JT_Aplicacao;
+using JT_Aplicacao;
 using JT_Aplicacao.Eventos;
 
 using JT_Classes.Financeiro;
@@ -195,7 +195,7 @@ namespace JT_Finance.Shared.Pages
 
             if (SetPageTitleAsync != null)
             {
-                var titulo = cartao != null ? $"Faturas do CartÃ£o - {cartao.Nome}" : "Faturas do CartÃ£o";
+                var titulo = cartao != null ? $"Faturas do Cartão - {cartao.Nome}" : "Faturas do Cartão";
                 if (Year.HasValue && Month.HasValue)
                     titulo += $" ({new DateTime(Year.Value, Month.Value, 1):MMMM yyyy})";
                 await SetPageTitleAsync.Invoke(titulo);
