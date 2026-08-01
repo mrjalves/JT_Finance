@@ -1,4 +1,4 @@
-﻿@page "/listacompras"
+@page "/listacompras"
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Components
 @using JT_Finance.Shared.Services
@@ -6,11 +6,14 @@
 @using static JT_UserInterface.Shared.Components.Core.ConfirmDialog
 @using static JT_UserInterface.Shared.Components.Core.Modal
 @inject JT_UserInterface.Shared.Services.Comum.ToastService ToastService
-
-
-<!-- Seletor de Listas e Botões de Ação -->
-<div class="card shadow-sm mb-3">
-    <div class="card-body d-flex justify-content-between align-items-center">
+@using JT_UserInterface.Shared.Components.Core
+<CrudPageTemplate>
+    <ToolbarLeft>
+        <button class="btn btn-primary" @onclick="AbrirModalNovoItem" disabled="@(listaSelecionadaId == 0)">
+            <i class="bi bi-plus-circle-fill me-2"></i>Novo Item
+        </button>
+    </ToolbarLeft>
+    <ToolbarRight>
         <div class="d-flex align-items-center flex-grow-1">
             <label for="listaSelect" class="form-label me-2 mb-0 fw-bold">Lista Ativa:</label>
             <InputSelect id="listaSelect" class="form-select w-auto" @bind-Value="listaSelecionadaId">
@@ -27,51 +30,19 @@
                 <i class="bi bi-gear-fill"></i>
             </button>
         </div>
-        <button class="btn btn-primary" @onclick="AbrirModalNovoItem" disabled="@(listaSelecionadaId == 0)">
-            <i class="bi bi-plus-circle-fill me-2"></i>Novo Item
-        </button>
-    </div>
-</div>
+    </ToolbarRight>
+    <ChildContent>
 
-<!-- Grid de Itens da Lista Selecionada -->
-<JT_UserInterface.Shared.Components.Core.DataGrid TItem="ListaCompraItem" Items="itensDaListaSelecionada" IsLoading="isLoading">
-    <HeaderTemplate>
-        <th style="width: 80px;">Comprado</th>
-        <th>Produto</th>
-        <th>Quantidade</th>
-        <th>Unidade</th>
-        <th class="text-end">Ações</th>
-    </HeaderTemplate>
-    <RowTemplate Context="item">
-        <td>
-            <div class="form-check form-switch d-flex justify-content-center">
-                <InputCheckbox class="form-check-input" @bind-Value="item.Comprado" @bind-Value:after='() => AtualizarStatusItem(item)' />
-            </div>
-        </td>
-        <td><span class="@(item.Comprado ? "text-decoration-line-through text-muted" : "")">@item.DescricaoProduto</span></td>
-        <td><span class="@(item.Comprado ? "text-decoration-line-through text-muted" : "")">@item.Quantidade</span></td>
-        <td><span class="@(item.Comprado ? "text-decoration-line-through text-muted" : "")">@item.UnidadeMedida</span></td>
-        <td>
-            <span class="@(item.Comprado ? "text-decoration-line-through text-muted" : "")">
-                @item.DescricaoProduto
-            </span>
-
-            @if (!string.IsNullOrWhiteSpace(item.LinkProduto))
-            {
-                <a href="@item.LinkProduto" target="_blank" class="ms-2" title="Abrir link do produto">
-                    <i class="bi bi-box-arrow-up-right"></i>
-                </a>
-            }
-        </td>
-        <td class="text-end">
-            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => AbrirModalEditarItem(item)" disabled="@item.Comprado">Editar</button>
-            <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoItem(item.Id)">Remover</button>
-        </td>
-    </RowTemplate>
+<JT_UserInterface.Shared.Components.Core.DataGrid TItem="ListaCompraItem" 
+    Items="itensDaListaSelecionada" 
+    IsLoading="isLoading" 
+    Columns="gridColumns">
     <EmptyTemplate>
         <p class="text-muted mb-0">@(listaSelecionadaId == 0 ? "Selecione uma lista para ver os itens." : "Esta lista está vazia. Adicione um novo item!")</p>
     </EmptyTemplate>
 </JT_UserInterface.Shared.Components.Core.DataGrid>
+    </ChildContent>
+    <Modals>
 
 <!-- Modal para Adicionar/Editar ITENS -->
 <JT_UserInterface.Shared.Components.Core.Modal @ref="itemModalRef" Title="@itemModalTitle" OnClose="() => itemAtual = null">
@@ -145,6 +116,8 @@
 </Modal>
 
 <ConfirmDialog @ref="confirmDialog" OnConfirm="OnConfirmDelete" />
+    </Modals>
+</CrudPageTemplate>
 
 @code {
     [CascadingParameter]
@@ -179,12 +152,53 @@
     private int? idItemParaRemover;
     private int? idListaParaRemover;
 
+    private List<DataGridColumn<ListaCompraItem>> gridColumns = new();
+
     protected override async Task OnInitializedAsync()
     {
         if (SetPageTitleAsync != null)
            await SetPageTitleAsync.Invoke("Lista Compras");
         
+        InicializarColunas();
         await CarregarListas();
+    }
+
+    private void InicializarColunas()
+    {
+        gridColumns.Add(new DataGridColumn<ListaCompraItem>("Comprado", "Comprado") { 
+            CellTemplate = item => @<div class="form-check form-switch d-flex justify-content-center">
+                <input type="checkbox" class="form-check-input" checked="@item.Comprado" @onchange="@(async (e) => { item.Comprado = (bool)e.Value; await AtualizarStatusItem(item); })" />
+            </div>
+        });
+        
+        gridColumns.Add(new DataGridColumn<ListaCompraItem>("DescricaoProduto", "Produto") { 
+            CellTemplate = item => @<text>
+                <span class="@(item.Comprado ? "text-decoration-line-through text-muted" : "")">
+                    @item.DescricaoProduto
+                </span>
+                @if (!string.IsNullOrWhiteSpace(item.LinkProduto))
+                {
+                    <a href="@item.LinkProduto" target="_blank" class="ms-2" title="Abrir link do produto">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                }
+            </text>
+        });
+
+        gridColumns.Add(new DataGridColumn<ListaCompraItem>("Quantidade", "Quantidade") { 
+            CellTemplate = item => @<span class="@(item.Comprado ? "text-decoration-line-through text-muted" : "")">@item.Quantidade</span> 
+        });
+
+        gridColumns.Add(new DataGridColumn<ListaCompraItem>("UnidadeMedida", "Unidade") { 
+            CellTemplate = item => @<span class="@(item.Comprado ? "text-decoration-line-through text-muted" : "")">@item.UnidadeMedida</span> 
+        });
+
+        gridColumns.Add(new DataGridColumn<ListaCompraItem>("Acoes", "Ações", sortable: false) { 
+            CellTemplate = item => @<text>
+                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => AbrirModalEditarItem(item)" disabled="@item.Comprado">Editar</button>
+                <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarRemocaoItem(item.Id)">Remover</button>
+            </text> 
+        });
     }
 
     private async Task CarregarListas()

@@ -39,13 +39,10 @@ namespace JT_Finance.Shared.Pages
                 await SetPageTitleAsync.Invoke("Despesas");
             }
 
-            if (UserState.Autenticado && UserState.UsuarioID > 0)
+            var config = await ConfiguracaoService.GetByUsuarioIdAsync(UserState.UsuarioID);
+            if (config != null && config.ItensPorPagina > 0)
             {
-                var config = await ConfiguracaoService.GetByUsuarioIdAsync(UserState.UsuarioID);
-                if (config != null && config.ItensPorPagina > 0)
-                {
-                    _pageSize = config.ItensPorPagina;
-                }
+                _pageSize = config.ItensPorPagina;
             }
 
             DespesaService.OnDataChanged += AtualizarDadosDaPagina;

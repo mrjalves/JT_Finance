@@ -1,4 +1,4 @@
-﻿@using JT_Classes.Financeiro
+@using JT_Classes.Financeiro
 @using JT_Classes.structs
 @using JT_Finance.Shared.Services.Interfaces
 @inject ICartaoCreditoService CartaoService
@@ -9,7 +9,10 @@
               Items="Cartoes"
               IsLoading="IsLoading"
               SortSelectors="SortSelectors"
-              ViewportMaxHeight="calc(100vh - 17rem)">
+              ViewportMaxHeight="calc(100vh - 17rem)"
+              EnableIA="true"
+              NomeEntidade="CartaoCredito"
+              EnableSearch="true">
         <SortableHeaderTemplate Context="ctx">
             <th role="button" @onclick="() => ctx.SortBy(KeyNome)">
                 Nome

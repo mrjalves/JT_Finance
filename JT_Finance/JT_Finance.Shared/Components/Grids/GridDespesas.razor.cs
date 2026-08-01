@@ -1,4 +1,4 @@
-﻿using JT_Aplicacao.Classes;
+using JT_Aplicacao.Classes;
 using JT_UserInterface.Shared.Services.Comum;
 using JT_Aplicacao;
 
@@ -41,6 +41,16 @@ namespace JT_Finance.Shared.Components.Grids
 
         private IEnumerable<sDespesa> ItensBase =>
             (Despesas ?? listaTodasDespesas) ?? Enumerable.Empty<sDespesa>();
+
+        public int CurrentPage { get; set; } = 1;
+        private IEnumerable<sDespesa> ItensPaginados =>
+            ItensBase.Skip((CurrentPage - 1) * PageSize).Take(PageSize);
+
+        private void MudarPagina(int novaPagina)
+        {
+            CurrentPage = novaPagina;
+            StateHasChanged();
+        }
 
         // Totais
         private int QtdDespesas => ItensBase.Count();

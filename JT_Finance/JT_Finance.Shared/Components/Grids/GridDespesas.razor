@@ -14,13 +14,20 @@
 
 <div class="card border-left-success shadow h-80 py-2">
 <DataGrid TItem="sDespesa"
-          Items="ItensBase"
+          Items="ItensPaginados"
           Columns="gridColumns"
           IsLoading="IsLoading"
           SortSelectors="SortSelectors"
           ViewportMaxHeight="calc(100vh - 17rem)"
           PageSize="PageSize"
-          UseServerPagination="true">
+          UseServerPagination="true"
+          TotalItems="QtdDespesas"
+          CurrentPage="CurrentPage"
+          OnPageChanged="MudarPagina"
+          EnableIA="true"
+          NomeEntidade="Despesa"
+          EnableSearch="true"
+          EnableColumnToggle="true">
     <EmptyTemplate>
         <p class="text-muted mb-0">Nenhuma despesa encontrada. Tente ajustar os filtros ou cadastre uma nova despesa.</p>
     </EmptyTemplate>

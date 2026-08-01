@@ -1,4 +1,4 @@
-﻿using JT_Classes.Comum;
+using JT_Classes.Comum;
 using JT_Aplicacao;
 
 using JT_Classes;
@@ -10,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using JT_Aplicacao.Classes;
+using JT_UserInterface.Shared.Components.Core;
+using JT_Classes.structs;
 
 namespace JT_Finance.Shared.Components.Grids
 {
@@ -32,8 +34,8 @@ namespace JT_Finance.Shared.Components.Grids
         public EventCallback<Receita> OnDuplicar { get; set; }
         #endregion
 
-        private List<Categoria> TiposReceita = new();
-        private List<Categoria> CategoriasReceita = new();
+        private List<sCategoria> TiposReceita = new();
+        private List<sCategoria> CategoriasReceita = new();
         private List<Receita> listaTodasReceitas = new();
         private const string KeyDescricao = nameof(Receita.Descricao);
         private const string KeyValor = nameof(Receita.Valor);
@@ -45,6 +47,16 @@ namespace JT_Finance.Shared.Components.Grids
         private IEnumerable<Receita> ItensBase =>
             (Receitas != null && Receitas.Count > 0 ? Receitas : listaTodasReceitas) ?? Enumerable.Empty<Receita>();
 
+        public int CurrentPage { get; set; } = 1;
+        private IEnumerable<Receita> ItensPaginados =>
+            ItensBase.Skip((CurrentPage - 1) * PageSize).Take(PageSize);
+
+        private void MudarPagina(int novaPagina)
+        {
+            CurrentPage = novaPagina;
+            StateHasChanged();
+        }
+
         // Totais
         private int QtdReceitas => ItensBase.Count();
         private decimal TotalReceitas => ItensBase.Sum(r => r.Valor);
@@ -53,24 +65,29 @@ namespace JT_Finance.Shared.Components.Grids
 
         private IReadOnlyDictionary<string, Func<Receita, IComparable?>> SortSelectors;
 
+        private List<DataGridColumn<Receita>> gridColumns = new();
+
         protected override async Task OnInitializedAsync()
         {
             ReceitaService.OnDataChanged += AtualizarDadosDaPagina;
             await CarregarDependencias();
             ConfigurarFiltros();
             InicializarSortSelectors();
+            InicializarColunas();
         }
+
+
 
         private void InicializarSortSelectors()
         {
             SortSelectors = new Dictionary<string, Func<Receita, IComparable?>>
             {
                 [KeyDescricao] = r => r.Descricao,
-                [KeyValor] = r => r.Valor,
-                [KeyData] = r => r.DataReceita,
-                [KeyCategoria] = r => CategoriasReceita.FirstOrDefault(c => c.Id == r.Categoria)?.Descricao ?? string.Empty,
-                [KeyTipo] = r => TiposReceita.FirstOrDefault(c => c.Id == r.TipoReceita)?.Descricao ?? string.Empty,
-                [KeyRecebida] = r => r.ReceitaRecebida
+                [KeyValor] = r => (IComparable?)r.Valor,
+                [KeyData] = r => (IComparable?)r.DataReceita,
+                [KeyCategoria] = r => CategoriasReceita.FirstOrDefault(c => c.Id == r.Categoria).Descricao ?? string.Empty,
+                [KeyTipo] = r => TiposReceita.FirstOrDefault(c => c.Id == r.TipoReceita).Descricao ?? string.Empty,
+                [KeyRecebida] = r => (IComparable?)r.ReceitaRecebida
             };
         }
 
@@ -103,8 +120,8 @@ namespace JT_Finance.Shared.Components.Grids
 
         private async Task CarregarOpcoes()
         {
-            // TiposReceita = await CategoriaService.GetTipoCategoriasReceitas();
-            // CategoriasReceita = await CategoriaService.GetCategoriasReceitas();
+            TiposReceita = await CategoriaService.ListarPorPapelAsync("Receita", "TipoReceita");
+            CategoriasReceita = await CategoriaService.ListarPorPapelAsync("Receita", "Categoria");
         }
 
         private void ConfigurarFiltros()

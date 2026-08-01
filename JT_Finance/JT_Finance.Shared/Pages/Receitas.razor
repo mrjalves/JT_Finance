@@ -11,14 +11,15 @@
 @implements IDisposable 
 @inject FiltroService FiltroService
 @inject IJSRuntime JSRuntime
+@using JT_UserInterface.Shared.Components.Core
 
-<div class="card shadow-sm mb-2">
-    <div class="card-body d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
-            <button class="btn btn-primary" title="Nova Receita (Alt+N)" aria-label="Nova Receita (Alt+N)" @onclick="AbrirModalParaNovaReceita">
-                <i class="bi bi-plus-circle-fill me-2"></i>Nova Receita
-            </button>
-        </div>
+<CrudPageTemplate>
+    <ToolbarLeft>
+        <button class="btn btn-primary" title="Nova Receita (Alt+N)" aria-label="Nova Receita (Alt+N)" @onclick="AbrirModalParaNovaReceita">
+            <i class="bi bi-plus-circle-fill me-2"></i>Nova Receita
+        </button>
+    </ToolbarLeft>
+    <ToolbarRight>
         <div class="d-flex align-items-center gap-2">
             <div title="Pesquisar (Ctrl+K, /)" aria-label="Pesquisar (Ctrl+K, /)">
                 <SearchFilter />
@@ -30,23 +31,25 @@
                 <i class="bi bi-filter action-icon" />
             </button>
         </div>
-    </div>
-</div>
+    </ToolbarRight>
+    <ChildContent>
+        <GridReceitas
+            PageSize="_pageSize"
+            Receitas="listaReceitas"
+            IsLoading="isLoading"
+            OnEditar="AbrirModalParaEditarReceita"
+            OnRemover="ConfirmarRemocaoReceita"
+            OnDuplicar="DuplicarReceita" />
+    </ChildContent>
+    <Modals>
+        <ModalReceita @ref="modalReceita"
+                      Receita="receitaAtual"
+                      OnClose="ResetarEstadoAposModal"
+                      OnCancel="HandleCancelarFormularioModal" />
 
-<GridReceitas
-    PageSize="_pageSize"
-    Receitas="listaReceitas"
-    IsLoading="isLoading"
-    OnEditar="AbrirModalParaEditarReceita"
-    OnRemover="ConfirmarRemocaoReceita"
-    OnDuplicar="DuplicarReceita" />
-
-<ModalReceita @ref="modalReceita"
-              Receita="receitaAtual"
-              OnClose="ResetarEstadoAposModal"
-              OnCancel="HandleCancelarFormularioModal" />
-
-<ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoReceita" />
+        <ConfirmDialog @ref="confirmDeleteDialog" OnConfirm="EfetuarRemocaoReceita" />
+    </Modals>
+</CrudPageTemplate>
 
 @code {
     [CascadingParameter]
@@ -71,13 +74,10 @@
             await SetPageTitleAsync.Invoke("Receitas");
         }
         
-        if (UserState.Autenticado && UserState.UsuarioID > 0)
+        var config = await ConfiguracaoService.GetByUsuarioIdAsync(UserState.UsuarioID);
+        if (config != null && config.ItensPorPagina > 0)
         {
-            var config = await ConfiguracaoService.GetByUsuarioIdAsync(UserState.UsuarioID);
-            if (config != null && config.ItensPorPagina > 0)
-            {
-                _pageSize = config.ItensPorPagina;
-            }
+            _pageSize = config.ItensPorPagina;
         }
 
         ReceitaService.OnDataChanged += AtualizarDadosDaPagina;

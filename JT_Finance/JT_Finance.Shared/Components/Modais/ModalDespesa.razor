@@ -9,7 +9,7 @@
 @inject ICartaoCreditoService CartoesService
 @inject JT_UserInterface.Shared.Services.Interfaces.Comum.ICategoriaService CategoriaService
 @using static JT_UserInterface.Shared.Components.Core.Modal
-<Modal @ref="ModalRef" Title="@Title" OnClose="OnClose" Size="ModalSize.Large" CloseOnBackdropClick="false">
+<Modal @ref="ModalRef" Title="@Title" OnClose="OnClose" Size="ModalSize.Large" CloseOnBackdropClick="false" EnableIA="true" EntidadeContexto="@Despesa" NomeEntidade="Despesa">
     <BodyContent>
         @if (Despesa != null)
         {

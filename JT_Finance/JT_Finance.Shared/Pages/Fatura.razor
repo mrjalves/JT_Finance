@@ -1,12 +1,12 @@
-﻿@page "/fatura/{CartaoId:int}"
+@page "/fatura/{CartaoId:int}"
 @page "/fatura/{CartaoId:int}/{Year:int}-{Month:int}"
 @using System.Linq
 @using JT_Aplicacao
 @using JT_Classes.Financeiro
 @using JT_Classes.structs
 @using JT_Finance.Shared.Components.Modais
-@using Microsoft.AspNetCore.Components
 @using Microsoft.JSInterop
+@using JT_UserInterface.Shared.Components.Core
 @using JT_Finance.Shared.Services.Interfaces
 @inject NavigationManager NavigationManager
 @inject JT_UserInterface.Shared.Services.Comum.ToastService ToastService
@@ -32,44 +32,50 @@ else if (cartao == null)
 else
 {
     <!-- RESUMO GERAL -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <div>
-                <strong>Faturas do Cartão:</strong>
-                <span class="ms-1">@cartao.Nome</span>
-                @if (Year.HasValue && Month.HasValue)
-                {
-                    <span class="ms-2 badge bg-primary">@(new DateTime(Year.Value, Month.Value, 1).ToString("MMMM yyyy"))</span>
-                }
+    <CrudPageTemplate>
+        <ToolbarLeft>
+            <div class="d-flex flex-column w-100">
+                <h4 class="mb-1 text-primary">
+                    <i class="bi bi-credit-card-fill me-2"></i>Faturas: @cartao.Nome
+                    @if (Year.HasValue && Month.HasValue)
+                    {
+                        <span class="ms-2 badge bg-primary fs-6">@(new DateTime(Year.Value, Month.Value, 1).ToString("MMMM yyyy"))</span>
+                    }
+                </h4>
+                <div class="text-muted small">
+                    <span class="me-3">Limite: <strong>@cartao.Limite.ToString("C")</strong></span>
+                    <span class="me-3">Vencimento: <strong>dia @cartao.DiaVencimento</strong></span>
+                    <span>Fechamento: <strong>dia @cartao.DiaFechamento</strong></span>
+                </div>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-primary btn-sm" title="Nova Despesa (Alt+N)" aria-label="Nova Despesa (Alt+N)"
+        </ToolbarLeft>
+        <ToolbarRight>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-primary" title="Nova Despesa (Alt+N)" aria-label="Nova Despesa (Alt+N)"
                         @onclick="AbrirModalParaNovaDespesaGeral">
-                    <i class="bi bi-plus-circle me-2"></i>Nova Despesa
+                    <i class="bi bi-plus-circle-fill me-2"></i>Nova Despesa
+                </button>
+                <button class="btn btn-outline-secondary" @onclick="Voltar">
+                    <i class="bi bi-arrow-left-circle-fill me-2"></i>Voltar
                 </button>
             </div>
-        </div>
-        <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <h5 class="card-title mb-1">Total em Aberto: @totalEmAberto.ToString("C")</h5>
-                    <div class="card-text text-muted">Total Pago: <strong>@totalPago.ToString("C")</strong></div>
-                    <p class="card-text text-muted">Exibindo @faturas.Count fatura(s) com um total de @faturas.SelectMany(f => f.Lancamentos).Count() lançamento(s).</p>
-                </div>
-
-                <div class="d-flex justify-content-end align-items-center gap-2">
-                    <button class="btn btn-outline-secondary" @onclick="Voltar">
-                        <i class="bi bi-arrow-left-circle me-2"></i>Voltar
-                    </button>
+        </ToolbarRight>
+        <ChildContent>
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title mb-1">Total em Aberto: <span class="text-danger">@totalEmAberto.ToString("C")</span></h5>
+                            <div class="card-text text-muted">Total Pago: <strong>@totalPago.ToString("C")</strong></div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-info rounded-pill fs-6">@faturas.Count faturas</span>
+                            <br />
+                            <small class="text-muted">@faturas.SelectMany(f => f.Lancamentos).Count() lançamentos</small>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="text-muted small mt-2">
-                <span class="me-3">Limite: <strong>@cartao.Limite.ToString("C")</strong></span>
-                <span class="me-3">Vencimento: <strong>dia @cartao.DiaVencimento</strong></span>
-                <span>Fechamento: <strong>dia @cartao.DiaFechamento</strong></span>
-            </div>
-        </div>
-    </div>
 
     @if (faturas.Any())
     {
@@ -188,7 +194,8 @@ else
             Nenhuma despesa encontrada para este cartão@(Year.HasValue && Month.HasValue ? $" em {new DateTime(Year.Value, Month.Value, 1):MMMM yyyy}" : "").
         </div>
     }
-}
+    </ChildContent>
+    <Modals>
 
 <Modal @ref="pagamentoModal" Title="Confirmar Data de Pagamento" Size="JT_UserInterface.Shared.Components.Core.Modal.ModalSize.Large" CloseOnBackdropClick="false">
     <BodyContent>
@@ -214,6 +221,9 @@ else
     Despesa="despesaAtual"
     OnClose="OnDespesaModalClose"
     OnCancel="HandleCancelarModalDespesa" />
+    </Modals>
+</CrudPageTemplate>
+}
 
 
 

@@ -7,7 +7,7 @@
 @inject IReceitaService ReceitaService
 @inject ICategoriaService CategoriaService
 
-<Modal @ref="ModalRef" Title="@Title" OnClose="OnClose" Size="ModalSize.Large">
+<Modal @ref="ModalRef" Title="@Title" OnClose="OnClose" Size="ModalSize.Large" EnableIA="true" EntidadeContexto="@Receita" NomeEntidade="Receita">
     <BodyContent>
         @if (Receita != null)
         {

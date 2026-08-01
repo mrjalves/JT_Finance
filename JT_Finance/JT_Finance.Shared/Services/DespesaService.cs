@@ -1,4 +1,4 @@
-﻿using JT_Finance.Shared.Services.Interfaces;
+using JT_Finance.Shared.Services.Interfaces;
 using JT_Classes.Financeiro;
 using JT_Classes.structs;
 
@@ -50,7 +50,10 @@ namespace JT_Finance.Shared.Services
             bool sucesso = await service.Duplicar(despesa);
 
             if (sucesso)
+            {
+                _despesas.Clear();
                 NotificarSucesso("Duplicada!", "A Despesa foi duplicada.");
+            }
             else
                 NotificarErro("Erro!", "Não foi possível duplicar a Despesa.");
 
@@ -68,7 +71,10 @@ namespace JT_Finance.Shared.Services
         {
             bool sucesso = await service.Delete(id);
             if (sucesso)
+            {
+                _despesas.Clear();
                 NotificarSucesso("Sucesso", "despesa removida com sucesso!");
+            }
             else
                 NotificarErro("Erro", "Falha ao remover despesa.");
 
@@ -80,7 +86,10 @@ namespace JT_Finance.Shared.Services
         {
             bool sucesso = await service.Save(despesa);
             if (sucesso)
+            {
+                _despesas.Clear();
                 NotificarSucesso("Sucesso", "Despesa salva com sucesso!");
+            }
             else
                 NotificarErro("Erro", "Falha ao salvar despesa.");
 

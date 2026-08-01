@@ -7,100 +7,25 @@
 @using JT_UserInterface.Shared.Services.Interfaces.Comum
 @using JT_UserInterface.Shared.Services.Comum
 @inject IReceitaService ReceitaService
+@inject ICategoriaService CategoriaService
 @inject FiltroService FiltroService
 
 <div class="card border-left-success shadow h-80 py-2">
     <DataGrid TItem="Receita"
-              Items="ItensBase"
+              Items="ItensPaginados"
+              Columns="gridColumns"
               IsLoading="IsLoading"
               SortSelectors="SortSelectors"
               PageSize="@PageSize"
-              ViewportMaxHeight="calc(100vh - 17rem)">
-        <SortableHeaderTemplate Context="ctx">
-            <th role="button" @onclick="() => ctx.SortBy(KeyDescricao)">
-                Descrição
-                @if (ctx.IsSortedBy(KeyDescricao))
-                {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
-                }
-            </th>
-            <th role="button" @onclick="() => ctx.SortBy(KeyValor)">
-                Valor
-                @if (ctx.IsSortedBy(KeyValor))
-                {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
-                }
-            </th>
-            <th role="button" @onclick="() => ctx.SortBy(KeyData)">
-                Data
-                @if (ctx.IsSortedBy(KeyData))
-                {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
-                }
-            </th>
-            <th role="button" @onclick="() => ctx.SortBy(KeyCategoria)">
-                Categoria
-                @if (ctx.IsSortedBy(KeyCategoria))
-                {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
-                }
-            </th>
-            <th role="button" @onclick="() => ctx.SortBy(KeyTipo)">
-                Tipo
-                @if (ctx.IsSortedBy(KeyTipo))
-                {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
-                }
-            </th>
-            <th role="button" @onclick="() => ctx.SortBy(KeyRecebida)">
-                Recebida
-                @if (ctx.IsSortedBy(KeyRecebida))
-                {
-                    <span class="ms-1">@((ctx.Direction == DataGrid<Receita>.SortDirection.Asc) ? "▲" : "▼")</span>
-                }
-            </th>
-            <th class="text-end">Ações</th>
-        </SortableHeaderTemplate>
-
-        <RowTemplate Context="receita">
-            <td>@receita.Descricao</td>
-            <td>@receita.Valor.ToString("C")</td>
-            <td>@receita.DataReceita.ToShortDateString()</td>
-            <td>@(CategoriasReceita.FirstOrDefault(c => c.Id == receita.Categoria)?.Descricao)</td>
-            <td>@(TiposReceita.FirstOrDefault(c => c.Id == receita.TipoReceita)?.Descricao)</td>
-            <td>
-                @if (receita.ReceitaRecebida)
-                {
-                    <span class="badge bg-success">Sim</span>
-                }
-                else
-                {
-                    <span class="badge bg-secondary">Não</span>
-                }
-            </td>
-            <td class="text-end">
-                @if (!receita.ReceitaRecebida)
-                {
-                    <button class="btn btn-sm btn-success me-2"
-                            title="Marcar como recebida"
-                            @onclick="() => MarcarComoRecebidaAsync(receita)"
-                            @onclick:stopPropagation="true">
-                        <i class="bi bi-check2-circle"></i>
-                    </button>
-                }
-
-                <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Receita" @onclick="() => OnDuplicar.InvokeAsync(receita)" @onclick:stopPropagation="true">
-                    <i class="bi bi-copy"></i>
-                </button>
-
-                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(receita)" @onclick:stopPropagation="true">
-                    <i class="bi bi-pencil-fill me-1"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(receita.Id)" @onclick:stopPropagation="true">
-                    <i class="bi bi-trash-fill me-1"></i>
-                </button>
-            </td>
-        </RowTemplate>
+              ViewportMaxHeight="calc(100vh - 17rem)"
+              TotalItems="QtdReceitas"
+              CurrentPage="CurrentPage"
+              OnPageChanged="MudarPagina"
+              UseServerPagination="true"
+              EnableIA="true"
+              NomeEntidade="Receita"
+              EnableSearch="true"
+              EnableColumnToggle="true">
         <EmptyTemplate>
             <p class="text-muted mb-0">Nenhuma receita cadastrada ainda. Clique em "Nova Receita" para começar.</p>
         </EmptyTemplate>
@@ -116,5 +41,38 @@
         </div>
     </div>
 </div>
+
+@code {
+    private void InicializarColunas()
+    {
+        gridColumns.Add(new DataGridColumn<Receita>(KeyDescricao, "Descrição") { CellTemplate = r => @<text>@r.Descricao</text> });
+        gridColumns.Add(new DataGridColumn<Receita>(KeyValor, "Valor") { CellTemplate = r => @<text>@r.Valor.ToString("C")</text> });
+        gridColumns.Add(new DataGridColumn<Receita>(KeyData, "Data") { CellTemplate = r => @<text>@r.DataReceita.ToShortDateString()</text> });
+        gridColumns.Add(new DataGridColumn<Receita>(KeyCategoria, "Categoria") { CellTemplate = r => @<text>@(CategoriasReceita.FirstOrDefault(c => c.Id == r.Categoria).Descricao)</text> });
+        gridColumns.Add(new DataGridColumn<Receita>(KeyTipo, "Tipo") { CellTemplate = r => @<text>@(TiposReceita.FirstOrDefault(c => c.Id == r.TipoReceita).Descricao)</text> });
+        gridColumns.Add(new DataGridColumn<Receita>(KeyRecebida, "Recebida") { 
+            CellTemplate = r => r.ReceitaRecebida ? @<span class="badge bg-success">Sim</span> : @<span class="badge bg-secondary">Não</span>
+        });
+        gridColumns.Add(new DataGridColumn<Receita>("Acoes", "Ações", sortable: false) {
+            CellTemplate = r => @<text>
+                @if (!r.ReceitaRecebida)
+                {
+                    <button class="btn btn-sm btn-success me-2" title="Marcar como recebida" @onclick="() => MarcarComoRecebidaAsync(r)" @onclick:stopPropagation="true">
+                        <i class="bi bi-check2-circle"></i>
+                    </button>
+                }
+                <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Receita" @onclick="() => OnDuplicar.InvokeAsync(r)" @onclick:stopPropagation="true">
+                    <i class="bi bi-copy"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(r)" @onclick:stopPropagation="true">
+                    <i class="bi bi-pencil-fill me-1"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(r.Id)" @onclick:stopPropagation="true">
+                    <i class="bi bi-trash-fill me-1"></i>
+                </button>
+            </text>
+        });
+    }
+}
 
 
