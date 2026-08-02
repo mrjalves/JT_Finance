@@ -102,6 +102,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="replay_pid15748.log" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="appsettings.json" />
     <EmbeddedResource Include="controlefinanceiro-35e2a-firebase-adminsdk-fbsvc-d8ec0c1878.json" />
   </ItemGroup>

@@ -97,7 +97,6 @@ builder.Services.AddScoped<ICartaoCreditoService, JT_Finance.Shared.Services.Car
 builder.Services.AddScoped<IReceitaService, JT_Finance.Shared.Services.ReceitaService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
-builder.Services.AddScoped<IConfiguracaoTabProvider, JT_UserInterface.Shared.Services.Providers.FinanceConfigTabProvider>();
 builder.Services.AddScoped<ISecureStorageService, JT_Finance.Shared.Services.WebSecureStorageService>();
 
 builder.Services.AddScoped<IModuloCategoriaProvider, JT_Finance.Shared.Layout.FinanceiroCategoriaProvider>();

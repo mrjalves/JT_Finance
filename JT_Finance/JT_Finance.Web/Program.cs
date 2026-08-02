@@ -15,7 +15,9 @@ using JT_UserInterface.Shared.Services.Interfaces.Comum;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using JT_Aplicacao.Config;
 using JT_Classes.Acessos;
+using JT_Classes.IA;
 using JT_UserInterface.Shared.Layout;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,7 +89,6 @@ builder.Services.AddScoped<IDespesaService, JT_Finance.Shared.Services.DespesaSe
 builder.Services.AddScoped<ICartaoCreditoService, JT_Finance.Shared.Services.CartaoCreditoService>();
 builder.Services.AddScoped<IReceitaService, JT_Finance.Shared.Services.ReceitaService>();
 builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
-builder.Services.AddScoped<IConfiguracaoTabProvider, JT_UserInterface.Shared.Services.Providers.FinanceConfigTabProvider>();
 builder.Services.AddScoped<ISecureStorageService, JT_Finance.Shared.Services.WebSecureStorageService>();
 
 builder.Services.AddScoped<IModuloCategoriaProvider, JT_Finance.Shared.Layout.FinanceiroCategoriaProvider>();
@@ -134,6 +135,29 @@ app.MapRazorComponents<App>()
         typeof(JT_Finance.Web.Client._Imports).Assembly,
         typeof(JT_UserInterface.Shared._Imports).Assembly
     );
+
+// Financeiro Config endpoints
+app.MapGet("/api/configuracoes-financeiras", async (JT_Servicos.Financeiro.MFinanceiroConfiguracaoService svc) => Results.Ok(await svc.GetAll()));
+app.MapGet("/api/configuracoes-financeiras/ativa", async (JT_Servicos.Financeiro.MFinanceiroConfiguracaoService svc) => Results.Ok(await svc.GetAtivaAsync()));
+app.MapGet("/api/configuracoes-financeiras/{id:int}", async (int id, JT_Servicos.Financeiro.MFinanceiroConfiguracaoService svc) => await svc.GetById(id) is { } e ? Results.Ok(e) : Results.NotFound());
+app.MapPost("/api/configuracoes-financeiras", async ([FromBody] MFinanceiroConfiguracao entity, JT_Servicos.Financeiro.MFinanceiroConfiguracaoService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
+app.MapPost("/api/configuracoes-financeiras/ativa", async ([FromBody] MFinanceiroConfiguracao entity, JT_Servicos.Financeiro.MFinanceiroConfiguracaoService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
+app.MapPut("/api/configuracoes-financeiras/{id:int}", async (int id, [FromBody] MFinanceiroConfiguracao entity, JT_Servicos.Financeiro.MFinanceiroConfiguracaoService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
+
+// IA Config endpoints
+app.MapGet("/api/configuracoes-ia", async (JT_Servicos.IA.ConfiguracaoIAService svc) => Results.Ok(await svc.GetAll()));
+app.MapGet("/api/configuracoes-ia/modelos", async ([FromQuery] string? apiKey, JT_Servicos.IA.ConfiguracaoIAService svc) => Results.Ok(await svc.ListarModelosDisponiveisAsync(apiKey)));
+app.MapGet("/api/configuracoes-ia/{id:int}", async (int id, JT_Servicos.IA.ConfiguracaoIAService svc) => await svc.GetById(id) is { } e ? Results.Ok(e) : Results.NotFound());
+app.MapPost("/api/configuracoes-ia", async ([FromBody] ConfiguracaoIA entity, JT_Servicos.IA.ConfiguracaoIAService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
+app.MapPut("/api/configuracoes-ia/{id:int}", async (int id, [FromBody] ConfiguracaoIA entity, JT_Servicos.IA.ConfiguracaoIAService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
+
+// Acessos Config endpoints
+app.MapGet("/api/configuracoes-acessos", async (JT_Servicos.Acessos.MAcessosConfiguracaoService svc) => Results.Ok(await svc.GetAll()));
+app.MapGet("/api/configuracoes-acessos/ativa", async (JT_Servicos.Acessos.MAcessosConfiguracaoService svc) => Results.Ok(await svc.GetAtivaAsync()));
+app.MapGet("/api/configuracoes-acessos/{id:int}", async (int id, JT_Servicos.Acessos.MAcessosConfiguracaoService svc) => await svc.GetById(id) is { } e ? Results.Ok(e) : Results.NotFound());
+app.MapPost("/api/configuracoes-acessos", async ([FromBody] MAcessosConfiguracao entity, JT_Servicos.Acessos.MAcessosConfiguracaoService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
+app.MapPost("/api/configuracoes-acessos/ativa", async ([FromBody] MAcessosConfiguracao entity, JT_Servicos.Acessos.MAcessosConfiguracaoService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
+app.MapPut("/api/configuracoes-acessos/{id:int}", async (int id, [FromBody] MAcessosConfiguracao entity, JT_Servicos.Acessos.MAcessosConfiguracaoService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
 
 app.Run();
 

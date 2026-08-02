@@ -1,95 +1,14 @@
 @page "/configuracoes"
-@using JT_Classes.Comum
 @using JT_Classes.Financeiro
-@using JT_Finance.Shared.Models
-@using JT_Finance.Shared.Services.Interfaces
-@using JT_UserInterface.Shared.Pages.Comum
-@using JT_UserInterface.Shared.Services.Interfaces.Comum
 @using JT_Servicos.Interfaces
-
-@inherits JT_UserInterface.Shared.Pages.Comum.ConfiguracoesBase
-@inject INotificationService NotificationService
+@inherits JT_UserInterface.Shared.Pages.Comum.ConfiguracoesBase<MFinanceiroConfiguracao, IMFinanceiroConfiguracaoService>
 
 <h3 class="mb-4 text-primary">
-    <i class="bi bi-gear-fill me-2"></i>Configurações Financeiras
+    <i class="bi bi-gear-fill me-2"></i>@ObterTituloPagina()
 </h3>
 
-@if (configuracaoAtual == null)
-{
-    <Loading /> @* Usa o teu componente de loading existente *@
-}
-else
-{
-    <EditForm Model="configuracaoAtual" OnValidSubmit="HandleSalvarConfiguracoes">
-        <DataAnnotationsValidator />
-        
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
-                <CascadingValue Value="configuracaoAtual">
-                    <TabControl>
+@RenderizarFormularioConfiguracoes()
 
-                        @* Se InjectedTabs existirem na base, renderiza *@
-                        @if (InjectedTabs != null)
-                        {
-                            @foreach (var tab in InjectedTabs)
-                            {
-                                <TabPage Title="@tab.Titulo">
-                                    @tab.Conteudo
-                                </TabPage>
-                            }
-                        }
-
-                        @AdditionalTabs
-
-                    </TabControl>
-                </CascadingValue>
-
-                <hr class="text-muted my-4" />
-                
-                <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
-                        <i class="bi bi-save-fill me-2"></i>Salvar Alterações
-                    </button>
-                </div>
-            </div>
-        </div>
-    </EditForm>
-}
-@inject IMFinanceiroConfiguracaoService ConfiguracaoService
 @code {
-    [Parameter] public RenderFragment? AdditionalTabs { get; set; }
-
-    protected override Configuracao CriarNovaConfiguracao()
-    {
-        return new MFinanceiroConfiguracao();
-    }
-
-    // Carrega com o novo método assíncrono
-    protected override async Task CarregarConfiguracoes()
-    {
-        configuracaoAtual = await ConfiguracaoService.GetAtivaAsync();
-        if (configuracaoAtual != null && configuracaoAtual.IdUsuario == 0 && UserState != null && UserState.UsuarioID > 0)
-        {
-            configuracaoAtual.IdUsuario = UserState.UsuarioID;
-        }
-    }
-
-    // CORREÇÃO AQUI: Alterado de 'bool' para 'async Task<bool>'
-    protected override async Task<bool> SalvarConfiguracao(Configuracao configuracao)
-    {
-        if (configuracao is MFinanceiroConfiguracao configFinanceiro)
-        {
-            // Agora usamos o 'await' diretamente, sem bloquear a thread da UI!
-            // O SaveAsync do teu JTServiceBase retorna um int (o ID guardado).
-            // Se for maior que 0, foi um sucesso.
-            int resultado = await ConfiguracaoService.SaveAsync(configFinanceiro);
-
-            return resultado > 0;
-        }
-
-        return false;
-    }
+    public override string ObterTituloPagina() => "Configurações Financeiras";
 }
-
-
-
