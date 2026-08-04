@@ -51,6 +51,7 @@ if (dadosConfig != null)
 // 4. Repete o processo para as configuraÃ§Ãµes do Firebase
 var secaoFirebase = builder.Configuration.GetSection("Config:FirebaseConfig");
 var dadosFConfig = secaoFirebase.Get<FirebaseConfig>();
+builder.Services.Configure<FirebaseConfig>(secaoFirebase);
 if (dadosFConfig != null)
 {
     FirebaseConfig.SetInstancia(dadosFConfig);
@@ -58,30 +59,21 @@ if (dadosFConfig != null)
     builder.Services.AddSingleton(FirebaseConfig.Instancia);
 }
 
-// =========================================================================
-// 2. CONFIGURAÃ‡ÃƒO DE HTTP CLIENT
-// =========================================================================
-builder.Services.AddScoped(sp =>
-{
-    // LÃª a BaseApiUrl do ficheiro correto. Se estiver em modo Debug, vai buscar
-    // a URL do appsettings.Development.json automaticamente.
-    var baseUrl = builder.Configuration["Config:FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
-    var httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-
-    var configPayload = new JT_Aplicacao.Config.ClientConfigPayload { ClientId = "JT_Finance" };
-    JT_Aplicacao.Config.Config.Instancia.ClientId = configPayload.ClientId;
-    var json = System.Text.Json.JsonSerializer.Serialize(configPayload);
-    var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
-    httpClient.DefaultRequestHeaders.Add("X-Client-Config", encoded);
-
-    return httpClient;
-});
+JT_Aplicacao.Config.Config.Instancia.ClientId = "JT_Finance";
 
 // =========================================================================
 // 3. REGISTO DE SERVIÃ‡OS (InjeÃ§Ã£o de DependÃªncia)
 // =========================================================================
 // ServiÃ§os Globais
 builder.Services.AddJTUserInterface();
+
+// Configura o cliente nomeado já registrado pela camada compartilhada.
+// O JwtAuthorizationHandler injeta o JWT e o tenant somente nas chamadas da API.
+builder.Services.AddHttpClient(string.Empty, client =>
+{
+    var baseUrl = builder.Configuration["Config:FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 // ServiÃ§os EspecÃ­ficos deste Projeto
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();

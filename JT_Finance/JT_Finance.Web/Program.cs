@@ -54,27 +54,17 @@ if (dadosFConfig != null)
     builder.Services.AddSingleton(FirebaseConfig.Instancia);
 }
 
-// 5. HttpClient (NecessÃ¡rio para o Repository e Auth)
-builder.Services.AddHttpClient();
-builder.Services.AddScoped(sp =>
-{
-    // No Server, BaseApiUrl geralmente Ã© a prÃ³pria URL onde o site estÃ¡ rodando ou vazia,
-    // jÃ¡ que o Repository usa URLs absolutas do Firebase.
-    var baseUrl = builder.Configuration["Config:FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
-    var httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-
-    var configPayload = new JT_Aplicacao.Config.ClientConfigPayload { ClientId = "JT_Finance" };
-    JT_Aplicacao.Config.Config.Instancia.ClientId = configPayload.ClientId;
-    var json = System.Text.Json.JsonSerializer.Serialize(configPayload);
-    var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
-    httpClient.DefaultRequestHeaders.Add("X-Client-Config", encoded);
-
-    return httpClient;
-});
-
-
 // 3. ServiÃ§os Globais (Via MÃ©todo de ExtensÃ£o da Shared)
 builder.Services.AddJTUserInterface();
+Config.Instancia.ClientId = "JT_Finance";
+
+// Configura o cliente nomeado já registrado pela camada compartilhada.
+// O JwtAuthorizationHandler injeta o JWT e o tenant somente nas chamadas da API.
+builder.Services.AddHttpClient(string.Empty, client =>
+{
+    var baseUrl = builder.Configuration["Config:FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 // 4. ServiÃ§os EspecÃ­ficos deste Projeto
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();

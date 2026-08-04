@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Components;
 
 using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 
 namespace JT_Finance.Shared.Pages
@@ -18,7 +20,7 @@ namespace JT_Finance.Shared.Pages
         [CascadingParameter]
         public Func<string, Task>? SetPageTitleAsync { get; set; }
 
-        // --- Estado da Página ---
+        // --- Estado da Pï¿½gina ---
         private DateTime mesReferencia = DateTime.Now;
         private bool isLoading = true;
 
@@ -27,7 +29,7 @@ namespace JT_Finance.Shared.Pages
         private decimal totalDespesas;
         private decimal saldoAtual;
 
-        // --- Dados para os Gráficos ---
+        // --- Dados para os Grï¿½ficos ---
         private List<string> despesaTiposLabels = new();
         private List<ChartDataset> datasetsGraficoPorTipo = new();
         private List<string> despesaCategoriasLabels = new();
@@ -37,55 +39,79 @@ namespace JT_Finance.Shared.Pages
         private List<sDespesa> DespesaMes = new();
         protected override async Task OnInitializedAsync()
         {
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (authenticationState.User.Identity?.IsAuthenticated != true)
+            {
+                NavigationManager.NavigateTo("/login?returnUrl=%2Fhome");
+                return;
+            }
+
             if (SetPageTitleAsync != null)
             {
                 await SetPageTitleAsync.Invoke("Dashboard");
             }
-            await LoadDashboardData();
+
+            if (!await LoadDashboardData())
+                return;
+
             DespesaAVencer = await DespesaService.ObterDespesasAVencerAsync();
-             DespesasVencidas = await DespesaService.ObterDespesasVencidasAsync();
+            DespesasVencidas = await DespesaService.ObterDespesasVencidasAsync();
         }
 
-        private async Task LoadDashboardData()
+        private async Task<bool> LoadDashboardData()
         {
             isLoading = true;
             await InvokeAsync(StateHasChanged);
 
-            // Usar Task.Run para não bloquear a UI enquanto os dados são buscados
-            await Task.Run(async () =>
+            try
             {
                 // --- CARREGA DADOS DOS CARDS ---
                 totalReceitas = await ReceitaService.GetTotalMes(mesReferencia);
                 totalDespesas = await DespesaService.GetTotalMes(mesReferencia);
                 saldoAtual = totalReceitas - totalDespesas;
 
-
                 DespesaMes = await DespesaService.ObterDespesasMesAsync(mesReferencia);
 
-                // --- GRÁFICO DE TIPO (BARRAS) ---
+                // --- GRï¿½FICO DE TIPO (BARRAS) ---
                 var despesasPorTipo = await DespesaService.GetDespesaPorTipo(mesReferencia);
                 despesaTiposLabels = despesasPorTipo.Select(d => d.Tipo).ToList();
                 datasetsGraficoPorTipo = new List<ChartDataset>
-            {
-                new() {
-                    Label = "Total por Tipo",
-                    Data = despesasPorTipo.Select(d => d.ValorTotal).ToList()
-                }
-            };
+                {
+                    new()
+                    {
+                        Label = "Total por Tipo",
+                        Data = despesasPorTipo.Select(d => d.ValorTotal).ToList()
+                    }
+                };
 
-                // --- GRÁFICO DE CATEGORIA (ROSCA) ---
+                // --- GRï¿½FICO DE CATEGORIA (ROSCA) ---
                 var despesasPorCategoria = await DespesaService.GetDespesaPorCategoria(mesReferencia);
                 despesaCategoriasLabels = despesasPorCategoria.Select(d => d.Categoria).ToList();
                 datasetsGraficoPorCategoria = new List<ChartDataset>
-            {
-                new() {
-                    Data = despesasPorCategoria.Select(d => d.ValorTotal).ToList()
-                }
-            };
-            });
+                {
+                    new()
+                    {
+                        Data = despesasPorCategoria.Select(d => d.ValorTotal).ToList()
+                    }
+                };
 
-            isLoading = false;
-            await InvokeAsync(StateHasChanged);
+                return true;
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                NavigationManager.NavigateTo("/login?returnUrl=%2Fhome");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERRO DASHBOARD] Falha ao carregar dados: {ex.Message}");
+                return true;
+            }
+            finally
+            {
+                isLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
 
         private async Task MudarMes(int mesesParaAdicionar)
