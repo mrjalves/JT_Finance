@@ -157,7 +157,7 @@ namespace JT_Finance.Shared.Pages
                 }
                 else
                 {
-                    ToastService.ShowError("Erro!", "NÃ£o foi possÃ­vel pagar a fatura. Verifique os logs.");
+                    ToastService.ShowError("Erro!", "Não foi possível pagar a fatura. Verifique os logs.");
                 }
             }
             catch (Exception ex)

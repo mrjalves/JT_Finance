@@ -21,25 +21,25 @@ using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. ConfiguraÃ§Ã£o dos Componentes Blazor
+// 1. Configuração dos Componentes Blazor
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
-// 2. ConfiguraÃ§Ã£o (O ASP.NET Core jÃ¡ leu o appsettings.json automaticamente)
-// Apenas mapeamos a seÃ§Ã£o para a classe.
+// 2. Configuração (O ASP.NET Core já leu o appsettings.json automaticamente)
+// Apenas mapeamos a seção para a classe.
 builder.Services.Configure<FirebaseConfig>(builder.Configuration.GetSection("Config:FirebaseConfig"));
 
 
-// 1. Localiza a seÃ§Ã£o "Config" dentro do JSON
+// 1. Localiza a seção "Config" dentro do JSON
 var secaoConfig = builder.Configuration.GetSection("Config");
 
-// 2. Converte essa seÃ§Ã£o para um objeto da classe Config
+// 2. Converte essa seção para um objeto da classe Config
 var dadosConfig = secaoConfig.Get<Config>();
 
 if (dadosConfig != null)
 {
-    // 3. Define a instÃ¢ncia estÃ¡tica para uso global (Config.Instancia)
+    // 3. Define a instância estática para uso global (Config.Instancia)
     Config.SetInstancia(dadosConfig);
 }
 
@@ -48,13 +48,13 @@ var dadosFConfig = secaoConfig.Get<FirebaseConfig>();
 
 if (dadosFConfig != null)
 {
-    // 3. Define a instÃ¢ncia estÃ¡tica para uso global (Config.Instancia)
+    // 3. Define a instância estática para uso global (Config.Instancia)
     FirebaseConfig.SetInstancia(dadosFConfig);
-    // 4. Registra no container de serviÃ§os para injeÃ§Ã£o (Opcional, mas boa prÃ¡tica)
+    // 4. Registra no container de serviços para injeção (Opcional, mas boa prática)
     builder.Services.AddSingleton(FirebaseConfig.Instancia);
 }
 
-// 3. ServiÃ§os Globais (Via MÃ©todo de ExtensÃ£o da Shared)
+// 3. Serviços Globais (Via Método de Extensão da Shared)
 builder.Services.AddJTUserInterface();
 Config.Instancia.ClientId = "JT_Finance";
 
@@ -66,7 +66,7 @@ builder.Services.AddHttpClient(string.Empty, client =>
     client.BaseAddress = new Uri(baseUrl);
 });
 
-// 4. ServiÃ§os EspecÃ­ficos deste Projeto
+// 4. Serviços Específicos deste Projeto
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
 builder.Services.AddScoped<IModuloMenuProvider, FinanceMenuProvider>();
 
@@ -88,7 +88,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // ðŸ”¥ ESTA LINHA Ã‰ OBRIGATÃ“RIA PARA DEPURAR O CLIENTE
+    // ðŸ”¥ ESTA LINHA É OBRIGATÓRIA PARA DEPURAR O CLIENTE
     //app.UseWebAssemblyDebugging();
 }
 else
@@ -108,10 +108,10 @@ app.Use(async (context, next) =>
     await next();
 });
 // 1. ADICIONE O ROUTING AQUI! 
-// Ele analisa a URL e descobre o destino antes de aplicar a seguranÃ§a
+// Ele analisa a URL e descobre o destino antes de aplicar a segurança
 app.UseRouting();
 
-// 2. Agora o Antiforgery sabe para onde a requisiÃ§Ã£o vai e pode validÃ¡-la
+// 2. Agora o Antiforgery sabe para onde a requisição vai e pode validá-la
 app.UseAntiforgery();
 
 // 3. Nossos mapeamentos de destino

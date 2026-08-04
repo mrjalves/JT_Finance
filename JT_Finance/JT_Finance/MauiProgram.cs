@@ -49,7 +49,7 @@ namespace JT_Finance
 
                 // 1. Carregamento do appsettings.json
                 var assembly = Assembly.GetExecutingAssembly();
-                // IMPORTANTE: Verifique se o nome do recurso estÃ¡ correto (Namespace.Arquivo)
+                // IMPORTANTE: Verifique se o nome do recurso está correto (Namespace.Arquivo)
                 using var stream = assembly.GetManifestResourceStream("JT_Finance.appsettings.json");
 
                 if (stream != null)
@@ -69,16 +69,16 @@ namespace JT_Finance
                 }
                 else
                 {
-                    Console.WriteLine("AVISO: appsettings.json nÃ£o encontrado.");
+                    Console.WriteLine("AVISO: appsettings.json não encontrado.");
                 }
 
-                // 2. ConfiguraÃ§Ã£o do Firebase
+                // 2. Configuração do Firebase
                 if (Config.Instancia.FirebaseConfig != null)
                 {
                     FirebaseConfig.SetInstancia(Config.Instancia.FirebaseConfig);
                     builder.Services.AddSingleton(FirebaseConfig.Instancia);
                 }
-                // 5. HttpClient com ajuste para Android Localhost e Header de ConfiguraÃ§Ã£o Cliente
+                // 5. HttpClient com ajuste para Android Localhost e Header de Configuração Cliente
                 builder.Services.AddScoped(sp =>
                 {
                     var baseAddressUrl = FirebaseConfig.Instancia.BaseApiUrl ?? "https://localhost:7166";
@@ -101,10 +101,10 @@ namespace JT_Finance
                 });
 
 
-                // 3. ServiÃ§os Singleton
+                // 3. Serviços Singleton
                 JT_UserInterface.Shared.DependencyInjection.AddJTUserInterface(builder.Services);
                 
-                // 4. ServiÃ§os EspecÃ­ficos deste Projeto
+                // 4. Serviços Específicos deste Projeto
                 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
                 builder.Services.AddScoped<IModuloMenuProvider, FinanceMenuProvider>();
 
@@ -135,7 +135,7 @@ namespace JT_Finance
             catch (Exception ex)
             {
                 Console.WriteLine($"Erro ao criar o MauiApp: {ex.Message}");
-                throw; // Re-throw para nÃ£o mascarar o erro
+                throw; // Re-throw para não mascarar o erro
             }
         }
     }
