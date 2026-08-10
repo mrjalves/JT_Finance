@@ -17,7 +17,6 @@
               IsLoading="IsLoading"
               SortSelectors="SortSelectors"
               PageSize="@PageSize"
-              ViewportMaxHeight="calc(100vh - 17rem)"
               TotalItems="QtdReceitas"
               CurrentPage="CurrentPage"
               OnPageChanged="MudarPagina"
@@ -25,6 +24,8 @@
               EnableIA="true"
               NomeEntidade="Receita"
               EnableSearch="true"
+              OnSearchChanged="AplicarPesquisa"
+              ShowFilterButton="true"
               EnableColumnToggle="true">
         <EmptyTemplate>
             <p class="text-muted mb-0">Nenhuma receita cadastrada ainda. Clique em "Nova Receita" para começar.</p>

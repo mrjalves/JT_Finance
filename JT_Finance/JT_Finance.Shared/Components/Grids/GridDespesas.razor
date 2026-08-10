@@ -18,7 +18,6 @@
           Columns="gridColumns"
           IsLoading="IsLoading"
           SortSelectors="SortSelectors"
-          ViewportMaxHeight="calc(100vh - 17rem)"
           PageSize="PageSize"
           UseServerPagination="true"
           TotalItems="QtdDespesas"
@@ -27,6 +26,8 @@
           EnableIA="true"
           NomeEntidade="Despesa"
           EnableSearch="true"
+          OnSearchChanged="AplicarPesquisa"
+          ShowFilterButton="true"
           EnableColumnToggle="true">
     <EmptyTemplate>
         <p class="text-muted mb-0">Nenhuma despesa encontrada. Tente ajustar os filtros ou cadastre uma nova despesa.</p>
