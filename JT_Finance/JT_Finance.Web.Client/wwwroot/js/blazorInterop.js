@@ -208,7 +208,7 @@ window.JTHotkeys = (function () {
                 if (matchesSearchHotkey(e) && searchEnabled) {
                     e.preventDefault();
                     try {
-                        dotnetRef.invokeMethodAsync('HandleSearchHotkey');
+                        dotnetRef.invokeMethodAsync('HandleSearchHotkey').catch(() => { /* no-op */ });
                     } catch (err) {
                         console.error('Falha ao invocar HandleSearchHotkey:', err);
                     }
@@ -218,7 +218,7 @@ window.JTHotkeys = (function () {
                 if (matchesFilterHotkey(e) && filterEnabled) {
                     e.preventDefault();
                     try {
-                        dotnetRef.invokeMethodAsync('HandleFilterHotkey');
+                        dotnetRef.invokeMethodAsync('HandleFilterHotkey').catch(() => { /* no-op */ });
                     } catch (err) {
                         console.error('Falha ao invocar HandleFilterHotkey:', err);
                     }
@@ -277,7 +277,7 @@ window.JTHotkeys.enableNewHotkeys = function (dotNetRef) {
         if (!isTyping && isAltN) {
             e.preventDefault();
             try {
-                dotNetRef.invokeMethodAsync('OnNovoHotkey');
+                dotNetRef.invokeMethodAsync('OnNovoHotkey').catch(() => { /* no-op */ });
             } catch { /* no-op */ }
         }
     };

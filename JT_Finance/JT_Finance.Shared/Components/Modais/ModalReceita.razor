@@ -75,7 +75,7 @@
                                 }
                             </InputSelect>
                             <button class="btn btn-outline-secondary" type="button"
-                                    @onclick='() => ToggleInlineForm("Categoria")' title="Adicionar Nova Categoria">
+                                    @onclick='() => ToggleInlineForm("CategoriaReceita")' title="Adicionar Nova Categoria">
                                 <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>
@@ -83,11 +83,11 @@
                         {
                             <div class="input-group mt-2 animate__animated animate__fadeIn">
                                 <InputText @bind-Value="novaCategoriaDescricao" class="form-control" placeholder="Nova categoria..." />
-                                <button type="button" class="btn btn-success"
-                                        @onclick='() => SalvarNovaCategoria("Categoria")'>
+<button type="button" class="btn btn-success"
+                                    @onclick='() => SalvarNovaCategoria("CategoriaReceita")'>
                                     Salvar
                                 </button>
-                                <button type="button" class="btn btn-secondary" @onclick='() => ToggleInlineForm("Categoria")'>Cancelar</button>
+                                <button type="button" class="btn btn-secondary" @onclick='() => ToggleInlineForm("CategoriaReceita")'>Cancelar</button>
                             </div>
                         }
                     </div>

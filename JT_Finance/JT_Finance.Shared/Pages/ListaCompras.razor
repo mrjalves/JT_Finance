@@ -6,7 +6,7 @@
 @using static JT_UserInterface.Shared.Components.Core.ConfirmDialog
 @using static JT_UserInterface.Shared.Components.Core.Modal
 @inject JT_UserInterface.Shared.Services.Comum.ToastService ToastService
-@using JT_UserInterface.Shared.Components.Core
+@using JT_UserInterface.Shared.Templates
 <CrudPageTemplate>
     <ToolbarLeft>
         <button class="btn btn-primary" @onclick="AbrirModalNovoItem" disabled="@(listaSelecionadaId == 0)">

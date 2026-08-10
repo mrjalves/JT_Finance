@@ -277,7 +277,7 @@ window.JTHotkeys.enableNewHotkeys = function (dotNetRef) {
         if (!isTyping && isAltN) {
             e.preventDefault();
             try {
-                dotNetRef.invokeMethodAsync('OnNovoHotkey');
+                dotNetRef.invokeMethodAsync('OnNovoHotkey').catch(() => { /* no-op */ });
             } catch { /* no-op */ }
         }
     };

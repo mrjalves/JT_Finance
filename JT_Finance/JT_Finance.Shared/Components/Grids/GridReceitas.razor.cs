@@ -121,7 +121,7 @@ namespace JT_Finance.Shared.Components.Grids
         private async Task CarregarOpcoes()
         {
             TiposReceita = await CategoriaService.ListarPorPapelAsync("Receita", "TipoReceita");
-            CategoriasReceita = await CategoriaService.ListarPorPapelAsync("Receita", "Categoria");
+            CategoriasReceita = await CategoriaService.ListarPorPapelAsync("Receita", "CategoriaReceita");
         }
 
         private void ConfigurarFiltros()
