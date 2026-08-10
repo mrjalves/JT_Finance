@@ -33,23 +33,21 @@ else if (cartao == null)
 else
 {
     <!-- RESUMO GERAL -->
-    <CrudPageTemplate>
-        <ToolbarLeft>
-            <div class="d-flex flex-column w-100">
-                <h4 class="mb-1 text-primary">
-                    <i class="bi bi-credit-card-fill me-2"></i>Faturas: @cartao.Nome
-                    @if (Year.HasValue && Month.HasValue)
-                    {
-                        <span class="ms-2 badge bg-primary fs-6">@(new DateTime(Year.Value, Month.Value, 1).ToString("MMMM yyyy"))</span>
-                    }
-                </h4>
-                <div class="text-muted small">
-                    <span class="me-3">Limite: <strong>@cartao.Limite.ToString("C")</strong></span>
-                    <span class="me-3">Vencimento: <strong>dia @cartao.DiaVencimento</strong></span>
-                    <span>Fechamento: <strong>dia @cartao.DiaFechamento</strong></span>
-                </div>
-            </div>
-        </ToolbarLeft>
+    <CrudPageTemplate PageTitle="@($"Faturas: {cartao.Nome}")" PageIcon="bi-receipt">
+        <TitleBadge>
+            @if (Year.HasValue && Month.HasValue)
+            {
+                <span class="badge bg-primary fs-6">@(new DateTime(Year.Value, Month.Value, 1).ToString("MMMM yyyy"))</span>
+            }
+        </TitleBadge>
+        <PageDescription>
+            Visualize o detalhamento e as transações da fatura.
+            <span class="text-muted small d-block">
+                <span class="me-3">Limite: <strong>@cartao.Limite.ToString("C")</strong></span>
+                <span class="me-3">Vencimento: <strong>dia @cartao.DiaVencimento</strong></span>
+                <span>Fechamento: <strong>dia @cartao.DiaFechamento</strong></span>
+            </span>
+        </PageDescription>
         <ToolbarRight>
             <div class="d-flex align-items-center gap-2">
                 <button class="btn btn-primary" title="Nova Despesa (Alt+N)" aria-label="Nova Despesa (Alt+N)"

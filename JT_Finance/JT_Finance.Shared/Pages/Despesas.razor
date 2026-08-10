@@ -17,7 +17,8 @@
 @inject FiltroService FiltroService
 @inject IJSRuntime JSRuntime
 
-<CrudPageTemplate>
+<CrudPageTemplate PageTitle="Despesas" PageIcon="bi-cash-stack">
+    <PageDescription>Gerencie suas despesas e mantenha o controle financeiro.</PageDescription>
     <ToolbarLeft>
         <button class="btn btn-primary" title="Nova Despesa (Alt+N)" aria-label="Nova Despesa (Alt+N)" @onclick="AbrirModalParaNovaDespesa">
             <i class="bi bi-plus-circle-fill me-1"></i>

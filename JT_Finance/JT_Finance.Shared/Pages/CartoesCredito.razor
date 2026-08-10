@@ -14,7 +14,8 @@
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
-<CrudPageTemplate>
+<CrudPageTemplate PageTitle="Cartões de Crédito" PageIcon="bi-credit-card">
+    <PageDescription>Gerencie os limites e o fechamento dos cartões de crédito.</PageDescription>
     <ToolbarLeft>
         <button class="btn btn-primary" title="Novo Cartão (Alt+N)" aria-label="Novo Cartão (Alt+N)" @onclick="AbrirModalParaNovoCartao">
             <i class="bi bi-plus-circle-fill me-2"></i>Novo Cartão
