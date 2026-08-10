@@ -10,7 +10,6 @@
 @using JT_UserInterface.Shared.Components.Core
 @using JT_UserInterface.Shared.Templates
 @inject ICartaoCreditoService CartaoService
-@inject FiltroService FiltroService
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
@@ -22,17 +21,6 @@
         </button>
     </ToolbarLeft>
     <ToolbarRight>
-        <div class="d-flex align-items-center gap-2">
-            <div title="Pesquisar (@HotkeysDisplay.Atalho("search"))" aria-label="Pesquisar (@HotkeysDisplay.Atalho("search"))">
-                <SearchFilter />
-            </div>
-            <button class="btn btn-outline-primary"
-                    title="Filtrar (@HotkeysDisplay.Atalho("filter"))"
-                    aria-label="Filtrar (@HotkeysDisplay.Atalho("filter"))"
-                    @onclick="FiltroService.ToggleFiltros">
-                <i class="bi bi-filter action-icon" />
-            </button>
-        </div>
     </ToolbarRight>
     <ChildContent>
         <JT_Finance.Shared.Components.Grids.GridCartoesCredito

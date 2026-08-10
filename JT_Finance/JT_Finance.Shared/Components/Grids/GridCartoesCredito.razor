@@ -1,18 +1,21 @@
 @using JT_Classes.Financeiro
 @using JT_Classes.structs
 @using JT_Finance.Shared.Services.Interfaces
+@using JT_UserInterface.Shared.Services.Comum
 @inject ICartaoCreditoService CartaoService
 @inject NavigationManager NavigationManager
 
 <div class="card border-left-success shadow h-80 py-2">
     <DataGrid TItem="sCartao"
-              Items="Cartoes"
+              Items="CartoesFiltrados"
               IsLoading="IsLoading"
               SortSelectors="SortSelectors"
               ViewportMaxHeight="calc(100vh - 17rem)"
               EnableIA="true"
               NomeEntidade="CartaoCredito"
-              EnableSearch="true">
+              EnableSearch="true"
+              OnSearchChanged="AplicarPesquisa"
+              ShowFilterButton="true">
         <SortableHeaderTemplate Context="ctx">
             <th role="button" @onclick="() => ctx.SortBy(KeyNome)">
                 Nome
