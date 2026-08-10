@@ -25,6 +25,8 @@ namespace JT_Finance.Shared.Components.Grids
         [Parameter]
         public EventCallback<int> OnRemover { get; set; }
 
+        [Inject] public JT_UserInterface.Shared.Services.Comum.HotkeysDisplayService HotkeysDisplay { get; set; } = default!;
+
         private const string KeyNome = nameof(sCartao.Nome);
         private const string KeyLimite = nameof(sCartao.Limite);
         private const string KeyVencimento = "Vencimento";
@@ -60,6 +62,7 @@ namespace JT_Finance.Shared.Components.Grids
 
         protected override async Task OnParametersSetAsync()
         {
+            await HotkeysDisplay.InicializarAsync();
             await base.OnParametersSetAsync();
             await CarregarTotaisFaturaMesAsync();
             await CarregarTotaisEmAbertoAsync();

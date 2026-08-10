@@ -27,6 +27,8 @@ namespace JT_Finance.Shared.Components.Grids
         [Parameter] public List<sDespesa>? Despesas { get; set; }
         [Parameter] public int PageSize { get; set; } = 100;
 
+        [Inject] public JT_UserInterface.Shared.Services.Comum.HotkeysDisplayService HotkeysDisplay { get; set; } = default!;
+
         private List<sDespesa> listaTodasDespesas = new();
         
 
@@ -77,6 +79,7 @@ namespace JT_Finance.Shared.Components.Grids
 
         protected override async Task OnInitializedAsync()
         {
+            await HotkeysDisplay.InicializarAsync();
             DespesaService.OnDataChanged += AtualizarDadosDaPagina;
             await CarregarDependencias();
             ConfigurarFiltros();

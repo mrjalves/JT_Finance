@@ -34,6 +34,8 @@ namespace JT_Finance.Shared.Components.Grids
         public EventCallback<Receita> OnDuplicar { get; set; }
         #endregion
 
+        [Inject] public JT_UserInterface.Shared.Services.Comum.HotkeysDisplayService HotkeysDisplay { get; set; } = default!;
+
         private List<sCategoria> TiposReceita = new();
         private List<sCategoria> CategoriasReceita = new();
         private List<Receita> listaTodasReceitas = new();
@@ -69,6 +71,7 @@ namespace JT_Finance.Shared.Components.Grids
 
         protected override async Task OnInitializedAsync()
         {
+            await HotkeysDisplay.InicializarAsync();
             ReceitaService.OnDataChanged += AtualizarDadosDaPagina;
             await CarregarDependencias();
             ConfigurarFiltros();

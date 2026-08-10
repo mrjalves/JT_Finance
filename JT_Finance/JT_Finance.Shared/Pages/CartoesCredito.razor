@@ -17,18 +17,18 @@
 <CrudPageTemplate PageTitle="Cartões de Crédito" PageIcon="bi-credit-card">
     <PageDescription>Gerencie os limites e o fechamento dos cartões de crédito.</PageDescription>
     <ToolbarLeft>
-        <button class="btn btn-primary" title="Novo Cartão (Alt+N)" aria-label="Novo Cartão (Alt+N)" @onclick="AbrirModalParaNovoCartao">
+        <button class="btn btn-primary" title="Novo Cartão @NovoHotkeySufixo" aria-label="Novo Cartão @NovoHotkeySufixo" @onclick="AbrirModalParaNovoCartao">
             <i class="bi bi-plus-circle-fill me-2"></i>Novo Cartão
         </button>
     </ToolbarLeft>
     <ToolbarRight>
         <div class="d-flex align-items-center gap-2">
-            <div title="Pesquisar (Ctrl+K, /)" aria-label="Pesquisar (Ctrl+K, /)">
+            <div title="Pesquisar (@HotkeysDisplay.Atalho("search"))" aria-label="Pesquisar (@HotkeysDisplay.Atalho("search"))">
                 <SearchFilter />
             </div>
             <button class="btn btn-outline-primary"
-                    title="Filtrar (Alt+F, Ctrl+Shift+F, F3)"
-                    aria-label="Filtrar (Alt+F, Ctrl+Shift+F, F3)"
+                    title="Filtrar (@HotkeysDisplay.Atalho("filter"))"
+                    aria-label="Filtrar (@HotkeysDisplay.Atalho("filter"))"
                     @onclick="FiltroService.ToggleFiltros">
                 <i class="bi bi-filter action-icon" />
             </button>
@@ -68,8 +68,14 @@
 
     private DotNetObjectReference<CartoesCredito>? _novoHotkeysRef;
 
+    [Inject] public JT_UserInterface.Shared.Services.Comum.HotkeysDisplayService HotkeysDisplay { get; set; } = default!;
+
+    public string NovoHotkeySufixo => HotkeysDisplay.ComSufixo("novo");
+
     protected override async Task OnInitializedAsync()
     {
+        await HotkeysDisplay.InicializarAsync();
+
         if (SetPageTitleAsync != null)
         {
             await SetPageTitleAsync.Invoke("Cartões Crédito");
@@ -97,6 +103,45 @@
         await InvokeAsync(() =>
         {
             AbrirModalParaNovoCartao();
+            StateHasChanged();
+        });
+    }
+
+    [JSInvokable]
+    public async Task HandleAcaoHotkey(string acao)
+    {
+        await InvokeAsync(async () =>
+        {
+            switch (acao)
+            {
+                case "novo":
+                    AbrirModalParaNovoCartao();
+                    break;
+                case "editar":
+                    if (listaCartoes.Count > 0)
+                    {
+                        AbrirModalParaEditarCartao(listaCartoes[0].Id);
+                    }
+                    break;
+                case "deletar":
+                    if (listaCartoes.Count > 0)
+                    {
+                        ConfirmarRemocaoCartao(listaCartoes[0].Id);
+                    }
+                    break;
+                case "salvar":
+                    if (cartaoAtual != null)
+                    {
+                        await modalCartao.Submit();
+                    }
+                    break;
+                case "cancelar":
+                    if (cartaoAtual != null)
+                    {
+                        await HandleCancelarFormularioModal();
+                    }
+                    break;
+            }
             StateHasChanged();
         });
     }

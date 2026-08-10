@@ -160,6 +160,8 @@ namespace JT_Finance.Shared.Components.Modais
             StateHasChanged();
         }
 
+        public Task Submit() => HandleSubmit();
+
         private async Task HandleCancel()
         {
             await OnCancel.InvokeAsync();

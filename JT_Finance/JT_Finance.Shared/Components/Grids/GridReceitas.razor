@@ -65,10 +65,10 @@
                 <button class="btn btn-sm btn-outline-success me-2" title="Duplicar Receita" @onclick="() => OnDuplicar.InvokeAsync(r)" @onclick:stopPropagation="true">
                     <i class="bi bi-copy"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => OnEditar.InvokeAsync(r)" @onclick:stopPropagation="true">
+                <button class="btn btn-sm btn-outline-primary me-2" title="Editar (@HotkeysDisplay.Atalho("editar"))" @onclick="() => OnEditar.InvokeAsync(r)" @onclick:stopPropagation="true">
                     <i class="bi bi-pencil-fill me-1"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" @onclick="() => OnRemover.InvokeAsync(r.Id)" @onclick:stopPropagation="true">
+                <button class="btn btn-sm btn-outline-danger" title="Remover (@HotkeysDisplay.Atalho("deletar"))" @onclick="() => OnRemover.InvokeAsync(r.Id)" @onclick:stopPropagation="true">
                     <i class="bi bi-trash-fill me-1"></i>
                 </button>
             </text>

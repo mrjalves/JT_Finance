@@ -61,6 +61,10 @@ namespace JT_Finance.Shared.Pages
 
         private DotNetObjectReference<Fatura>? _novoHotkeysRef;
 
+        [Inject] public JT_UserInterface.Shared.Services.Comum.HotkeysDisplayService HotkeysDisplay { get; set; } = default!;
+
+        public string NovoHotkeySufixo => HotkeysDisplay.ComSufixo("novo");
+
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
@@ -80,6 +84,33 @@ namespace JT_Finance.Shared.Pages
             await InvokeAsync(() =>
             {
                 AbrirModalParaNovaDespesaGeral();
+                StateHasChanged();
+            });
+        }
+
+        [JSInvokable]
+        public async Task HandleAcaoHotkey(string acao)
+        {
+            await InvokeAsync(async () =>
+            {
+                switch (acao)
+                {
+                    case "novo":
+                        AbrirModalParaNovaDespesaGeral();
+                        break;
+                    case "salvar":
+                        if (despesaAtual != null)
+                        {
+                            await modalDespesa.Submit();
+                        }
+                        break;
+                    case "cancelar":
+                        if (despesaAtual != null)
+                        {
+                            await HandleCancelarModalDespesa();
+                        }
+                        break;
+                }
                 StateHasChanged();
             });
         }
@@ -187,6 +218,7 @@ namespace JT_Finance.Shared.Pages
         protected override async Task OnInitializedAsync()
         {
             isLoading = true;
+            await HotkeysDisplay.InicializarAsync();
             await Task.Yield();
 
             cartao = new CartaoCredito(CartaoId);

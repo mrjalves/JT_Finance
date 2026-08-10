@@ -4,6 +4,7 @@ using JT_Finance.Shared.Layout;
 using JT_Finance.Web.Components;
 using JT_Finance.Shared.Services.Interfaces;
 using JT_Classes.Financeiro;
+using JT_Classes.Comum;
 using JT_Servicos.Financeiro;
 using JT_Servicos.Interfaces;
 
@@ -140,6 +141,13 @@ app.MapGet("/api/configuracoes-ia/modelos", async ([FromQuery] string? apiKey, J
 app.MapGet("/api/configuracoes-ia/{id:int}", async (int id, JT_Servicos.IA.ConfiguracaoIAService svc) => await svc.GetById(id) is { } e ? Results.Ok(e) : Results.NotFound());
 app.MapPost("/api/configuracoes-ia", async ([FromBody] ConfiguracaoIA entity, JT_Servicos.IA.ConfiguracaoIAService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
 app.MapPut("/api/configuracoes-ia/{id:int}", async (int id, [FromBody] ConfiguracaoIA entity, JT_Servicos.IA.ConfiguracaoIAService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
+
+// Atalhos de Teclado Config endpoints
+app.MapGet("/api/configuracoes-hotkeys", async (JT_Servicos.Comum.ConfiguracaoHotkeysService svc) => Results.Ok(await svc.GetAll()));
+app.MapGet("/api/configuracoes-hotkeys/ativa", async (JT_Servicos.Comum.ConfiguracaoHotkeysService svc) => Results.Ok(await svc.GetAtivaAsync()));
+app.MapGet("/api/configuracoes-hotkeys/{id:int}", async (int id, JT_Servicos.Comum.ConfiguracaoHotkeysService svc) => await svc.GetById(id) is { } e ? Results.Ok(e) : Results.NotFound());
+app.MapPost("/api/configuracoes-hotkeys", async ([FromBody] ConfiguracaoHotkeys entity, JT_Servicos.Comum.ConfiguracaoHotkeysService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
+app.MapPut("/api/configuracoes-hotkeys/{id:int}", async (int id, [FromBody] ConfiguracaoHotkeys entity, JT_Servicos.Comum.ConfiguracaoHotkeysService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
 
 // Acessos Config endpoints
 app.MapGet("/api/configuracoes-acessos", async (JT_Servicos.Acessos.MAcessosConfiguracaoService svc) => Results.Ok(await svc.GetAll()));

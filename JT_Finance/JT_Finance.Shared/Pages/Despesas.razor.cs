@@ -29,11 +29,16 @@ namespace JT_Finance.Shared.Pages
 
         [Inject] public JT_Classes.Acessos.CurrentUserState UserState { get; set; } = default!;
         [Inject] public JT_Servicos.Comum.ConfiguracaoService ConfiguracaoService { get; set; } = default!;
+        [Inject] public JT_UserInterface.Shared.Services.Comum.HotkeysDisplayService HotkeysDisplay { get; set; } = default!;
+
+        public string NovoHotkeySufixo => HotkeysDisplay.ComSufixo("novo");
 
         private int _pageSize = 10;
 
         protected override async Task OnInitializedAsync()
         {
+            await HotkeysDisplay.InicializarAsync();
+
             if (SetPageTitleAsync != null)
             {
                 await SetPageTitleAsync.Invoke("Despesas");
@@ -70,6 +75,45 @@ namespace JT_Finance.Shared.Pages
             await InvokeAsync(() =>
             {
                 AbrirModalParaNovaDespesa();
+                StateHasChanged();
+            });
+        }
+
+        [JSInvokable]
+        public async Task HandleAcaoHotkey(string acao)
+        {
+            await InvokeAsync(async () =>
+            {
+                switch (acao)
+                {
+                    case "novo":
+                        AbrirModalParaNovaDespesa();
+                        break;
+                    case "editar":
+                        if (despesasFiltradas.Count > 0)
+                        {
+                            await AbrirModalParaEditarDespesa(despesasFiltradas[0].Id);
+                        }
+                        break;
+                    case "deletar":
+                        if (despesasFiltradas.Count > 0)
+                        {
+                            ConfirmarRemocaoDespesa(despesasFiltradas[0].Id);
+                        }
+                        break;
+                    case "salvar":
+                        if (despesaAtual != null)
+                        {
+                            await modalDespesa.Submit();
+                        }
+                        break;
+                    case "cancelar":
+                        if (despesaAtual != null)
+                        {
+                            await HandleCancelarFormularioModal();
+                        }
+                        break;
+                }
                 StateHasChanged();
             });
         }

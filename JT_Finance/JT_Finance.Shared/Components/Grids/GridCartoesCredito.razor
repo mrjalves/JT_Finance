@@ -96,13 +96,13 @@
                 </button>
 
                 <button class="btn btn-sm btn-outline-primary me-2"
-                        title="Editar cartão"
+                        title="Editar (@HotkeysDisplay.Atalho("editar"))"
                         @onclick="() => OnEditar.InvokeAsync(cartao.Id)"
                         @onclick:stopPropagation="true">
                     <i class="bi bi-pencil-fill me-1"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger"
-                        title="Remover cartão"
+                        title="Remover (@HotkeysDisplay.Atalho("deletar"))"
                         @onclick="() => OnRemover.InvokeAsync(cartao.Id)"
                         @onclick:stopPropagation="true">
                     <i class="bi bi-trash-fill me-1"></i>

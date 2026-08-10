@@ -82,6 +82,7 @@
 
     public void Open() => ModalRef.Open();
     public Task Close() => ModalRef.Close();
+    public Task Submit() => HandleSubmit();
 
     private async Task HandleCancel()
     {

@@ -17,7 +17,7 @@
 <CrudPageTemplate PageTitle="Receitas" PageIcon="bi-graph-up-arrow">
     <PageDescription>Acompanhe todas as suas receitas e ganhos.</PageDescription>
     <ToolbarLeft>
-        <button class="btn btn-primary" title="Nova Receita (Alt+N)" aria-label="Nova Receita (Alt+N)" @onclick="AbrirModalParaNovaReceita">
+        <button class="btn btn-primary" title="Nova Receita @NovoHotkeySufixo" aria-label="Nova Receita @NovoHotkeySufixo" @onclick="AbrirModalParaNovaReceita">
             <i class="bi bi-plus-circle-fill me-1"></i>
             <span class="d-none d-sm-inline">Nova Receita</span>
         </button>
@@ -55,12 +55,17 @@
     
     [Inject] public JT_Classes.Acessos.CurrentUserState UserState { get; set; } = default!;
     [Inject] public JT_Servicos.Comum.ConfiguracaoService ConfiguracaoService { get; set; } = default!;
+    [Inject] public JT_UserInterface.Shared.Services.Comum.HotkeysDisplayService HotkeysDisplay { get; set; } = default!;
     private int _pageSize = 10;
+
+    public string NovoHotkeySufixo => HotkeysDisplay.ComSufixo("novo");
 
     private DotNetObjectReference<Receitas>? _novoHotkeysRef;
 
     protected override async Task OnInitializedAsync()
     {
+        await HotkeysDisplay.InicializarAsync();
+
         if (SetPageTitleAsync != null)
         {
             await SetPageTitleAsync.Invoke("Receitas");
@@ -99,6 +104,45 @@
         await InvokeAsync(() =>
         {
             AbrirModalParaNovaReceita();
+            StateHasChanged();
+        });
+    }
+
+    [JSInvokable]
+    public async Task HandleAcaoHotkey(string acao)
+    {
+        await InvokeAsync(async () =>
+        {
+            switch (acao)
+            {
+                case "novo":
+                    AbrirModalParaNovaReceita();
+                    break;
+                case "editar":
+                    if (listaReceitas != null && listaReceitas.Count > 0)
+                    {
+                        AbrirModalParaEditarReceita(listaReceitas[0]);
+                    }
+                    break;
+                case "deletar":
+                    if (listaReceitas != null && listaReceitas.Count > 0)
+                    {
+                        ConfirmarRemocaoReceita(listaReceitas[0].Id);
+                    }
+                    break;
+                case "salvar":
+                    if (receitaAtual != null)
+                    {
+                        await modalReceita.Submit();
+                    }
+                    break;
+                case "cancelar":
+                    if (receitaAtual != null)
+                    {
+                        await HandleCancelarFormularioModal();
+                    }
+                    break;
+            }
             StateHasChanged();
         });
     }

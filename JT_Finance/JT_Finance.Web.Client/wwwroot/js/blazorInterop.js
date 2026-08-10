@@ -128,11 +128,26 @@ window.blazorCharts.createChart = (chartId, type, labels, datasets, title) => {
     });
 };
 
-// Atalhos globais para filtros e pesquisa
-window.JTHotkeys = (function () {
-    let handler = null;
-    let filterEnabled = false;
-    let searchEnabled = false;
+// ============================================================
+// appHotkeys — Configuração dinâmica de atalhos de teclado
+// ============================================================
+window.appHotkeys = (function () {
+    let config = {
+        search: 'Ctrl+K',
+        filter: 'F3',
+        novo: 'Alt+N',
+        editar: 'Alt+E',
+        deletar: 'Alt+D',
+        salvar: 'Alt+S',
+        cancelar: 'Esc',
+        ia: 'Alt+I'
+    };
+
+    let mainRef = null;
+    let pageRef = null;
+    let dispatchHandler = null;
+    let capture = null;
+    let capturing = false;
 
     function isTypingContext() {
         const ae = document.activeElement;
@@ -142,29 +157,134 @@ window.JTHotkeys = (function () {
         return isFormField || ae.isContentEditable === true;
     }
 
-    function matchesFilterHotkey(e) {
-        if (e.key === 'F3') return true;
-        if (e.altKey && (e.key === 'f' || e.key === 'F')) return true;
-        if (e.ctrlKey && e.shiftKey && (e.key === 'f' || e.key === 'F')) return true;
-        return false;
+    function parseCombo(combo) {
+        const p = { ctrl: false, alt: false, shift: false, meta: false, key: null };
+        if (!combo) return p;
+        for (const raw of String(combo).split('+')) {
+            const s = raw.trim();
+            if (!s) continue;
+            if (s === 'Ctrl') p.ctrl = true;
+            else if (s === 'Alt') p.alt = true;
+            else if (s === 'Shift') p.shift = true;
+            else if (s === 'Meta') p.meta = true;
+            else p.key = s;
+        }
+        return p;
     }
 
-    function matchesSearchHotkey(e) {
-        // Ctrl+K e "/"
-        if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) return true;
-        if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key === '/') return true;
-        return false;
+    function keyLabel(k) {
+        if (k === 'Esc') return 'Escape';
+        if (k === 'Del') return 'Delete';
+        if (k === 'Space') return ' ';
+        if (k === 'Plus') return '+';
+        return k;
+    }
+
+    function keysEqual(evtKey, comboKey) {
+        const c = keyLabel(comboKey);
+        if (!c) return false;
+        if (evtKey && evtKey.length === 1 && c.length === 1) {
+            return evtKey.toLowerCase() === c.toLowerCase();
+        }
+        return evtKey === c;
+    }
+
+    function matches(e, combo) {
+        const p = parseCombo(combo);
+        if (p.key == null) return false;
+        return e.ctrlKey === p.ctrl &&
+               e.altKey === p.alt &&
+               e.shiftKey === p.shift &&
+               e.metaKey === p.meta &&
+               keysEqual(e.key, p.key);
+    }
+
+    function displayKey(key) {
+        if (!key) return '';
+        if (key === ' ') return 'Space';
+        if (key.length === 1) return key.toUpperCase();
+        const map = {
+            Escape: 'Esc', Delete: 'Del',
+            ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right',
+            Backspace: 'Backspace', Tab: 'Tab', Enter: 'Enter',
+            Insert: 'Ins', Home: 'Home', End: 'End', PageUp: 'PgUp', PageDown: 'PgDn'
+        };
+        if (map[key]) return map[key];
+        if (/^F\d{1,2}$/.test(key)) return key;
+        return key;
+    }
+
+    function buildCombo(e) {
+        const parts = [];
+        if (e.ctrlKey) parts.push('Ctrl');
+        if (e.altKey) parts.push('Alt');
+        if (e.shiftKey) parts.push('Shift');
+        if (e.metaKey) parts.push('Meta');
+        const k = displayKey(e.key);
+        if (k) parts.push(k);
+        return parts.join('+');
+    }
+
+    function safeCall(ref, method, arg) {
+        if (!ref) return;
+        try {
+            const p = arg === undefined ? ref.invokeMethodAsync(method) : ref.invokeMethodAsync(method, arg);
+            if (p && typeof p.catch === 'function') p.catch(() => { /* no-op */ });
+        } catch { /* no-op */ }
+    }
+
+    function invokeAcao(acao) {
+        switch (acao) {
+            case 'search': safeCall(mainRef, 'HandleSearchHotkey'); break;
+            case 'filter': safeCall(mainRef, 'HandleFilterHotkey'); break;
+            case 'ia':     safeCall(mainRef, 'HandleIAHotkey'); break;
+            case 'novo':   safeCall(pageRef, 'OnNovoHotkey'); break;
+            default:       safeCall(pageRef, 'HandleAcaoHotkey', acao); break;
+        }
+    }
+
+    function handleKey(e) {
+        if (capturing) return;
+
+        if (isTypingContext()) {
+            // Em campos de digitação, apenas Salvar e Cancelar ficam ativos.
+            if (config.salvar && matches(e, config.salvar)) {
+                e.preventDefault();
+                invokeAcao('salvar');
+            } else if (config.cancelar && matches(e, config.cancelar)) {
+                e.preventDefault();
+                invokeAcao('cancelar');
+            }
+            return;
+        }
+
+        const order = ['search', 'filter', 'ia', 'novo', 'editar', 'deletar', 'salvar', 'cancelar'];
+        for (const acao of order) {
+            if (config[acao] && matches(e, config[acao])) {
+                e.preventDefault();
+                invokeAcao(acao);
+                return;
+            }
+        }
+    }
+
+    function ensureHandler() {
+        if (!dispatchHandler) {
+            dispatchHandler = handleKey;
+            document.addEventListener('keydown', handleKey, true);
+        }
+    }
+
+    function removeHandler() {
+        if (dispatchHandler) {
+            document.removeEventListener('keydown', dispatchHandler, true);
+            dispatchHandler = null;
+        }
     }
 
     function tryFocus(el) {
         if (!el) return false;
-        try {
-            el.focus();
-            el.select?.();
-            return true;
-        } catch {
-            return false;
-        }
+        try { el.focus(); el.select?.(); return true; } catch { return false; }
     }
 
     function isVisible(el) {
@@ -174,74 +294,75 @@ window.JTHotkeys = (function () {
     }
 
     function focusSearchInput() {
-        // Tenta achar o input
         const inputSel = 'input[data-role="search-filter"], input#searchFilterInput, .search-container .search-input, input[type="search"]';
         let input = document.querySelector(inputSel);
-
-        // Se não houver input ou não estiver visível, clica no ícone primeiro
         if (!input || !isVisible(input)) {
             const icon = document.querySelector('.search-container i.bi-search.action-icon');
             if (icon) {
                 icon.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-                setTimeout(() => {
-                    input = document.querySelector(inputSel);
-                    tryFocus(input);
-                }, 50);
+                setTimeout(() => { tryFocus(document.querySelector(inputSel)); }, 50);
                 return true;
             }
         }
-
-        // Se já estiver visível, apenas focar
         return tryFocus(input);
     }
 
+    function stopCapture() {
+        if (capture) {
+            const c = capture;
+            capture = null;
+            c.input.classList.remove('is-capturing');
+            c.input.removeEventListener('blur', c.blur);
+            document.removeEventListener('keydown', c.key, true);
+        }
+        capturing = false;
+    }
+
+    function startCapture(inputId, dotnetRef, acaoKey) {
+        stopCapture();
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        const onKey = function (e) {
+            if (e.key === 'Escape') {
+                e.preventDefault(); e.stopPropagation();
+                stopCapture();
+                return;
+            }
+            if (e.key === 'Control' || e.key === 'Shift' || e.key === 'Alt' || e.key === 'Meta') {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault(); e.stopPropagation();
+            const combo = buildCombo(e);
+            stopCapture();
+            input.value = combo;
+            try {
+                const p = dotnetRef.invokeMethodAsync('SetAtalho', acaoKey, combo);
+                if (p && typeof p.catch === 'function') p.catch(() => { /* no-op */ });
+            } catch { /* no-op */ }
+        };
+        const onBlur = function () { stopCapture(); };
+
+        capturing = true;
+        capture = { input, key: onKey, blur: onBlur };
+        input.classList.add('is-capturing');
+        input.addEventListener('blur', onBlur);
+        document.addEventListener('keydown', onKey, true);
+        try { input.focus({ preventScroll: true }); } catch { input.focus(); }
+        try { input.select(); } catch { /* no-op */ }
+    }
+
     return {
-        registerFilterHotkeys: function (dotnetRef) {
-            if (handler) {
-                document.removeEventListener('keydown', handler, true);
-                handler = null;
-            }
-
-            handler = function (e) {
-                if (isTypingContext()) return;
-
-                if (matchesSearchHotkey(e) && searchEnabled) {
-                    e.preventDefault();
-                    try {
-                        dotnetRef.invokeMethodAsync('HandleSearchHotkey').catch(() => { /* no-op */ });
-                    } catch (err) {
-                        console.error('Falha ao invocar HandleSearchHotkey:', err);
-                    }
-                    return;
-                }
-
-                if (matchesFilterHotkey(e) && filterEnabled) {
-                    e.preventDefault();
-                    try {
-                        dotnetRef.invokeMethodAsync('HandleFilterHotkey').catch(() => { /* no-op */ });
-                    } catch (err) {
-                        console.error('Falha ao invocar HandleFilterHotkey:', err);
-                    }
-                }
-            };
-
-            document.addEventListener('keydown', handler, true);
-        },
-
-        unregisterFilterHotkeys: function () {
-            if (handler) {
-                document.removeEventListener('keydown', handler, true);
-                handler = null;
-            }
-        },
-
-        enableFilterHotkeys: function () { filterEnabled = true; },
-        disableFilterHotkeys: function () { filterEnabled = false; },
-
-        enableSearchHotkeys: function () { searchEnabled = true; },
-        disableSearchHotkeys: function () { searchEnabled = false; },
-
-        focusSearchInput: function () { return focusSearchInput(); }
+        register: function (cfg) { if (cfg) Object.assign(config, cfg); },
+        getConfig: function () { return Object.assign({}, config); },
+        registerMain: function (dotnetRef) { mainRef = dotnetRef; ensureHandler(); },
+        unregisterMain: function () { mainRef = null; removeHandler(); },
+        registerPage: function (dotnetRef) { pageRef = dotnetRef; ensureHandler(); },
+        clearPage: function () { pageRef = null; },
+        focusSearchInput: function () { return focusSearchInput(); },
+        startCapture: startCapture,
+        stopCapture: stopCapture
     };
 })();
 
@@ -259,39 +380,25 @@ window.BlazorInterop.goBack = function (fallbackUrl) {
     }
 };
 
-// Namespace de atalhos do app
-window.JTHotkeys = window.JTHotkeys || {
-    _novoHandler: null
+window.BlazorInterop.getClientRect = function (element) {
+    if (!element || typeof element.getBoundingClientRect !== 'function') {
+        return { left: 0, top: 0, width: 0, height: 0 };
+    }
+    const r = element.getBoundingClientRect();
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
 };
 
-// Habilita atalhos para o botão "Novo" (Alt+N). Evita Ctrl+N (atalho do navegador).
-window.JTHotkeys.enableNewHotkeys = function (dotNetRef) {
-    const handler = (e) => {
-        const active = document.activeElement;
-        const isTyping =
-            active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
-
-        const key = (e.key || '').toLowerCase();
-        const isAltN = e.altKey && key === 'n';
-
-        if (!isTyping && isAltN) {
-            e.preventDefault();
-            try {
-                dotNetRef.invokeMethodAsync('OnNovoHotkey').catch(() => { /* no-op */ });
-            } catch { /* no-op */ }
-        }
+// Namespace de compatibilidade (JTHotkeys) — delega ao appHotkeys
+window.JTHotkeys = (function () {
+    return {
+        registerFilterHotkeys: function (dotnetRef) { window.appHotkeys.registerMain(dotnetRef); },
+        unregisterFilterHotkeys: function () { window.appHotkeys.unregisterMain(); },
+        enableFilterHotkeys: function () { /* compat: filtro sempre ativo */ },
+        disableFilterHotkeys: function () { /* compat */ },
+        enableSearchHotkeys: function () { /* compat: pesquisa sempre ativa */ },
+        disableSearchHotkeys: function () { /* compat */ },
+        focusSearchInput: function () { return window.appHotkeys.focusSearchInput(); },
+        enableNewHotkeys: function (dotnetRef) { window.appHotkeys.registerPage(dotnetRef); },
+        disableNewHotkeys: function () { window.appHotkeys.clearPage(); }
     };
-
-    if (window.JTHotkeys._novoHandler) {
-        window.removeEventListener('keydown', window.JTHotkeys._novoHandler, true);
-    }
-    window.JTHotkeys._novoHandler = handler;
-    window.addEventListener('keydown', handler, true);
-};
-
-window.JTHotkeys.disableNewHotkeys = function () {
-    if (window.JTHotkeys._novoHandler) {
-        window.removeEventListener('keydown', window.JTHotkeys._novoHandler, true);
-        window.JTHotkeys._novoHandler = null;
-    }
-};
+})();
