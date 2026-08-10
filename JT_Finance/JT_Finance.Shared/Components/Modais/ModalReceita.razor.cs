@@ -1,4 +1,4 @@
-﻿using JT_Aplicacao;
+using JT_Aplicacao;
 
 using JT_Classes;
 using JT_Classes.Financeiro;
@@ -54,7 +54,7 @@ namespace JT_Finance.Shared.Components.Modais
             try
             {
                 TiposReceita = await CategoriaService.ListarPorPapelAsync("Receita", "TipoReceita");
-                CategoriasReceita = await CategoriaService.ListarPorPapelAsync("Receita", "CategoriaReceita");
+                CategoriasReceita = await CategoriaService.ListarPorPapelAsync("Receita", "Categoria");
             }
             catch (Exception ex)
             {
