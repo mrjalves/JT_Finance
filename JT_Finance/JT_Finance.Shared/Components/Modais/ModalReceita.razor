@@ -47,19 +47,19 @@
                                 }
                             </InputSelect>
                             <button class="btn btn-outline-secondary" type="button"
-                                    @onclick='() => ToggleInlineForm("TipoReceita")'>
-                                +
+                                    @onclick='() => ToggleInlineForm("TipoReceita")' title="Adicionar Novo Tipo">
+                                <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>
                         @if (showNewTipoForm)
                         {
-                            <div class="input-group mt-2">
+                            <div class="input-group mt-2 animate__animated animate__fadeIn">
                                 <InputText @bind-Value="novaCategoriaDescricao" class="form-control" placeholder="Novo tipo..." />
                                 <button type="button" class="btn btn-success"
                                         @onclick='() => SalvarNovaCategoria("TipoReceita")'>
                                     Salvar
                                 </button>
-                                <button type="button" class="btn btn-secondary" @onclick='() => ToggleInlineForm("TipoDespesa")'>Cancelar</button>
+                                <button type="button" class="btn btn-secondary" @onclick='() => ToggleInlineForm("TipoReceita")'>Cancelar</button>
                             </div>
                         }
                     </div>
@@ -75,13 +75,13 @@
                                 }
                             </InputSelect>
                             <button class="btn btn-outline-secondary" type="button"
-                                    @onclick='() => ToggleInlineForm("CategoriaReceita")'>
-                                +
+                                    @onclick='() => ToggleInlineForm("CategoriaReceita")' title="Adicionar Nova Categoria">
+                                <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>
                         @if (showNewCategoriaForm)
                         {
-                            <div class="input-group mt-2">
+                            <div class="input-group mt-2 animate__animated animate__fadeIn">
                                 <InputText @bind-Value="novaCategoriaDescricao" class="form-control" placeholder="Nova categoria..." />
                                 <button type="button" class="btn btn-success"
                                         @onclick='() => SalvarNovaCategoria("CategoriaReceita")'>
@@ -96,6 +96,7 @@
                 <div class="form-group mb-3">
                     <label for="observacao" class="form-label">Observação</label>
                     <InputTextArea id="observacao" class="form-control" @bind-Value="Receita.Observacao" rows="3" />
+                    <ValidationMessage For="@(() => Receita.Observacao)" />
                 </div>
 
                 <div class="row align-items-center">
