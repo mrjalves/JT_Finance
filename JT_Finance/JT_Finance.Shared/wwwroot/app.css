@@ -50,7 +50,7 @@ h1:focus {
     border-color: #929292;
 }
 /* =================================================================
-   1. FONTAS E VARIÁVEIS DE TEMA (GLOBAIS)
+   1. FONTAS E VARIï¿½VEIS DE TEMA (GLOBAIS)
    ================================================================= */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -75,7 +75,7 @@ h1:focus {
 }
 
 /* =================================================================
-   2. RESET BÁSICO E ESTILOS GLOBAIS
+   2. RESET Bï¿½SICO E ESTILOS GLOBAIS
    ================================================================= */
 html, body {
     margin: 0;
@@ -83,6 +83,7 @@ html, body {
     font-family: var(--font-family-base);
     background-color: var(--background-color);
     color: var(--text-color);
+    font-size: 11px; /* Reduz a base global */
 }
 
 a, .btn-link {
@@ -95,7 +96,7 @@ a, .btn-link {
     }
 
 /* =================================================================
-   3. ESTILOS DE FORMULÁRIO E VALIDAÇÃO
+   3. ESTILOS DE FORMULï¿½RIO E VALIDAï¿½ï¿½O
    ================================================================= */
 .btn-primary {
     color: #fff;
