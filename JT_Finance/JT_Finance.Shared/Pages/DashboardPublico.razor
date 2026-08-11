@@ -1,0 +1,157 @@
+@page "/compartilhado/{token}"
+@using System.Globalization
+@using JT_Classes.Financeiro
+@using JT_Finance.Shared.Services.Dashboard
+@using JT_Finance.Shared.Components
+@using JT_UserInterface.Shared.Components.Core
+@inject JT_Servicos.Financeiro.DashboardService DashboardService
+@inject NavigationManager NavigationManager
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>@(dashboard?.Nome ?? "Dashboard Compartilhado")</PageTitle>
+
+@if (isLoading)
+{
+    <div class="text-center py-5"><Loading /></div>
+}
+else if (dashboard == null)
+{
+    <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-shield-lock fs-1 text-muted"></i>
+            <p class="mt-3 fw-semibold">Link inválido ou dashboard não está mais disponível.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">
+                <i class="bi bi-speedometer2 me-2 text-primary"></i>@dashboard.Nome
+            </h1>
+            @if (!string.IsNullOrWhiteSpace(dashboard.Descricao))
+            {
+                <p class="text-muted small mb-0">@dashboard.Descricao</p>
+            }
+            <span class="badge bg-secondary mt-1">
+                <i class="bi bi-eye me-1"></i>Visualização compartilhada
+            </span>
+            @if (mesReferencia != null)
+            {
+                <span class="badge bg-light text-dark border mt-1 ms-1">
+                    <i class="bi bi-calendar3 me-1"></i>Dados de @mesReferencia.Value.ToString("MMMM yyyy", new CultureInfo("pt-BR"))
+                </span>
+            }
+        </div>
+        @if (usuarioLogado)
+        {
+            <button class="btn btn-outline-primary btn-sm" @onclick="IrParaMeusDashboards">
+                <i class="bi bi-speedometer2 me-1"></i>Meus Dashboards
+            </button>
+        }
+    </div>
+
+    @if (!snapshots.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5 text-muted">
+                <i class="bi bi-grid fs-1"></i>
+                <p class="mt-3 mb-0">Este dashboard ainda não possui dados salvos. O proprietário precisa salvá-lo para gerar a visualização.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var def in dashboard.Indicadores.OrderBy(i => i.Ordem))
+            {
+                var snap = snapshots.FirstOrDefault(s => s.IndicadorId == def.Id);
+                var colunas = Math.Clamp(def.Colunas, 1, 12);
+                <div class="col-12 col-md-6 col-lg-@colunas">
+                    @if (snap != null)
+                    {
+                        <DashboardWidget ChartId="@ChartIdPara(def.Id)" Resultado="snap.Resultado" />
+                    }
+                    else
+                    {
+                        <div class="card shadow h-100">
+                            <div class="card-body text-center py-4 text-muted">
+                                <i class="bi bi-arrow-clockwise"></i> Carregando...
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public string Token { get; set; } = string.Empty;
+
+    private bool isLoading = true;
+    private bool usuarioLogado;
+    private MDashboard? dashboard;
+    private DateTime? mesReferencia;
+    private List<DashboardIndicadorSnapshot> snapshots = new();
+
+    private void IrParaMeusDashboards() => NavigationManager.NavigateTo("/dashboards");
+
+    private string ChartIdPara(Guid id) => $"chart_{id:N}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        usuarioLogado = authState.User.Identity?.IsAuthenticated == true;
+
+        await Carregar();
+    }
+
+    private async Task Carregar()
+    {
+        isLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            dashboard = await DashboardService.GetByToken(Token);
+            if (dashboard != null)
+            {
+                CarregarSnapshot();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DashboardPublico] Erro: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void CarregarSnapshot()
+    {
+        snapshots = new List<DashboardIndicadorSnapshot>();
+
+        if (dashboard == null || string.IsNullOrWhiteSpace(dashboard.DadosJson)) return;
+
+        try
+        {
+            var lista = System.Text.Json.JsonSerializer.Deserialize<List<DashboardIndicadorSnapshot>>(dashboard.DadosJson);
+            if (lista != null)
+            {
+                snapshots = lista;
+                var mesSnapshot = snapshots.Select(s => s.MesReferencia).FirstOrDefault(d => d.Year > 2000);
+                if (mesSnapshot != default) mesReferencia = mesSnapshot;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DashboardPublico] Erro ao ler snapshot: {ex.Message}");
+        }
+    }
+}

@@ -1,0 +1,327 @@
+@page "/dashboards/{id:int}"
+@using System.Globalization
+@using JT_Classes.Financeiro
+@using JT_Finance.Shared.Services.Dashboard
+@using JT_Finance.Shared.Components
+@using JT_UserInterface.Shared.Components.Core
+@inject JT_Servicos.Financeiro.DashboardService DashboardService
+@inject DashboardIndicadorRegistry IndicadorRegistry
+@inject NavigationManager NavigationManager
+@inject JT_UserInterface.Shared.Services.Comum.ToastService ToastService
+
+<PageTitle>@(dashboard?.Nome ?? "Dashboard")</PageTitle>
+
+@if (isLoading)
+{
+    <div class="text-center py-5"><Loading /></div>
+}
+else if (dashboard == null)
+{
+    <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-exclamation-triangle fs-1 text-muted"></i>
+            <p class="mt-3 fw-semibold">Dashboard não encontrado.</p>
+            <button class="btn btn-outline-primary" @onclick="Voltar">
+                <i class="bi bi-arrow-left me-1"></i>Voltar
+            </button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">
+                <i class="bi bi-speedometer2 me-2 text-primary"></i>@dashboard.Nome
+            </h1>
+            @if (!string.IsNullOrWhiteSpace(dashboard.Descricao))
+            {
+                <p class="text-muted small mb-0">@dashboard.Descricao</p>
+            }
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center me-2">
+                <button class="btn btn-outline-primary btn-sm" @onclick="MudarMesAnterior">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <span class="mx-2 text-nowrap fw-semibold">
+                    @mesReferencia.ToString("MMMM yyyy", new CultureInfo("pt-BR"))
+                </span>
+                <button class="btn btn-outline-primary btn-sm" @onclick="MudarMesProximo">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" @onclick="AbrirModalAdicionar">
+                <i class="bi bi-plus-circle me-1"></i>Indicador
+            </button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="Voltar">
+                                <i class="bi bi-arrow-left me-1"></i>Voltar
+                            </button>
+            <button class="btn btn-primary btn-sm" @onclick="Salvar">
+                <i class="bi bi-check-lg me-1"></i>Salvar
+            </button>
+        </div>
+    </div>
+
+    @if (!dashboard.Indicadores.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-plus-square fs-1 text-muted"></i>
+                <p class="mt-3 mb-1 fw-semibold">Este dashboard está vazio.</p>
+                <p class="text-muted small">Adicione indicadores para visualizar seus dados financeiros.</p>
+                <button class="btn btn-outline-primary mt-2" @onclick="AbrirModalAdicionar">
+                    <i class="bi bi-plus-circle me-1"></i> Adicionar Indicador
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var def in dashboard.Indicadores.OrderBy(i => i.Ordem))
+            {
+                var resultado = resultados.TryGetValue(def.Id, out var r) ? r : null;
+                var colunas = Math.Clamp(def.Colunas, 1, 12);
+                <div class="col-12 col-md-6 col-lg-@colunas">
+                    <div class="position-relative dashboard-widget-wrap">
+                        <div class="btn-group btn-group-sm position-absolute top-0 end-0 z-1 m-2">
+                            <button class="btn btn-outline-secondary" title="Mover para cima" @onclick="() => Mover(def.Id, -1)">
+                                <i class="bi bi-arrow-up"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" title="Mover para baixo" @onclick="() => Mover(def.Id, 1)">
+                                <i class="bi bi-arrow-down"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" title="Remover" @onclick="() => Remover(def.Id)">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        @if (resultado != null)
+                        {
+                            <DashboardWidget ChartId="@ChartIdPara(def.Id)" Resultado="resultado" />
+                        }
+                        else
+                        {
+                            <div class="card shadow h-100">
+                                <div class="card-body text-center py-4 text-muted">
+                                    <i class="bi bi-arrow-clockwise"></i> Carregando...
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+<Modal @ref="modalAdicionar" Title="Adicionar Indicador" Size="Modal.ModalSize.Large">
+    <BodyContent>
+        <div class="row g-3">
+            @foreach (var grupo in catalogo.GroupBy(c => c.Formato))
+            {
+                <div class="col-12">
+                    <h6 class="text-uppercase text-muted small fw-bold mb-2">
+                        <i class="bi @(grupo.Key == eDashboardFormato.Card ? "bi-square-fill" : "bi-bar-chart-fill") me-1"></i>
+                        @(grupo.Key == eDashboardFormato.Card ? "Cards" : "Gráficos")
+                    </h6>
+                    <div class="row g-2">
+                        @foreach (var item in grupo)
+                        {
+                            <div class="col-md-6">
+                                <div class="card h-100 border dashboard-catalogo-item" @onclick="() => AdicionarIndicador(item.Chave)">
+                                    <div class="card-body py-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi @item.Icone fs-4 text-primary"></i>
+                                            <div>
+                                                <div class="fw-semibold small">@item.Titulo</div>
+                                                <div class="text-muted small">@item.Descricao</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </BodyContent>
+    <FooterContent>
+        <button class="btn btn-secondary" @onclick="modalAdicionar.Close">Fechar</button>
+    </FooterContent>
+</Modal>
+
+@code {
+    [CascadingParameter]
+    public Func<string, Task>? SetPageTitleAsync { get; set; }
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private bool isLoading = true;
+    private MDashboard? dashboard;
+    private DateTime mesReferencia = DateTime.Now;
+    private List<DashboardIndicadorCatalogo> catalogo = new();
+    private Dictionary<Guid, DashboardIndicadorResultado> resultados = new();
+    private Modal modalAdicionar = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Carregar();
+    }
+
+    private async Task Carregar()
+    {
+        isLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            dashboard = await DashboardService.GetById(Id);
+            catalogo = IndicadorRegistry.ObterCatalogo();
+            if (dashboard != null)
+            {
+                if (SetPageTitleAsync != null) await SetPageTitleAsync.Invoke(dashboard.Nome);
+                await ComputarIndicadores();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DashboardEditor] Erro: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ComputarIndicadores()
+    {
+        if (dashboard == null) return;
+        resultados.Clear();
+
+        foreach (var def in dashboard.Indicadores)
+        {
+            var provider = IndicadorRegistry.ObterProvider(def.ChaveIndicador);
+            if (provider == null) continue;
+
+            try
+            {
+                var resultado = await provider.ResolverAsync(mesReferencia);
+                resultado.Titulo = string.IsNullOrWhiteSpace(def.Titulo) ? resultado.Titulo : def.Titulo;
+                resultados[def.Id] = resultado;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DashboardEditor] Falha no indicador {def.ChaveIndicador}: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task MudarMesAnterior()
+    {
+        mesReferencia = mesReferencia.AddMonths(-1);
+        await ComputarIndicadores();
+    }
+
+    private async Task MudarMesProximo()
+    {
+        mesReferencia = mesReferencia.AddMonths(1);
+        await ComputarIndicadores();
+    }
+
+    private void Voltar() => NavigationManager.NavigateTo("/dashboards");
+
+    private string ChartIdPara(Guid id) => $"chart_{id:N}";
+
+    private void AbrirModalAdicionar() => modalAdicionar.Open();
+
+    private async Task AdicionarIndicador(string chave)
+    {
+        if (dashboard == null) return;
+        var catalogoItem = catalogo.FirstOrDefault(c => c.Chave == chave);
+        if (catalogoItem == null) return;
+
+        var lista = dashboard.Indicadores;
+        lista.Add(new DashboardIndicadorDef
+        {
+            Id = Guid.NewGuid(),
+            ChaveIndicador = chave,
+            Titulo = catalogoItem.Titulo,
+            Colunas = catalogoItem.Formato == eDashboardFormato.Card ? 4 : 6,
+            Ordem = lista.Any() ? lista.Max(i => i.Ordem) + 1 : 1,
+            TipoGrafico = catalogoItem.TipoGrafico
+        });
+        dashboard.Indicadores = lista;
+
+        await modalAdicionar.Close();
+        await ComputarIndicadores();
+    }
+
+    private async Task Mover(Guid id, int direcao)
+    {
+        if (dashboard == null) return;
+        var lista = dashboard.Indicadores.OrderBy(i => i.Ordem).ToList();
+        var index = lista.FindIndex(i => i.Id == id);
+        var novoIndex = index + direcao;
+        if (index < 0 || novoIndex < 0 || novoIndex >= lista.Count) return;
+
+        (lista[index], lista[novoIndex]) = (lista[novoIndex], lista[index]);
+        for (int i = 0; i < lista.Count; i++) lista[i].Ordem = i + 1;
+
+        dashboard.Indicadores = lista;
+    }
+
+    private void Remover(Guid id)
+    {
+        if (dashboard == null) return;
+        dashboard.Indicadores = dashboard.Indicadores.Where(i => i.Id != id).ToList();
+        var ordenada = dashboard.Indicadores.OrderBy(i => i.Ordem).ToList();
+        for (int i = 0; i < ordenada.Count; i++) ordenada[i].Ordem = i + 1;
+        dashboard.Indicadores = ordenada;
+    }
+
+    private async Task Salvar()
+    {
+        if (dashboard == null) return;
+
+        dashboard.DadosJson = GerarSnapshotJson();
+
+        var sucesso = await DashboardService.Save(dashboard);
+        if (sucesso)
+        {
+            ToastService.ShowSuccess("Sucesso", "Dashboard salvo!");
+        }
+        else
+        {
+            ToastService.ShowError("Erro", "Falha ao salvar dashboard.");
+        }
+    }
+
+    private string? GerarSnapshotJson()
+    {
+        if (dashboard == null) return null;
+
+        var snapshots = dashboard.Indicadores
+            .OrderBy(i => i.Ordem)
+            .Select(def =>
+            {
+                var resultado = resultados.TryGetValue(def.Id, out var r)
+                    ? r
+                    : new DashboardIndicadorResultado { Titulo = def.Titulo, SemDados = true };
+
+                return new DashboardIndicadorSnapshot
+                {
+                    IndicadorId = def.Id,
+                    ChaveIndicador = def.ChaveIndicador,
+                    MesReferencia = mesReferencia,
+                    Resultado = resultado
+                };
+            })
+            .ToList();
+
+        return snapshots.Count == 0 ? null : System.Text.Json.JsonSerializer.Serialize(snapshots);
+    }
+}

@@ -1,0 +1,17 @@
+.dashboard-catalogo-item {
+    cursor: pointer;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
+.dashboard-catalogo-item:hover {
+    border-color: var(--primary-color, #0d6efd) !important;
+    box-shadow: 0 .25rem .5rem rgba(0, 0, 0, .08);
+}
+
+.dashboard-widget-wrap {
+    transition: box-shadow .15s ease-in-out;
+}
+
+.dashboard-widget-wrap:hover {
+    box-shadow: 0 .25rem .5rem rgba(0, 0, 0, .08);
+}
