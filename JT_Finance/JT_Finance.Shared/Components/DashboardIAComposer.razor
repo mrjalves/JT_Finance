@@ -148,10 +148,11 @@
                 ? $"/api/dashboards/{DashboardId.Value}/ia/previsualizar"
                 : "/api/dashboards/ia/previsualizar";
             var response = await Http.PostAsJsonAsync(route, new DashboardIAComposicaoRequest { Prompt = prompt.Trim(), DashboardId = DashboardId });
-            preview = await response.Content.ReadFromJsonAsync<DashboardIAComposicaoPreview>();
+            var body = await response.Content.ReadAsStringAsync();
+            preview = TryRead<DashboardIAComposicaoPreview>(body);
             if (!response.IsSuccessStatusCode || preview?.Sucesso != true)
             {
-                ToastService.ShowError("IA", preview?.Mensagem ?? "Não foi possível gerar a prévia.");
+                ToastService.ShowError("IA", preview?.Mensagem ?? ReadError(body, $"Não foi possível gerar a prévia (HTTP {(int)response.StatusCode})."));
                 preview = null;
             }
         }
@@ -181,10 +182,11 @@
                 Widgets = preview.Widgets
             };
             var response = await Http.PostAsJsonAsync(route, request);
-            var result = await response.Content.ReadFromJsonAsync<DashboardIAConfirmacaoResult>();
+            var body = await response.Content.ReadAsStringAsync();
+            var result = TryRead<DashboardIAConfirmacaoResult>(body);
             if (!response.IsSuccessStatusCode || result?.Sucesso != true)
             {
-                ToastService.ShowError("IA", result?.Mensagem ?? "Não foi possível confirmar a composição.");
+                ToastService.ShowError("IA", result?.Mensagem ?? ReadError(body, $"Não foi possível confirmar a composição (HTTP {(int)response.StatusCode})."));
                 return;
             }
 
@@ -202,5 +204,25 @@
         {
             isBusy = false;
         }
+    }
+
+    private static T? TryRead<T>(string body)
+    {
+        try { return System.Text.Json.JsonSerializer.Deserialize<T>(body); }
+        catch { return default; }
+    }
+
+    private static string ReadError(string body, string fallback)
+    {
+        try
+        {
+            using var json = System.Text.Json.JsonDocument.Parse(body);
+            var root = json.RootElement;
+            foreach (var name in new[] { "mensagem", "Mensagem", "message", "detail", "title" })
+                if (root.TryGetProperty(name, out var value) && value.ValueKind == System.Text.Json.JsonValueKind.String && !string.IsNullOrWhiteSpace(value.GetString()))
+                    return value.GetString()!;
+        }
+        catch { }
+        return string.IsNullOrWhiteSpace(body) ? fallback : body;
     }
 }
