@@ -1,11 +1,15 @@
 @page "/dashboards/{id:int}"
 @using System.Globalization
+@using System.Net.Http.Json
+@using JT_Classes.DW
 @using JT_Classes.Financeiro
 @using JT_Finance.Shared.Services.Dashboard
 @using JT_Finance.Shared.Components
 @using JT_UserInterface.Shared.Components.Core
+@using JT_UserInterface.Shared.Components.Core.Charts
 @inject JT_Servicos.Financeiro.DashboardService DashboardService
 @inject DashboardIndicadorRegistry IndicadorRegistry
+@inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject JT_UserInterface.Shared.Services.Comum.ToastService ToastService
 
@@ -145,6 +149,47 @@ else
                     </div>
                 </div>
             }
+
+            <div class="col-12">
+                <h6 class="text-uppercase text-muted small fw-bold mb-2">
+                    <i class="bi bi-database-fill me-1"></i>Genéricos (EDW — entidade e propriedade)
+                </h6>
+                @if (!indicadoresDw.Any())
+                {
+                    <div class="alert alert-light border small mb-0">
+                        Nenhum indicador genérico configurado ainda.
+                        <a href="/gestao/indicadores" target="_blank">Gerenciar Indicadores (EDW)</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-2">
+                        @foreach (var item in indicadoresDw)
+                        {
+                            var ehGrafico = !string.IsNullOrWhiteSpace(item.ColunaData);
+                            <div class="col-md-6">
+                                <div class="card h-100 border dashboard-catalogo-item" @onclick="() => AdicionarIndicadorDw(item.Id)">
+                                    <div class="card-body py-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi @(ehGrafico ? "bi-bar-chart-fill" : "bi-calculator-fill") fs-4 text-primary"></i>
+                                            <div>
+                                                <div class="fw-semibold small">@item.Nome</div>
+                                                <div class="text-muted small">
+                                                    <code>@item.OrigemNome</code> · @item.TipoOperacao@(string.IsNullOrWhiteSpace(item.Coluna) ? "" : $" · {item.Coluna}")
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="form-text">
+                        Indicadores genéricos calculam sobre o EDW (origem + coluna + operação).
+                        <a href="/gestao/indicadores" target="_blank">Gerenciar</a>
+                    </div>
+                }
+            </div>
         </div>
     </BodyContent>
     <FooterContent>
@@ -163,6 +208,7 @@ else
     private MDashboard? dashboard;
     private DateTime mesReferencia = DateTime.Now;
     private List<DashboardIndicadorCatalogo> catalogo = new();
+    private List<IndicadorDashboardDto> indicadoresDw = new();
     private Dictionary<Guid, DashboardIndicadorResultado> resultados = new();
     private Modal modalAdicionar = default!;
 
@@ -180,6 +226,7 @@ else
         {
             dashboard = await DashboardService.GetById(Id);
             catalogo = IndicadorRegistry.ObterCatalogo();
+            await CarregarIndicadoresDw();
             if (dashboard != null)
             {
                 if (SetPageTitleAsync != null) await SetPageTitleAsync.Invoke(dashboard.Nome);
@@ -204,14 +251,21 @@ else
 
         foreach (var def in dashboard.Indicadores)
         {
-            var provider = IndicadorRegistry.ObterProvider(def.ChaveIndicador);
-            if (provider == null) continue;
-
             try
             {
-                var resultado = await provider.ResolverAsync(mesReferencia);
-                resultado.Titulo = string.IsNullOrWhiteSpace(def.Titulo) ? resultado.Titulo : def.Titulo;
-                resultados[def.Id] = resultado;
+                if (def.ChaveIndicador.StartsWith("dw:", StringComparison.Ordinal))
+                {
+                    var resultado = await ResolverIndicadorDwAsync(def);
+                    if (resultado != null) resultados[def.Id] = resultado;
+                    continue;
+                }
+
+                var provider = IndicadorRegistry.ObterProvider(def.ChaveIndicador);
+                if (provider == null) continue;
+
+                var resultadoProvider = await provider.ResolverAsync(mesReferencia);
+                resultadoProvider.Titulo = string.IsNullOrWhiteSpace(def.Titulo) ? resultadoProvider.Titulo : def.Titulo;
+                resultados[def.Id] = resultadoProvider;
             }
             catch (Exception ex)
             {
@@ -238,6 +292,20 @@ else
 
     private void AbrirModalAdicionar() => modalAdicionar.Open();
 
+    private async Task CarregarIndicadoresDw()
+    {
+        try
+        {
+            indicadoresDw = await Http.GetFromJsonAsync<List<IndicadorDashboardDto>>("/api/indicadores-dashboard/painel")
+                             ?? new List<IndicadorDashboardDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DashboardEditor] Falha ao carregar indicadores genéricos: {ex.Message}");
+            indicadoresDw = new List<IndicadorDashboardDto>();
+        }
+    }
+
     private async Task AdicionarIndicador(string chave)
     {
         if (dashboard == null) return;
@@ -259,6 +327,88 @@ else
         await modalAdicionar.Close();
         await ComputarIndicadores();
     }
+
+    private async Task AdicionarIndicadorDw(int indicadorPainelId)
+    {
+        if (dashboard == null) return;
+        var item = indicadoresDw.FirstOrDefault(i => i.Id == indicadorPainelId);
+        if (item == null) return;
+
+        var ehGrafico = !string.IsNullOrWhiteSpace(item.ColunaData);
+        var lista = dashboard.Indicadores;
+        lista.Add(new DashboardIndicadorDef
+        {
+            Id = Guid.NewGuid(),
+            ChaveIndicador = $"dw:{item.Id}",
+            Titulo = item.Nome,
+            Colunas = ehGrafico ? 6 : 4,
+            Ordem = lista.Any() ? lista.Max(i => i.Ordem) + 1 : 1,
+            TipoGrafico = ehGrafico ? "bar" : string.Empty
+        });
+        dashboard.Indicadores = lista;
+
+        await modalAdicionar.Close();
+        await ComputarIndicadores();
+    }
+
+    private async Task<DashboardIndicadorResultado?> ResolverIndicadorDwAsync(DashboardIndicadorDef def)
+    {
+        if (!int.TryParse(def.ChaveIndicador[3..], out var id)) return null;
+        var item = indicadoresDw.FirstOrDefault(i => i.Id == id);
+        if (item == null) return null;
+
+        var de = new DateTime(mesReferencia.Year, mesReferencia.Month, 1);
+        var ate = de.AddMonths(1).AddDays(-1);
+        var ehGrafico = !string.IsNullOrWhiteSpace(item.ColunaData);
+
+        try
+        {
+            if (ehGrafico)
+            {
+                var resposta = await Http.PostAsJsonAsync($"/api/indicadores-dashboard/serie/{id}", new { De = de, Ate = ate });
+                if (!resposta.IsSuccessStatusCode) return null;
+                var serie = await resposta.Content.ReadFromJsonAsync<IndicadorSerieDto>();
+                if (serie == null) return null;
+
+                return new DashboardIndicadorResultado
+                {
+                    Titulo = def.Titulo,
+                    Formato = eDashboardFormato.Grafico,
+                    Icone = "bi-bar-chart-fill",
+                    CorVariante = "primary",
+                    TipoGrafico = "bar",
+                    Labels = serie.Labels,
+                    Datasets = serie.Valores.Any()
+                        ? new List<ChartDataset> { new() { Label = item.OrigemNome, Data = serie.Valores.Select(v => v ?? 0).ToList() } }
+                        : new List<ChartDataset>(),
+                    SemDados = !serie.Valores.Any()
+                };
+            }
+
+            var respostaCard = await Http.PostAsJsonAsync($"/api/indicadores-dashboard/calcular/{id}", new { De = de, Ate = ate });
+            if (!respostaCard.IsSuccessStatusCode) return null;
+            var resultado = await respostaCard.Content.ReadFromJsonAsync<IndicadorResultadoDto>();
+            if (resultado == null) return null;
+
+            return new DashboardIndicadorResultado
+            {
+                Titulo = def.Titulo,
+                Formato = eDashboardFormato.Card,
+                Icone = "bi-calculator-fill",
+                CorVariante = "primary",
+                Valor = resultado.Valor.HasValue ? FormatarValorGenerico(resultado.Valor.Value) : null,
+                SemDados = !resultado.Valor.HasValue
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DashboardEditor] Falha no indicador genérico {id}: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static string FormatarValorGenerico(decimal valor)
+        => valor.ToString(valor % 1 == 0 ? "N0" : "N2", CultureInfo.InvariantCulture);
 
     private async Task Mover(Guid id, int direcao)
     {
