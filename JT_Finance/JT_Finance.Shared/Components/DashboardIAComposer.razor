@@ -1,0 +1,206 @@
+@using JT_Classes.IA
+@using JT_UserInterface.Shared.Components.Core
+@inject HttpClient Http
+@inject JT_UserInterface.Shared.Services.Comum.ToastService ToastService
+
+<button class="btn @(ButtonClass)" @onclick="Abrir" disabled="@isBusy">
+    <i class="bi bi-stars me-1"></i>@ButtonText
+</button>
+
+<Modal @ref="modal" Title="Compor dashboard com IA" Size="Modal.ModalSize.ExtraLarge" CloseOnBackdropClick="false">
+    <BodyContent>
+        <div class="alert alert-light border small">
+            Descreva o dashboard desejado. A IA gera uma prévia editável; indicadores EDW novos só são criados ao confirmar.
+        </div>
+        <label class="form-label fw-semibold" for="dashboardIaPrompt">Prompt</label>
+        <textarea id="dashboardIaPrompt" class="form-control" rows="4" maxlength="1500" @bind="prompt"
+                  placeholder="Ex.: dashboard mensal com saldo, despesas por categoria e evolução das receitas"></textarea>
+        <div class="text-end text-muted small mt-1">@prompt.Length/1500</div>
+
+        @if (isBusy)
+        {
+            <div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Processando composição...</div>
+        }
+        else if (preview != null)
+        {
+            <hr />
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="mb-1"><i class="bi bi-eye me-1"></i>Prévia editável</h6>
+                    <span class="text-muted small">Expira em @preview.ExpiraEm.ToLocalTime().ToString("HH:mm")</span>
+                </div>
+                <span class="badge bg-primary">@preview.Widgets.Count widget(s)</span>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label small">Nome</label>
+                    <input class="form-control form-control-sm" @bind="preview.Nome" maxlength="120" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">Descrição</label>
+                    <input class="form-control form-control-sm" @bind="preview.Descricao" maxlength="500" />
+                </div>
+            </div>
+            <div class="list-group">
+                @foreach (var widget in preview.Widgets.OrderBy(w => w.Ordem))
+                {
+                    <div class="list-group-item">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-lg-4">
+                                <label class="form-label small mb-1">Título</label>
+                                <input class="form-control form-control-sm" @bind="widget.Titulo" maxlength="120" />
+                            </div>
+                            <div class="col-lg-3">
+                                <label class="form-label small mb-1">Indicador</label>
+                                <code class="d-block text-truncate pt-2">@widget.ChaveIndicador</code>
+                            </div>
+                            <div class="col-6 col-lg-2">
+                                <label class="form-label small mb-1">Tipo</label>
+                                <select class="form-select form-select-sm" @bind="widget.Formato">
+                                    <option value="Card">Card</option>
+                                    <option value="Grafico">Gráfico</option>
+                                </select>
+                            </div>
+                            <div class="col-3 col-lg-1">
+                                <label class="form-label small mb-1">Colunas</label>
+                                <input type="number" class="form-control form-control-sm" min="1" max="12" @bind="widget.Colunas" />
+                            </div>
+                            <div class="col-3 col-lg-2">
+                                <label class="form-label small mb-1">Gráfico</label>
+                                <select class="form-select form-select-sm" @bind="widget.TipoGrafico">
+                                    <option value="">Padrão</option>
+                                    <option value="bar">Barras</option>
+                                    <option value="line">Linha</option>
+                                    <option value="pie">Pizza</option>
+                                    <option value="doughnut">Rosca</option>
+                                    <option value="radar">Radar</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            @if (preview.IndicadoresPendentes.Any())
+            {
+                <div class="alert alert-warning small mt-3 mb-0">
+                    <i class="bi bi-database-add me-1"></i>
+                    @preview.IndicadoresPendentes.Count indicador(es) EDW novo(s) serão criados somente ao confirmar.
+                </div>
+            }
+        }
+    </BodyContent>
+    <FooterContent>
+        <button class="btn btn-secondary" @onclick="Fechar" disabled="@isBusy">Cancelar</button>
+        @if (preview == null)
+        {
+            <button class="btn btn-primary" @onclick="GerarPrevia" disabled="@(isBusy || string.IsNullOrWhiteSpace(prompt))">
+                <i class="bi bi-stars me-1"></i>Gerar prévia
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-outline-primary" @onclick="GerarPrevia" disabled="@isBusy">Gerar novamente</button>
+            <button class="btn btn-primary" @onclick="Confirmar" disabled="@isBusy">
+                <i class="bi bi-check-lg me-1"></i>Confirmar composição
+            </button>
+        }
+    </FooterContent>
+</Modal>
+
+@code {
+    [Parameter] public int? DashboardId { get; set; }
+    [Parameter] public string ButtonText { get; set; } = "Criar com IA";
+    [Parameter] public string ButtonClass { get; set; } = "btn-outline-primary";
+    [Parameter] public EventCallback<int> OnConfirmed { get; set; }
+
+    private Modal modal = default!;
+    private string prompt = string.Empty;
+    private DashboardIAComposicaoPreview? preview;
+    private bool isBusy;
+
+    private async Task Abrir()
+    {
+        prompt = string.Empty;
+        preview = null;
+        await modal.Open();
+    }
+
+    private async Task Fechar()
+    {
+        if (preview != null && !string.IsNullOrWhiteSpace(preview.PreviewId))
+        {
+            var route = DashboardId.HasValue
+                ? $"/api/dashboards/{DashboardId.Value}/ia/previsualizar/{preview.PreviewId}"
+                : $"/api/dashboards/ia/previsualizar/{preview.PreviewId}";
+            try { await Http.DeleteAsync(route); } catch { }
+        }
+        preview = null;
+        await modal.Close();
+    }
+
+    private async Task GerarPrevia()
+    {
+        if (string.IsNullOrWhiteSpace(prompt)) return;
+        isBusy = true;
+        try
+        {
+            var route = DashboardId.HasValue
+                ? $"/api/dashboards/{DashboardId.Value}/ia/previsualizar"
+                : "/api/dashboards/ia/previsualizar";
+            var response = await Http.PostAsJsonAsync(route, new DashboardIAComposicaoRequest { Prompt = prompt.Trim(), DashboardId = DashboardId });
+            preview = await response.Content.ReadFromJsonAsync<DashboardIAComposicaoPreview>();
+            if (!response.IsSuccessStatusCode || preview?.Sucesso != true)
+            {
+                ToastService.ShowError("IA", preview?.Mensagem ?? "Não foi possível gerar a prévia.");
+                preview = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("IA", ex.Message);
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task Confirmar()
+    {
+        if (preview == null) return;
+        isBusy = true;
+        try
+        {
+            var route = DashboardId.HasValue
+                ? $"/api/dashboards/{DashboardId.Value}/ia/previsualizar/{preview.PreviewId}/confirmar"
+                : $"/api/dashboards/ia/previsualizar/{preview.PreviewId}/confirmar";
+            var request = new DashboardIAComposicaoConfirmRequest
+            {
+                Nome = preview.Nome,
+                Descricao = preview.Descricao,
+                Widgets = preview.Widgets
+            };
+            var response = await Http.PostAsJsonAsync(route, request);
+            var result = await response.Content.ReadFromJsonAsync<DashboardIAConfirmacaoResult>();
+            if (!response.IsSuccessStatusCode || result?.Sucesso != true)
+            {
+                ToastService.ShowError("IA", result?.Mensagem ?? "Não foi possível confirmar a composição.");
+                return;
+            }
+
+            ToastService.ShowSuccess("Dashboard", "Composição confirmada.");
+            var id = result.DashboardId;
+            preview = null;
+            await modal.Close();
+            await OnConfirmed.InvokeAsync(id);
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError("IA", ex.Message);
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}
