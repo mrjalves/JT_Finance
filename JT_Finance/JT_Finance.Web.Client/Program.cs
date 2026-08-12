@@ -83,6 +83,7 @@ builder.Services.AddScoped<IModuloMenuProvider, FinanceMenuProvider>();
 builder.Services.AddScoped<JT_Servicos.Financeiro.DespesaService>();
 builder.Services.AddScoped<JT_Servicos.Financeiro.CartaoCreditoService>();
 builder.Services.AddScoped<JT_Servicos.Financeiro.ReceitaService>();
+builder.Services.AddScoped<JT_Servicos.Financeiro.DashboardService>();
 
 builder.Services.AddScoped<IDespesaService, JT_Finance.Shared.Services.DespesaService>();
 builder.Services.AddScoped<ICartaoCreditoService, JT_Finance.Shared.Services.CartaoCreditoService>();
@@ -90,6 +91,16 @@ builder.Services.AddScoped<IReceitaService, JT_Finance.Shared.Services.ReceitaSe
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
 builder.Services.AddScoped<ISecureStorageService, JT_Finance.Shared.Services.WebSecureStorageService>();
+
+// Providers de indicadores de dashboard
+builder.Services.AddScoped<JT_Finance.Shared.Services.Dashboard.TotalReceitasProvider>();
+builder.Services.AddScoped<JT_Finance.Shared.Services.Dashboard.TotalDespesasProvider>();
+builder.Services.AddScoped<JT_Finance.Shared.Services.Dashboard.SaldoProvider>();
+builder.Services.AddScoped<JT_Finance.Shared.Services.Dashboard.DespesasVencidasProvider>();
+builder.Services.AddScoped<JT_Finance.Shared.Services.Dashboard.ProximasVencimentoProvider>();
+builder.Services.AddScoped<JT_Finance.Shared.Services.Dashboard.DespesasPorCategoriaProvider>();
+builder.Services.AddScoped<JT_Finance.Shared.Services.Dashboard.DespesasPorTipoProvider>();
+builder.Services.AddScoped<JT_Finance.Shared.Services.Dashboard.DashboardIndicadorRegistry>();
 
 builder.Services.AddScoped<IModuloCategoriaProvider, JT_Finance.Shared.Layout.FinanceiroCategoriaProvider>();
 
