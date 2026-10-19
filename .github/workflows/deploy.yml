@@ -2,7 +2,7 @@ name: Deploy Finance
 
 on:  
   push:    
-    branches: [main, APP]  
+    branches: [master]  
   workflow_dispatch:
 
 concurrency:  
