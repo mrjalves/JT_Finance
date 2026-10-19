@@ -24,7 +24,7 @@ jobs:
 
       - name: Checkout JT_ApplicationLayer
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           if ! git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/mrjalves/JT_ApplicationLayer.git" ../JT_ApplicationLayer; then
             echo "::error::Falha ao clonar JT_ApplicationLayer. Se o repositório for privado, configure a secret GH_PAT (Personal Access Token com permissão 'repo')."
