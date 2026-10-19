@@ -23,23 +23,19 @@ jobs:
       - name: Checkout JT_Finance
         uses: actions/checkout@v4
 
-      # 2. Faz o checkout do repositório secundário (ApplicationLayer)
+     # 2. Faz o checkout do repositório secundário (ApplicationLayer)
       - name: Checkout JT_ApplicationLayer
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          # Validação: Verifica se a Secret foi carregada pelo GitHub.
-          if [ -z "$GH_TOKEN" ]; then
-            echo "::error::A secret GH_PAT está vazia! Verifique se ela foi criada nas Settings (Actions) do repositório JT_Finance."
-            exit 1
-          fi
+        uses: actions/checkout@v4
+        with:
+          # Indica qual repositório queremos baixar
+          repository: mrjalves/JT_ApplicationLayer
           
-          echo "Clonando JT_ApplicationLayer..."
-          # Utilizamos o 'http.extraHeader' para passar a autorização de forma mais limpa e segura.
-          if ! git -c http.extraHeader="Authorization: token ${GH_TOKEN}" clone --depth 1 "https://github.com/mrjalves/JT_ApplicationLayer.git" ../JT_ApplicationLayer; then
-            echo "::error::Falha ao clonar JT_ApplicationLayer. Verifique se o Token expirou ou se tem permissão de leitura neste repositório."
-            exit 1
-          fi
+          # Passa a secret com o Personal Access Token (PAT) para ter permissão
+          token: ${{ secrets.GH_PAT }}
+          
+          # Define onde os arquivos serão salvos. 
+          # O '../' garante que ficará no nível superior, assim como no seu comando original.
+          path: ../JT_ApplicationLayer
 
       # 3. Configura a versão do .NET
       - name: Setup .NET
