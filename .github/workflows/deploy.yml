@@ -19,7 +19,7 @@ jobs:
   deploy:    
     runs-on: ubuntu-latest    
     steps:
-      # 1. Faz o checkout do repositório principal (Isso trará a pasta velha junto)
+      # 1. Faz o checkout do repositório principal
       - name: Checkout JT_Finance
         uses: actions/checkout@v4
 
@@ -27,25 +27,30 @@ jobs:
       - name: Checkout JT_ApplicationLayer
         uses: actions/checkout@v4
         with:
+          # Repositório que será baixado
           repository: mrjalves/JT_ApplicationLayer
+          
+          # Token de autorização para repositórios privados
           token: ${{ secrets.GH_PAT }}
-          # MUDANÇA AQUI: Removemos o '../'
-          # Ao definir apenas 'JT_ApplicationLayer', a Action vai limpar a pasta 
-          # velha dentro do repo principal e colocar o código mais recente no lugar.
+          
+          # Substitui a pasta antiga dentro do projeto principal pelo código mais recente
           path: JT_ApplicationLayer
-          ref: ${{ github.ref_name }}
+          
+          # CORREÇÃO DEFINITIVA: Apontamos explicitamente para a branch 'master', 
+          # que é onde o seu código da camada de aplicação realmente está salvo.
+          ref: master
 
-      # 3. Configura a versão do .NET
+      # 3. Configura a versão do .NET para a compilação
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET }}
 
-      # 4. Publica a aplicação
+      # 4. Publica a aplicação gerando os arquivos finais
       - name: Publish
         run: dotnet publish ${{ env.PROJECT }} -c Release -o ./publish -p:ErrorOnDuplicatePublishOutputFiles=false
 
-      # 5. Configura a chave SSH para comunicar com o servidor (VPS)
+      # 5. Configura a chave SSH para comunicar de forma segura com o servidor (VPS)
       - name: Configurar SSH
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -59,7 +64,7 @@ jobs:
           ssh-keyscan -T 10 -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
           test -s ~/.ssh/known_hosts
 
-      # 6. Sincroniza os arquivos gerados com a pasta de produção
+      # 6. Envia os arquivos compilados para o seu servidor Linux usando rsync
       - name: Enviar arquivos
         run: |
           rsync -az --delete \
@@ -73,7 +78,7 @@ jobs:
             ./publish/ \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_PATH || env.DEST }}/
 
-      # 7. Reinicia o serviço no Linux e checa a integridade (Health Check)
+      # 7. Acessa o servidor via SSH para reiniciar a aplicação e verificar se está rodando
       - name: Reiniciar e verificar
         run: |
           ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' <<'EOF'
