@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECT: src/JT_Finance          # ajuste: pasta ou .csproj do projeto web
+  PROJECT: JT_Finance          # ajuste: pasta ou .csproj do projeto web
   SERVICE: jt_sistemas_finance
   DOTNET: 9.0.x                    # ajuste para o TargetFramework do projeto
 
