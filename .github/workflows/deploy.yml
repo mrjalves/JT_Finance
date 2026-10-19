@@ -1,44 +1,57 @@
 name: Deploy Finance
 
-on:
-  push:
-    branches: [main, APP]
+on:  
+  push:    
+    branches: [main, APP]  
   workflow_dispatch:
 
-concurrency:
-  group: deploy-finance
+concurrency:  
+  group: deploy-finance  
   cancel-in-progress: false
 
-env:
-  PROJECT: JT_Finance/JT_Finance.Web/JT_Finance.Web.csproj
-  SERVICE: jt_sistemas_finance
-  DEST: /var/www/jt_sistemas_finance
+env:  
+  PROJECT: JT_Finance/JT_Finance.Web/JT_Finance.Web.csproj  
+  SERVICE: jt_sistemas_finance  
+  DEST: /var/www/jt_sistemas_finance  
   DOTNET: 10.0.x
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+jobs:  
+  deploy:    
+    runs-on: ubuntu-latest    
     steps:
+      # 1. Faz o checkout do repositório principal
       - name: Checkout JT_Finance
         uses: actions/checkout@v4
 
+      # 2. Faz o checkout do repositório secundário (ApplicationLayer)
       - name: Checkout JT_ApplicationLayer
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          if ! git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/mrjalves/JT_ApplicationLayer.git" ../JT_ApplicationLayer; then
-            echo "::error::Falha ao clonar JT_ApplicationLayer. Se o repositório for privado, configure a secret GH_PAT (Personal Access Token com permissão 'repo')."
+          # Validação: Verifica se a Secret foi carregada pelo GitHub.
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::A secret GH_PAT está vazia! Verifique se ela foi criada nas Settings (Actions) do repositório JT_Finance."
+            exit 1
+          fi
+          
+          echo "Clonando JT_ApplicationLayer..."
+          # Utilizamos o 'http.extraHeader' para passar a autorização de forma mais limpa e segura.
+          if ! git -c http.extraHeader="Authorization: token ${GH_TOKEN}" clone --depth 1 "https://github.com/mrjalves/JT_ApplicationLayer.git" ../JT_ApplicationLayer; then
+            echo "::error::Falha ao clonar JT_ApplicationLayer. Verifique se o Token expirou ou se tem permissão de leitura neste repositório."
             exit 1
           fi
 
+      # 3. Configura a versão do .NET
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET }}
 
+      # 4. Publica a aplicação
       - name: Publish
         run: dotnet publish ${{ env.PROJECT }} -c Release -o ./publish -p:ErrorOnDuplicatePublishOutputFiles=false
 
+      # 5. Configura a chave SSH para comunicar com o seu servidor (VPS)
       - name: Configurar SSH
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -52,6 +65,7 @@ jobs:
           ssh-keyscan -T 10 -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
           test -s ~/.ssh/known_hosts
 
+      # 6. Sincroniza os arquivos gerados com a pasta no servidor
       - name: Enviar arquivos
         run: |
           rsync -az --delete \
@@ -65,6 +79,7 @@ jobs:
             ./publish/ \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_PATH || env.DEST }}/
 
+      # 7. Reinicia o serviço no Linux e checa a integridade
       - name: Reiniciar e verificar
         run: |
           ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' <<'EOF'
