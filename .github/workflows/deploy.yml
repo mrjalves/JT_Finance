@@ -23,7 +23,7 @@ jobs:
       - name: Checkout JT_Finance
         uses: actions/checkout@v4
 
-     # 2. Faz o checkout do repositório secundário (ApplicationLayer)
+      # 2. Faz o checkout do repositório secundário (ApplicationLayer)
       - name: Checkout JT_ApplicationLayer
         uses: actions/checkout@v4
         with:
@@ -33,9 +33,19 @@ jobs:
           # Passa a secret com o Personal Access Token (PAT) para ter permissão
           token: ${{ secrets.GH_PAT }}
           
-          # Define onde os arquivos serão salvos. 
-          # O '../' garante que ficará no nível superior, assim como no seu comando original.
-          path: ../JT_ApplicationLayer
+          # O checkout precisa ficar dentro do GITHUB_WORKSPACE.
+          path: JT_ApplicationLayer
+
+      # Os projetos usam referências relativas ao repositório secundário como irmão.
+      - name: Link JT_ApplicationLayer como repositório irmão
+        run: |
+          set -e
+          secondary_repo="$GITHUB_WORKSPACE/JT_ApplicationLayer"
+          sibling_repo="$GITHUB_WORKSPACE/../JT_ApplicationLayer"
+          test -d "$secondary_repo"
+          test ! -e "$sibling_repo"
+          ln -s "$secondary_repo" "$sibling_repo"
+          test -f "$sibling_repo/JT_UserInterface.Shared/JT_UserInterface.Shared.csproj"
 
       # 3. Configura a versão do .NET
       - name: Setup .NET
