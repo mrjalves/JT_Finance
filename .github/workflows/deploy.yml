@@ -2,21 +2,37 @@ name: Deploy Finance
 
 on:
   push:
-    branches: [main]
+    branches: [main, APP]
   workflow_dispatch:
 
+concurrency:
+  group: deploy-finance
+  cancel-in-progress: false
+
 env:
-  PROJECT: JT_Finance          # ajuste: pasta ou .csproj do projeto web
+  PROJECT: JT_Finance/JT_Finance.Web/JT_Finance.Web.csproj
   SERVICE: jt_sistemas_finance
-  DOTNET: 9.0.x                    # ajuste para o TargetFramework do projeto
+  DEST: /var/www/jt_sistemas_finance
+  DOTNET: 10.0.x
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout JT_Finance
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout JT_ApplicationLayer
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: |
+          if ! git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/mrjalves/JT_ApplicationLayer.git" ../JT_ApplicationLayer; then
+            echo "::error::Falha ao clonar JT_ApplicationLayer. Se o repositório for privado, configure a secret GH_PAT (Personal Access Token com permissão 'repo')."
+            exit 1
+          fi
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET }}
 
@@ -34,20 +50,32 @@ jobs:
           printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -T 10 -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          test -s ~/.ssh/known_hosts
 
       - name: Enviar arquivos
         run: |
           rsync -az --delete \
+            --exclude 'appsettings.json' \
             --exclude 'appsettings.Production.json' \
             --exclude '*.db' \
+            --exclude '*.db-shm' \
+            --exclude '*.db-wal' \
             --exclude 'uploads/' \
             -e "ssh -p ${{ secrets.VPS_PORT }}" \
             ./publish/ \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_PATH }}/
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_PATH || env.DEST }}/
 
       - name: Reiniciar e verificar
         run: |
-          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "sudo systemctl restart ${{ env.SERVICE }} && sleep 5 \
-             && systemctl is-active ${{ env.SERVICE }} \
-             && journalctl -u ${{ env.SERVICE }} -n 30 --no-pager | grep -A5 MIGRACAO || true"
+          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' <<'EOF'
+          set -e
+          sudo systemctl restart ${{ env.SERVICE }}
+          sleep 5
+          if ! systemctl is-active --quiet ${{ env.SERVICE }}; then
+            echo "::error::Serviço não subiu"
+            journalctl -u ${{ env.SERVICE }} -n 50 --no-pager
+            exit 1
+          fi
+          echo "Serviço ativo. Logs de migração:"
+          journalctl -u ${{ env.SERVICE }} -n 30 --no-pager | grep -A5 MIGRACAO || true
+          EOF

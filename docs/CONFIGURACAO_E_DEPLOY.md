@@ -130,29 +130,34 @@ O projeto `JT_Finance.Web` expõe endpoints de gerenciamento que podem ser consu
 O repositório possui uma esteira automatizada configurada via **GitHub Actions** em [.github/workflows/deploy.yml](file:///c:/Users/sirja/source/repos/mrjalves/JT_Finance/.github/workflows/deploy.yml).
 
 ### Fluxo do Workflow:
-1. **Gatilho**: Disparado automaticamente em cada `push` na branch `main` ou manualmente via `workflow_dispatch`.
-2. **Build & Publish**:
-   - Compila a aplicação com o SDK do .NET em modo `Release`.
+1. **Gatilho**: Disparado automaticamente em cada `push` nas branches `main` e `APP` ou manualmente via `workflow_dispatch`.
+2. **Resolução de Dependências Compartilhadas**:
+   - Clona o repositório irmão `mrjalves/JT_ApplicationLayer` para fornecer os componentes e serviços base (`JT_UserInterface.Shared`, `JT_Aplicacao`, `JT_Classes`, etc.).
+   - Utiliza a Secret `GH_PAT` (Personal Access Token com escopo `repo`).
+3. **Build & Publish**:
+   - Utiliza o SDK .NET 10.0 (`10.0.x`).
+   - Compila o projeto web `JT_Finance/JT_Finance.Web/JT_Finance.Web.csproj` em modo `Release`.
    - Gera o pacote de publicação na pasta `./publish/`.
-3. **Comunicação Segura (SSH)**:
+4. **Comunicação Segura (SSH)**:
    - Configura as chaves privadas do servidor remoto a partir das Secrets do GitHub:
+     - `GH_PAT`: Token de acesso para clonar repositórios privados da organização/usuário.
      - `VPS_SSH_KEY`: Chave privada SSH.
      - `VPS_HOST`: Endereço IP ou hostname do servidor.
      - `VPS_PORT`: Porta SSH de conexão.
      - `VPS_USER`: Usuário do servidor Linux.
-     - `VPS_PATH`: Caminho de destino da aplicação no servidor.
-4. **Sincronização com `rsync`**:
-   - Transfere os arquivos compilados excluindo dados dinâmicos do servidor para evitar sobrescrita indesejada:
+     - `VPS_PATH`: Caminho de destino da aplicação no servidor (padrão: `/var/www/jt_sistemas_finance`).
+5. **Sincronização com `rsync`**:
+   - Transfere os arquivos compilados excluindo arquivos sensíveis e dados de produção:
+     - `--exclude 'appsettings.json'`
      - `--exclude 'appsettings.Production.json'`
-     - `--exclude '*.db'`
+     - `--exclude '*.db*'`
      - `--exclude 'uploads/'`
-5. **Reinicialização do Serviço no Linux**:
-   - Executa o comando via SSH:
+6. **Reinicialização do Serviço no Linux**:
+   - Executa via SSH:
      ```bash
      sudo systemctl restart jt_sistemas_finance
      ```
-   - Aguarda 5 segundos e verifica se o serviço permaneceu com status `active (running)`.
-   - Exibe as últimas 30 linhas de log do `journalctl` com foco em mensagens de migração de banco de dados.
+   - Valida se o serviço está ativo (`systemctl is-active --quiet`) e exibe os logs de inicialização e migração.
 
 ---
 
