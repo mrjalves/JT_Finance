@@ -35,8 +35,9 @@ jobs:
           fi
           
           echo "Clonando JT_ApplicationLayer..."
-          # Utilizamos o 'http.extraHeader' para passar a autorização de forma mais limpa e segura.
-          if ! git -c http.extraHeader="Authorization: token ${GH_TOKEN}" clone --depth 1 "https://github.com/mrjalves/JT_ApplicationLayer.git" ../JT_ApplicationLayer; then
+          # GitHub exige autenticação Basic para operações Git via HTTPS com PAT.
+          AUTH_HEADER=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')
+          if ! git -c http.extraHeader="AUTHORIZATION: basic ${AUTH_HEADER}" clone --depth 1 "https://github.com/mrjalves/JT_ApplicationLayer.git" ../JT_ApplicationLayer; then
             echo "::error::Falha ao clonar JT_ApplicationLayer. Verifique se o Token expirou ou se tem permissão de leitura neste repositório."
             exit 1
           fi
