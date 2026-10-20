@@ -38,7 +38,7 @@ jobs:
           
           # CORREÇÃO DEFINITIVA: Apontamos explicitamente para a branch 'master', 
           # que é onde o seu código da camada de aplicação realmente está salvo.
-          ref: master
+          ref: Master
 
       # 3. Configura a versão do .NET para a compilação
       - name: Setup .NET
