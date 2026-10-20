@@ -13,7 +13,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\JT_ApplicationLayer\JT_UserInterface.Shared\JT_UserInterface.Shared.csproj" />
+		<ProjectReference Include="..\..\JT_ApplicationLayer\JT_UserInterface.Shared\JT_UserInterface.Shared.csproj" />
 		<ProjectReference Include="..\JT_Finance.Shared\JT_Finance.Shared.csproj" />
 	</ItemGroup>
 
