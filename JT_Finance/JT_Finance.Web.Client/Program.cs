@@ -74,6 +74,7 @@ builder.Services.AddHttpClient(string.Empty, client =>
     var baseUrl = builder.Configuration["Config:FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
     client.BaseAddress = new Uri(baseUrl);
 });
+builder.Services.AddHttpClient("GeminiCleanClient");
 
 // Serviços Específicos deste Projeto
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
@@ -90,6 +91,12 @@ builder.Services.AddScoped<ICartaoCreditoService, JT_Finance.Shared.Services.Car
 builder.Services.AddScoped<IReceitaService, JT_Finance.Shared.Services.ReceitaService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
+
+// Serviços de IA e Consultor Executivo
+builder.Services.AddScoped<JT_Finance.Shared.Services.Interfaces.IIAAnalyticsService, JT_Finance.Shared.Services.Implementations.GeminiRelatorioService>();
+builder.Services.AddScoped<JT_Finance.Shared.Services.Implementations.GeminiRelatorioService>();
+builder.Services.AddScoped<JT_Finance.Shared.BusinessLogic.RelatorioIALogic>();
+
 builder.Services.AddScoped<ISecureStorageService, JT_Finance.Shared.Services.WebSecureStorageService>();
 
 // Providers de indicadores de dashboard (registrados pela interface para o catálogo)
@@ -109,5 +116,3 @@ builder.Services.AddScoped<JT_UserInterface.Shared.Services.Interfaces.Comum.ITu
 // 4. INICIALIZAÇÃO DA APLICAÇÃO
 // =========================================================================
 await builder.Build().RunAsync();
-
-
