@@ -16,7 +16,7 @@
 
 <PageTitle>Dashboard Executivo Financeiro</PageTitle>
 
-<div class="container-fluid py-3 px-3 px-md-4 dashboard-home">
+<div class="container-fluid py-2 py-md-3 px-3 px-md-4 dashboard-home">
     <!-- Cabeçalho Executivo com Navegador de Mês Integrado -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 dashboard-header" data-tutorial="dashboard-header">
         <div class="d-flex align-items-center gap-2.5">
@@ -31,14 +31,23 @@
 
         <!-- Barra de Ações & Navegação de Mês -->
         <div class="d-flex flex-wrap align-items-center gap-2">
-            <div class="month-nav-pill d-flex align-items-center px-2 py-1 shadow-sm border rounded-pill">
+            <div class="month-nav-pill d-flex align-items-center px-2 py-1 shadow-sm border rounded-pill position-relative">
                 <button class="btn btn-sm btn-icon month-nav-btn rounded-circle" @onclick="MudarMesAnterior" title="Mês anterior">
                     <i class="bi bi-chevron-left"></i>
                 </button>
-                <span class="fw-bold px-2 text-capitalize d-flex align-items-center" style="font-size: 0.88rem; min-width: 145px; justify-content: center;">
-                    <i class="bi bi-calendar3 text-primary me-2"></i>
-                    @mesReferencia.ToString("MMMM yyyy", new CultureInfo("pt-BR"))
-                </span>
+                <div class="position-relative d-inline-flex align-items-center month-picker-wrapper">
+                    <label for="inputDataReferencia" class="fw-bold px-2 text-capitalize d-flex align-items-center mb-0 month-picker-label" style="font-size: 0.88rem; min-width: 145px; justify-content: center; cursor: pointer;" title="Clique para abrir o calendário e selecionar uma data">
+                        <i class="bi bi-calendar3 text-primary me-2"></i>
+                        @mesReferencia.ToString("MMMM yyyy", new CultureInfo("pt-BR"))
+                    </label>
+                    <input id="inputDataReferencia" 
+                           type="date" 
+                           class="month-picker-input-hidden" 
+                           value="@mesReferencia.ToString("yyyy-MM-dd")" 
+                           @onchange="OnDataReferenciaChanged" 
+                           onclick="try { this.showPicker(); } catch(e){}" 
+                           title="Clique para selecionar a data no calendário" />
+                </div>
                 <button class="btn btn-sm btn-icon month-nav-btn rounded-circle" @onclick="MudarMesProximo" title="Próximo mês">
                     <i class="bi bi-chevron-right"></i>
                 </button>
@@ -586,6 +595,31 @@
     .month-nav-pill {
         background-color: var(--card-bg, #ffffff);
         color: var(--text-color, inherit);
+    }
+
+    .month-picker-wrapper {
+        position: relative;
+        cursor: pointer;
+    }
+    .month-picker-label {
+        user-select: none;
+        transition: color 0.15s ease, background-color 0.15s ease;
+        border-radius: 999px;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+    .month-picker-wrapper:hover .month-picker-label {
+        color: var(--primary-color, #2563eb);
+        background-color: rgba(37, 99, 235, 0.08);
+    }
+    .month-picker-input-hidden {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
     }
 
     .month-nav-btn {

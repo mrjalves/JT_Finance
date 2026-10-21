@@ -145,6 +145,15 @@ namespace JT_Finance.Shared.Pages
             await RecarregarMetricasAsync();
         }
 
+        private async Task OnDataReferenciaChanged(ChangeEventArgs e)
+        {
+            if (DateTime.TryParse(e.Value?.ToString(), out var novaData))
+            {
+                mesReferencia = novaData;
+                await RecarregarMetricasAsync();
+            }
+        }
+
         private string ObterStatusVencimento(DateTime dataVencimento)
         {
             var dias = (DateTime.Today - dataVencimento.Date).Days;
