@@ -171,13 +171,6 @@ a, .btn-link {
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
     }
 
-/* =================================================================
-   Ajustes de Proporção e Layout (Padrão JT_UserInterface / JT_Estoque)
-   ================================================================= */
-html, body {
-    font-size: 13px !important;
-}
-
 .text-indigo {
     color: #4f46e5 !important;
 }
@@ -195,89 +188,4 @@ html, body {
 
 main.content-body {
     overflow-y: visible !important;
-}
-
-/* =================================================================
-   Correções do Menu Lateral (Sidebar) & Visibilidade dos Sub-itens
-   ================================================================= */
-.sidebar:not(.expanded) .sidebar-brand {
-    padding: 0.5rem 0 !important;
-    justify-content: center !important;
-    height: 60px !important;
-}
-
-.sidebar:not(.expanded) .sidebar-brand .brand-link {
-    display: none !important;
-}
-
-.sidebar:not(.expanded) .sidebar-brand .toggle-button {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    font-size: 1.3rem;
-    color: var(--sidebar-icon-color, #94a3b8);
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin: 0 auto;
-    transition: all 0.2s ease;
-}
-
-.sidebar:not(.expanded) .sidebar-brand .toggle-button:hover {
-    color: #ffffff;
-    background-color: var(--sidebar-icon-hover-bg, #334155);
-}
-
-@media (min-width: 769px) {
-    .dashboard-layout {
-        position: relative;
-    }
-
-    .dashboard-layout:not(.expanded) .sidebar:hover {
-        width: 14rem !important;
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 1050;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.35);
-        transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .dashboard-layout:not(.expanded) .sidebar:hover .sidebar-brand {
-        padding: 0 1rem !important;
-        justify-content: space-between !important;
-    }
-
-    .dashboard-layout:not(.expanded) .sidebar:hover .brand-link {
-        display: flex !important;
-    }
-
-    .dashboard-layout:not(.expanded) .sidebar:hover .brand-text,
-    .dashboard-layout:not(.expanded) .sidebar:hover .nav-text,
-    .dashboard-layout:not(.expanded) .sidebar:hover .sidebar-username {
-        display: inline-block !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-    }
-
-    .dashboard-layout:not(.expanded) .sidebar:hover .nav-group-chevron {
-        display: inline-block !important;
-    }
-
-    .dashboard-layout:not(.expanded) .sidebar:hover .sidebar-footer .nav-link {
-        justify-content: flex-start !important;
-        padding: 0.6rem 1rem !important;
-    }
-
-    .dashboard-layout:not(.expanded) .sidebar:hover .sidebar-footer .sidebar-avatar-wrapper {
-        margin: 0 !important;
-    }
-
-    .dashboard-layout:not(.expanded) .sidebar:hover .nav-sub-item .nav-link {
-        padding-left: 2rem !important;
-    }
-}
+}
