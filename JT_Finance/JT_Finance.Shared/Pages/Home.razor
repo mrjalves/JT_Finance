@@ -16,26 +16,26 @@
 
 <PageTitle>Dashboard Executivo Financeiro</PageTitle>
 
-<div class="container-fluid py-4 dashboard-home">
+<div class="container-fluid py-3 px-3 px-md-4 dashboard-home">
     <!-- Cabeçalho Executivo com Navegador de Mês Integrado -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 dashboard-header" data-tutorial="dashboard-header">
-        <div class="d-flex align-items-center gap-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 dashboard-header" data-tutorial="dashboard-header">
+        <div class="d-flex align-items-center gap-2.5">
             <div class="header-icon-badge shadow-sm">
                 <i class="bi bi-wallet2"></i>
             </div>
             <div>
-                <h1 class="h4 mb-0 fw-bold">Dashboard Executivo Financeiro</h1>
-                <p class="text-muted small mb-0">Gestão consolidada de receitas, despesas, fluxo de caixa e compromissos.</p>
+                <h1 class="h5 mb-0 fw-bold">Dashboard Executivo Financeiro</h1>
+                <p class="text-muted small mb-0 d-none d-sm-block">Gestão consolidada de fluxo de caixa, despesas e compromissos.</p>
             </div>
         </div>
 
         <!-- Barra de Ações & Navegação de Mês -->
         <div class="d-flex flex-wrap align-items-center gap-2">
-            <div class="month-nav-pill d-flex align-items-center px-2 py-1.5 shadow-sm border rounded-pill">
+            <div class="month-nav-pill d-flex align-items-center px-2 py-1 shadow-sm border rounded-pill">
                 <button class="btn btn-sm btn-icon month-nav-btn rounded-circle" @onclick="MudarMesAnterior" title="Mês anterior">
                     <i class="bi bi-chevron-left"></i>
                 </button>
-                <span class="fw-bold px-3 text-capitalize d-flex align-items-center" style="font-size: 0.92rem; min-width: 160px; justify-content: center;">
+                <span class="fw-bold px-2 text-capitalize d-flex align-items-center" style="font-size: 0.88rem; min-width: 145px; justify-content: center;">
                     <i class="bi bi-calendar3 text-primary me-2"></i>
                     @mesReferencia.ToString("MMMM yyyy", new CultureInfo("pt-BR"))
                 </span>
@@ -46,12 +46,12 @@
 
             @if (!IsMesAtual)
             {
-                <button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm fw-semibold" @onclick="IrParaMesAtualAsync" title="Voltar ao mês corrente">
-                    <i class="bi bi-calendar-check me-1"></i>Mês Atual
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-2.5 shadow-sm fw-semibold" @onclick="IrParaMesAtualAsync" title="Voltar ao mês corrente">
+                    <i class="bi bi-calendar-check me-1"></i>Hoje
                 </button>
             }
 
-            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm fw-semibold" @onclick="RecarregarMetricasAsync" title="Atualizar indicadores">
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 shadow-sm fw-semibold" @onclick="RecarregarMetricasAsync" title="Atualizar indicadores">
                 <i class="bi bi-arrow-clockwise me-1 @(isLoading ? "spin-animation" : "")"></i>Atualizar
             </button>
 
@@ -61,16 +61,16 @@
         </div>
     </div>
 
-    <!-- 1. KPIs Principais: Receitas, Despesas, Saldo Líquido e Saúde Orçamentária -->
-    <div class="row g-3 mb-4">
+    <!-- 1. Linha Unificada de KPIs Executivos (5 Cards em Linha Responsiva) -->
+    <div class="row g-2.5 g-md-3 mb-3">
         <!-- Receitas (Mês) -->
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 kpi-card-refined kpi-accent-emerald h-100 p-3 shadow-sm" data-tutorial="kpi-receitas">
+        <div class="col-12 col-sm-6 col-md-4 col-xl">
+            <div class="card border-0 kpi-card-refined kpi-accent-emerald h-100 p-2.5 p-xl-3 shadow-sm" data-tutorial="kpi-receitas">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
+                    <div class="flex-grow-1 min-w-0">
                         <div class="kpi-label">Receitas (Mês)</div>
                         <div class="kpi-value text-success">@totalReceitas.ToString("C")</div>
-                        <div class="kpi-sub-badges mt-2 d-flex flex-wrap gap-1">
+                        <div class="kpi-sub-badges mt-1.5 d-flex flex-wrap gap-1">
                             <span class="badge badge-subtle-success">
                                 <i class="bi bi-arrow-up-right me-1"></i>Entradas confirmadas
                             </span>
@@ -84,21 +84,18 @@
         </div>
 
         <!-- Despesas (Mês) -->
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 kpi-card-refined kpi-accent-rose h-100 p-3 shadow-sm card-clickable"
+        <div class="col-12 col-sm-6 col-md-4 col-xl">
+            <div class="card border-0 kpi-card-refined kpi-accent-rose h-100 p-2.5 p-xl-3 shadow-sm card-clickable"
                  data-tutorial="kpi-despesas"
                  @onclick='() => AbrirModalDetalhes("Despesas do Mês", DespesaMes)'
-                 title="Clique para ver a relação de despesas do mês">
+                 title="Clique para auditar as despesas do mês">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
+                    <div class="flex-grow-1 min-w-0">
                         <div class="kpi-label">Despesas (Mês)</div>
                         <div class="kpi-value text-danger">@totalDespesas.ToString("C")</div>
-                        <div class="kpi-sub-badges mt-2 d-flex flex-wrap gap-1">
+                        <div class="kpi-sub-badges mt-1.5 d-flex flex-wrap gap-1">
                             <span class="badge badge-subtle-danger">
                                 <i class="bi bi-arrow-down-right me-1"></i>@DespesaMes.Count lançamento(s)
-                            </span>
-                            <span class="badge badge-subtle-neutral">
-                                <i class="bi bi-eye me-1"></i>Auditar
                             </span>
                         </div>
                     </div>
@@ -109,17 +106,17 @@
             </div>
         </div>
 
-        <!-- Saldo Líquido (Mês) -->
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 kpi-card-refined kpi-accent-indigo h-100 p-3 shadow-sm" data-tutorial="kpi-saldo">
+        <!-- Saldo Líquido -->
+        <div class="col-12 col-sm-6 col-md-4 col-xl">
+            <div class="card border-0 kpi-card-refined kpi-accent-indigo h-100 p-2.5 p-xl-3 shadow-sm" data-tutorial="kpi-saldo">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="kpi-label">Saldo Líquido (Mês)</div>
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="kpi-label">Saldo Líquido</div>
                         <div class="kpi-value @(saldoAtual >= 0 ? "text-primary" : "text-danger")">@saldoAtual.ToString("C")</div>
-                        <div class="kpi-sub-badges mt-2 d-flex flex-wrap gap-1">
+                        <div class="kpi-sub-badges mt-1.5 d-flex flex-wrap gap-1" data-tutorial="kpi-saude">
                             <span class="badge @(saldoAtual >= 0 ? "badge-subtle-success" : "badge-subtle-danger")">
                                 <i class="bi @(saldoAtual >= 0 ? "bi-graph-up-arrow" : "bi-graph-down-arrow") me-1"></i>
-                                @(saldoAtual >= 0 ? "Superávit no período" : "Déficit no período")
+                                @(saldoAtual >= 0 ? "Superávit" : "Déficit") (@TaxaComprometimento% gasto)
                             </span>
                         </div>
                     </div>
@@ -130,54 +127,21 @@
             </div>
         </div>
 
-        <!-- Saúde Financeira / Comprometimento -->
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 kpi-card-refined kpi-accent-sky h-100 p-3 shadow-sm" data-tutorial="kpi-saude">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="kpi-label">Comprometimento de Renda</div>
-                        <div class="d-flex align-items-baseline gap-2">
-                            <div class="kpi-value">@TaxaComprometimento%</div>
-                            <span class="small text-muted fw-semibold">gastos / receita</span>
-                        </div>
-                        <div class="progress mt-2" style="height: 6px; background-color: rgba(100, 116, 139, 0.12); border-radius: 999px;">
-                            <div class="progress-bar @(TaxaComprometimento > 90 ? "bg-danger" : TaxaComprometimento > 70 ? "bg-warning" : "bg-success")"
-                                 style="width: @(Math.Min(100, TaxaComprometimento))%; border-radius: 999px;"></div>
-                        </div>
-                        <div class="kpi-sub-badges mt-2 d-flex flex-wrap gap-1">
-                            <span class="badge @(TaxaComprometimento > 90 ? "badge-subtle-danger" : TaxaComprometimento > 70 ? "badge-subtle-warning" : "badge-subtle-success")">
-                                @(TaxaComprometimento > 100 ? "Gastos > Receitas" : TaxaComprometimento > 70 ? "Atenção ao teto" : "Equilíbrio saudável")
-                            </span>
-                        </div>
-                    </div>
-                    <div class="kpi-icon-bubble kpi-bubble-sky ms-2">
-                        <i class="bi bi-speedometer2"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. Alertas Críticos de Vencimento -->
-    <div class="row g-3 mb-4">
         <!-- Próximas ao Vencimento -->
-        <div class="col-12 col-md-6">
-            <div class="card border-0 kpi-card-refined kpi-accent-amber h-100 p-3 shadow-sm card-clickable"
+        <div class="col-12 col-sm-6 col-md-6 col-xl">
+            <div class="card border-0 kpi-card-refined kpi-accent-amber h-100 p-2.5 p-xl-3 shadow-sm card-clickable"
                  data-tutorial="kpi-a-vencer"
                  @onclick='() => AbrirModalDetalhes("Próximas ao Vencimento", DespesaAVencer)'
                  title="Clique para auditar as despesas que vencem em breve">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="kpi-label">Próximas ao Vencimento</div>
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="kpi-label">A Vencer (Próximas)</div>
                         <div class="kpi-value text-warning-emphasis">
                             @(DespesaAVencer?.Sum(d => d.Valor).ToString("C") ?? "R$ 0,00")
                         </div>
-                        <div class="kpi-sub-badges mt-2 d-flex flex-wrap gap-1">
+                        <div class="kpi-sub-badges mt-1.5 d-flex flex-wrap gap-1">
                             <span class="badge badge-subtle-warning">
                                 <i class="bi bi-clock-history me-1"></i>@(DespesaAVencer?.Count ?? 0) conta(s) a vencer
-                            </span>
-                            <span class="badge badge-subtle-neutral">
-                                <i class="bi bi-calendar2-check me-1"></i>Auditar pendências
                             </span>
                         </div>
                     </div>
@@ -189,24 +153,21 @@
         </div>
 
         <!-- Despesas Vencidas -->
-        <div class="col-12 col-md-6">
-            <div class="card border-0 kpi-card-refined kpi-accent-danger h-100 p-3 shadow-sm card-clickable"
+        <div class="col-12 col-sm-6 col-md-6 col-xl">
+            <div class="card border-0 kpi-card-refined kpi-accent-danger h-100 p-2.5 p-xl-3 shadow-sm card-clickable"
                  data-tutorial="kpi-vencidas"
                  @onclick='() => AbrirModalDetalhes("Despesas Vencidas", DespesasVencidas)'
-                 title="Clique para regularizar as despesas vencidas">
+                 title="Clique para regularizar contas vencidas">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="kpi-label">Despesas Vencidas (Urgente)</div>
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="kpi-label">Contas Vencidas</div>
                         <div class="kpi-value text-danger">
                             @(DespesasVencidas?.Sum(d => d.Valor).ToString("C") ?? "R$ 0,00")
                         </div>
-                        <div class="kpi-sub-badges mt-2 d-flex flex-wrap gap-1">
+                        <div class="kpi-sub-badges mt-1.5 d-flex flex-wrap gap-1">
                             <span class="badge @((DespesasVencidas?.Count ?? 0) > 0 ? "badge-subtle-danger" : "badge-subtle-success")">
                                 <i class="bi @((DespesasVencidas?.Count ?? 0) > 0 ? "bi-exclamation-triangle-fill" : "bi-check2-circle") me-1"></i>
-                                @(DespesasVencidas?.Count ?? 0) conta(s) pendente(s)
-                            </span>
-                            <span class="badge badge-subtle-neutral">
-                                <i class="bi bi-shield-check me-1"></i>Regularizar quitação
+                                @((DespesasVencidas?.Count ?? 0) > 0 ? $"{DespesasVencidas?.Count} atrasada(s)" : "Tudo em dia")
                             </span>
                         </div>
                     </div>
@@ -218,280 +179,364 @@
         </div>
     </div>
 
-    <!-- 3. Acessos Rápidos Operacionais (Estilo JT_Food) -->
-    <div class="row g-3 mb-4" data-tutorial="dashboard-atalhos">
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 quick-card h-100 p-3 shadow-sm" @onclick='() => NavigationManager.NavigateTo("/despesas")' style="cursor: pointer;">
+    <!-- 2. Acessos Rápidos Operacionais Compactos -->
+    <div class="row g-2 mb-3" data-tutorial="dashboard-atalhos">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 quick-card p-2.5 shadow-sm" @onclick='() => NavigationManager.NavigateTo("/despesas")' style="cursor: pointer;">
                 <div class="d-flex align-items-center">
-                    <div class="quick-icon-bubble quick-bubble-rose me-3">
-                        <i class="bi bi-dash-circle fs-4"></i>
+                    <div class="quick-icon-bubble quick-bubble-rose me-2.5">
+                        <i class="bi bi-dash-circle fs-5"></i>
                     </div>
-                    <div>
-                        <h6 class="fw-bold mb-1">Despesas & Contas</h6>
-                        <p class="text-muted small mb-0">Lançar saídas, baixas e agendamentos.</p>
+                    <div class="text-truncate">
+                        <div class="fw-bold fs-7 text-truncate">Despesas</div>
+                        <span class="text-muted small d-none d-sm-block text-truncate">Lançamentos e saídas</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 quick-card h-100 p-3 shadow-sm" @onclick='() => NavigationManager.NavigateTo("/receitas")' style="cursor: pointer;">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 quick-card p-2.5 shadow-sm" @onclick='() => NavigationManager.NavigateTo("/receitas")' style="cursor: pointer;">
                 <div class="d-flex align-items-center">
-                    <div class="quick-icon-bubble quick-bubble-emerald me-3">
-                        <i class="bi bi-plus-circle fs-4"></i>
+                    <div class="quick-icon-bubble quick-bubble-emerald me-2.5">
+                        <i class="bi bi-plus-circle fs-5"></i>
                     </div>
-                    <div>
-                        <h6 class="fw-bold mb-1">Receitas & Faturamento</h6>
-                        <p class="text-muted small mb-0">Cadastrar recebimentos e rendimentos.</p>
+                    <div class="text-truncate">
+                        <div class="fw-bold fs-7 text-truncate">Receitas</div>
+                        <span class="text-muted small d-none d-sm-block text-truncate">Entradas e faturamento</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 quick-card h-100 p-3 shadow-sm" @onclick='() => NavigationManager.NavigateTo("/cartoes-credito")' style="cursor: pointer;">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 quick-card p-2.5 shadow-sm" @onclick='() => NavigationManager.NavigateTo("/cartoes-credito")' style="cursor: pointer;">
                 <div class="d-flex align-items-center">
-                    <div class="quick-icon-bubble quick-bubble-indigo me-3">
-                        <i class="bi bi-credit-card-2-front fs-4"></i>
+                    <div class="quick-icon-bubble quick-bubble-indigo me-2.5">
+                        <i class="bi bi-credit-card-2-front fs-5"></i>
                     </div>
-                    <div>
-                        <h6 class="fw-bold mb-1">Cartões de Crédito</h6>
-                        <p class="text-muted small mb-0">Faturas abertas, limites e vencimentos.</p>
+                    <div class="text-truncate">
+                        <div class="fw-bold fs-7 text-truncate">Cartões de Crédito</div>
+                        <span class="text-muted small d-none d-sm-block text-truncate">Faturas e limites</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 quick-card h-100 p-3 shadow-sm" @onclick='() => NavigationManager.NavigateTo("/dashboards")' style="cursor: pointer;">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 quick-card p-2.5 shadow-sm" @onclick='() => NavigationManager.NavigateTo("/dashboards")' style="cursor: pointer;">
                 <div class="d-flex align-items-center">
-                    <div class="quick-icon-bubble quick-bubble-purple me-3">
-                        <i class="bi bi-stars fs-4"></i>
+                    <div class="quick-icon-bubble quick-bubble-purple me-2.5">
+                        <i class="bi bi-stars fs-5"></i>
                     </div>
-                    <div>
-                        <h6 class="fw-bold mb-1">Dashboards & Relatórios</h6>
-                        <p class="text-muted small mb-0">Composição IA e relatórios EDW.</p>
+                    <div class="text-truncate">
+                        <div class="fw-bold fs-7 text-truncate">Relatórios EDW</div>
+                        <span class="text-muted small d-none d-sm-block text-truncate">Composição analítica</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 4. Painéis Operacionais: Últimas Despesas do Mês & Contas Vencidas -->
-    <div class="row g-3 mb-4">
-        <!-- Últimas Despesas Lançadas no Mês -->
+    <!-- 3. Painéis Centrais Lado a Lado: Gráficos/Lançamentos & Compromissos -->
+    <div class="row g-3">
+        <!-- Painel Esquerdo: Gráficos Analíticos ou Últimos Lançamentos -->
         <div class="col-12 col-xl-7">
-            <div class="card border-0 shadow-sm h-100 dashboard-panel" data-tutorial="dashboard-ultimas-despesas">
-                <div class="card-header py-3 px-3 d-flex justify-content-between align-items-center border-bottom bg-transparent">
-                    <h5 class="fw-bold mb-0 fs-6">
-                        <i class="bi bi-clock-history text-primary me-2"></i>Últimas Despesas do Mês (@DespesaMes.Count)
-                    </h5>
-                    @if (DespesaMes.Any())
+            <div class="card border-0 shadow-sm h-100 dashboard-panel">
+                <!-- Header com Abas Integradas -->
+                <div class="card-header py-2.5 px-3 d-flex flex-wrap justify-content-between align-items-center border-bottom bg-transparent gap-2">
+                    <div class="nav-pills-custom d-flex p-1 rounded-pill border shadow-sm">
+                        <button type="button"
+                                class="nav-tab-pill @(abaPainelEsquerdo == "graficos" ? "active" : "")"
+                                @onclick='() => abaPainelEsquerdo = "graficos"'>
+                            <i class="bi bi-graph-up me-1.5"></i>Gráficos Analíticos
+                        </button>
+                        <button type="button"
+                                class="nav-tab-pill @(abaPainelEsquerdo == "lancamentos" ? "active" : "")"
+                                data-tutorial="dashboard-ultimas-despesas"
+                                @onclick='() => abaPainelEsquerdo = "lancamentos"'>
+                            <i class="bi bi-clock-history me-1.5"></i>Lançamentos do Mês
+                            <span class="badge @(DespesaMes.Any() ? "badge-subtle-primary" : "badge-subtle-neutral") ms-1">@DespesaMes.Count</span>
+                        </button>
+                    </div>
+
+                    <!-- Sub-seleção para quando a aba Gráficos estiver ativa -->
+                    @if (abaPainelEsquerdo == "graficos")
+                    {
+                        <div class="btn-group btn-group-sm shadow-sm" role="group">
+                            <button type="button"
+                                    class="btn btn-sm @(subAbaGrafico == "categoria" ? "btn-primary fw-bold" : "btn-outline-secondary")"
+                                    data-tutorial="grafico-categorias"
+                                    @onclick='() => subAbaGrafico = "categoria"'>
+                                <i class="bi bi-pie-chart me-1"></i>Categorias
+                            </button>
+                            <button type="button"
+                                    class="btn btn-sm @(subAbaGrafico == "tipo" ? "btn-primary fw-bold" : "btn-outline-secondary")"
+                                    data-tutorial="grafico-tipos"
+                                    @onclick='() => subAbaGrafico = "tipo"'>
+                                <i class="bi bi-bar-chart me-1"></i>Fixas vs Variáveis
+                            </button>
+                        </div>
+                    }
+                    else if (DespesaMes.Any())
                     {
                         <button class="btn btn-sm btn-link text-primary p-0 text-decoration-none fw-semibold"
                                 @onclick='() => AbrirModalDetalhes("Despesas do Mês", DespesaMes)'>
-                            Ver Todas <i class="bi bi-chevron-right small"></i>
+                            Ver Todas (@DespesaMes.Count) <i class="bi bi-chevron-right small"></i>
                         </button>
                     }
                 </div>
-                <div class="card-body p-0">
-                    @if (!DespesaMes.Any())
+
+                <!-- Corpo do Painel Esquerdo -->
+                <div class="card-body p-3">
+                    @if (abaPainelEsquerdo == "graficos")
                     {
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox fs-1 opacity-25"></i>
-                            <p class="mt-2 mb-0 fw-semibold">Nenhuma despesa registrada para este mês.</p>
-                            <small class="text-muted">As despesas adicionadas serão listadas aqui.</small>
-                            <div class="mt-3">
+                        @if (isLoading)
+                        {
+                            <div class="text-center py-5"><Loading /></div>
+                        }
+                        else if (subAbaGrafico == "categoria")
+                        {
+                            @if (TemDadosCategoria)
+                            {
+                                <div class="chart-container-compact">
+                                    <Chart ChartId="despesasPorCategoriaChart"
+                                           Type="ChartType.Doughnut"
+                                           Labels="despesaCategoriasLabels"
+                                           Datasets="datasetsGraficoPorCategoria"
+                                           Title="Despesas por Categoria" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4 px-3 d-flex flex-column justify-content-center align-items-center h-100">
+                                    <div class="empty-state-bubble mb-2">
+                                        <i class="bi bi-pie-chart fs-3 text-muted"></i>
+                                    </div>
+                                    <h6 class="fw-semibold mb-1" style="font-size: 0.95rem;">Sem despesas categorizadas neste mês</h6>
+                                    <p class="text-muted small mb-3" style="max-width: 340px;">Não há lançamentos de despesas com categoria vinculada em @mesReferencia.ToString("MMMM/yyyy").</p>
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" @onclick='() => NavigationManager.NavigateTo("/despesas")'>
+                                        <i class="bi bi-plus-lg me-1"></i>Lançar Despesa
+                                    </button>
+                                </div>
+                            }
+                        }
+                        else // subAbaGrafico == "tipo"
+                        {
+                            @if (TemDadosTipo)
+                            {
+                                <div class="chart-container-compact">
+                                    <Chart ChartId="despesasPorTipoChart"
+                                           Type="ChartType.Bar"
+                                           Labels="despesaTiposLabels"
+                                           Datasets="datasetsGraficoPorTipo"
+                                           Title="Despesas por Tipo" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4 px-3 d-flex flex-column justify-content-center align-items-center h-100">
+                                    <div class="empty-state-bubble mb-2">
+                                        <i class="bi bi-bar-chart-line fs-3 text-muted"></i>
+                                    </div>
+                                    <h6 class="fw-semibold mb-1" style="font-size: 0.95rem;">Sem despesas por tipo neste mês</h6>
+                                    <p class="text-muted small mb-3" style="max-width: 340px;">Não há registros de despesas fixas ou variáveis em @mesReferencia.ToString("MMMM/yyyy").</p>
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" @onclick='() => NavigationManager.NavigateTo("/despesas")'>
+                                        <i class="bi bi-plus-lg me-1"></i>Lançar Despesa
+                                    </button>
+                                </div>
+                            }
+                        }
+                    }
+                    else // abaPainelEsquerdo == "lancamentos"
+                    {
+                        @if (!DespesaMes.Any())
+                        {
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-2 opacity-25"></i>
+                                <p class="mt-2 mb-1 fw-semibold" style="font-size: 0.95rem;">Nenhuma despesa registrada para @mesReferencia.ToString("MMMM/yyyy").</p>
+                                <small class="text-muted d-block mb-3">Lançamentos cadastrados para este mês aparecerão detalhados aqui.</small>
                                 <button class="btn btn-sm btn-outline-primary rounded-pill px-3" @onclick='() => NavigationManager.NavigateTo("/despesas")'>
                                     <i class="bi bi-plus-lg me-1"></i>Cadastrar Despesa
                                 </button>
                             </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-header-custom">
-                                    <tr>
-                                        <th>Descrição</th>
-                                        <th>Categoria</th>
-                                        <th class="text-center">Data</th>
-                                        <th class="text-end">Valor</th>
-                                        <th class="text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var d in DespesaMes.OrderByDescending(x => x.DataDespesa).Take(7))
-                                    {
+                        }
+                        else
+                        {
+                            <div class="table-responsive custom-scroll" style="max-height: 380px;">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-header-custom position-sticky top-0 bg-white">
                                         <tr>
-                                            <td class="fw-bold">
-                                                @d.Descricao
-                                                @if (!string.IsNullOrWhiteSpace(d.Observacao))
-                                                {
-                                                    <small class="d-block text-muted fw-normal">Obs: @d.Observacao</small>
-                                                }
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-subtle-neutral">
-                                                    @(string.IsNullOrWhiteSpace(d.CategoriaStruct.Nome) ? "Geral" : d.CategoriaStruct.Nome)
-                                                </span>
-                                            </td>
-                                            <td class="text-center text-muted small">
-                                                @d.DataDespesa.ToString("dd/MM/yyyy")
-                                            </td>
-                                            <td class="text-end fw-bold text-danger">
-                                                @d.Valor.ToString("C")
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="badge @(d.DespesaPaga ? "badge-subtle-success" : "badge-subtle-warning")">
-                                                    <i class="bi @(d.DespesaPaga ? "bi-check2-circle" : "bi-clock") me-1"></i>
-                                                    @(d.DespesaPaga ? "Paga" : "Pendente")
-                                                </span>
-                                            </td>
+                                            <th>Descrição</th>
+                                            <th>Categoria</th>
+                                            <th class="text-center">Data</th>
+                                            <th class="text-end">Valor</th>
+                                            <th class="text-center">Status</th>
                                         </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var d in DespesaMes.OrderByDescending(x => x.DataDespesa))
+                                        {
+                                            <tr>
+                                               <td class="fw-bold">
+                                                   @d.Descricao
+                                                   @if (!string.IsNullOrWhiteSpace(d.Observacao))
+                                                   {
+                                                       <small class="d-block text-muted fw-normal">Obs: @d.Observacao</small>
+                                                   }
+                                               </td>
+                                               <td>
+                                                   <span class="badge badge-subtle-neutral">
+                                                       @(string.IsNullOrWhiteSpace(d.CategoriaStruct.Nome) ? "Geral" : d.CategoriaStruct.Nome)
+                                                   </span>
+                                               </td>
+                                               <td class="text-center text-muted small">
+                                                   @d.DataDespesa.ToString("dd/MM/yyyy")
+                                               </td>
+                                               <td class="text-end fw-bold text-danger">
+                                                   @d.Valor.ToString("C")
+                                               </td>
+                                               <td class="text-center">
+                                                   <span class="badge @(d.DespesaPaga ? "badge-subtle-success" : "badge-subtle-warning")">
+                                                       <i class="bi @(d.DespesaPaga ? "bi-check2-circle" : "bi-clock") me-1"></i>
+                                                       @(d.DespesaPaga ? "Paga" : "Pendente")
+                                                   </span>
+                                               </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
                     }
                 </div>
             </div>
         </div>
 
-        <!-- Contas Vencidas & Alertas Prioritários -->
+        <!-- Painel Direito: Compromissos & Contas Críticas com Scroll Interno -->
         <div class="col-12 col-xl-5">
             <div class="card border-0 shadow-sm h-100 dashboard-panel" data-tutorial="dashboard-contas-criticas">
-                <div class="card-header py-3 px-3 d-flex justify-content-between align-items-center border-bottom bg-transparent">
-                    <h5 class="fw-bold mb-0 fs-6">
-                        <i class="bi bi-shield-exclamation text-danger me-2"></i>Contas Vencidas (@(DespesasVencidas?.Count ?? 0))
-                    </h5>
-                    @if (DespesasVencidas?.Any() == true)
+                <!-- Header com Abas de Contas Vencidas vs A Vencer -->
+                <div class="card-header py-2.5 px-3 d-flex flex-wrap justify-content-between align-items-center border-bottom bg-transparent gap-2">
+                    <div class="nav-pills-custom d-flex p-1 rounded-pill border shadow-sm">
+                        <button type="button"
+                                class="nav-tab-pill @(abaCompromissos == "vencidas" ? "active text-danger fw-bold" : "")"
+                                @onclick='() => abaCompromissos = "vencidas"'>
+                            <i class="bi bi-shield-exclamation me-1"></i>Vencidas
+                            <span class="badge @((DespesasVencidas?.Count ?? 0) > 0 ? "bg-danger text-white" : "badge-subtle-neutral") ms-1">
+                                @(DespesasVencidas?.Count ?? 0)
+                            </span>
+                        </button>
+                        <button type="button"
+                                class="nav-tab-pill @(abaCompromissos == "avencer" ? "active text-warning fw-bold" : "")"
+                                @onclick='() => abaCompromissos = "avencer"'>
+                            <i class="bi bi-clock-history me-1"></i>A Vencer
+                            <span class="badge @((DespesaAVencer?.Count ?? 0) > 0 ? "bg-warning text-dark" : "badge-subtle-neutral") ms-1">
+                                @(DespesaAVencer?.Count ?? 0)
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Botão de Auditoria -->
+                    @if (abaCompromissos == "vencidas" && DespesasVencidas?.Any() == true)
                     {
-                        <button class="btn btn-sm btn-link text-danger p-0 text-decoration-none fw-semibold"
-                                @onclick='() => AbrirModalDetalhes("Despesas Vencidas", DespesasVencidas)'>
-                            Auditar Todas <i class="bi bi-chevron-right small"></i>
+                        <button class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 fw-semibold"
+                                @onclick='() => AbrirModalDetalhes("Despesas Vencidas", DespesasVencidas)'
+                                style="font-size: 0.78rem;">
+                            <i class="bi bi-eye me-1"></i>Auditar Todas (@DespesasVencidas.Count)
+                        </button>
+                    }
+                    else if (abaCompromissos == "avencer" && DespesaAVencer?.Any() == true)
+                    {
+                        <button class="btn btn-sm btn-outline-warning rounded-pill px-2.5 py-1 fw-semibold text-dark"
+                                @onclick='() => AbrirModalDetalhes("Próximas ao Vencimento", DespesaAVencer)'
+                                style="font-size: 0.78rem;">
+                            <i class="bi bi-eye me-1"></i>Auditar Todas (@DespesaAVencer.Count)
                         </button>
                     }
                 </div>
+
+                <!-- Lista Scrollável com Altura Fixada (evita scroll infinito da página!) -->
                 <div class="card-body p-0">
-                    @if (DespesasVencidas == null || !DespesasVencidas.Any())
+                    @if (abaCompromissos == "vencidas")
                     {
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-check2-circle fs-1 text-success opacity-50"></i>
-                            <p class="mt-2 mb-0 fw-semibold text-success">Nenhuma conta vencida!</p>
-                            <small class="text-muted">Excelente! Todos os pagamentos e obrigações estão em dia.</small>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="list-group list-group-flush">
-                            @foreach (var v in DespesasVencidas.Take(6))
-                            {
-                                <div class="list-group-item d-flex justify-content-between align-items-center p-3 border-bottom">
-                                    <div>
-                                        <div class="fw-bold text-truncate" style="max-width: 200px;">
-                                            @v.Descricao
+                        @if (DespesasVencidas == null || !DespesasVencidas.Any())
+                        {
+                            <div class="text-center py-4 px-3 text-muted">
+                                <i class="bi bi-check2-circle fs-2 text-success opacity-75"></i>
+                                <p class="mt-2 mb-0 fw-semibold text-success">Nenhuma conta vencida!</p>
+                                <small class="text-muted">Excelente! Todos os pagamentos e compromissos estão em dia.</small>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="list-group list-group-flush custom-scroll" style="max-height: 380px; overflow-y: auto;">
+                                @foreach (var v in DespesasVencidas)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center p-2.5 px-3 border-bottom">
+                                        <div class="min-w-0 me-2">
+                                            <div class="fw-bold text-truncate" style="max-width: 220px;" title="@v.Descricao">
+                                                @v.Descricao
+                                            </div>
+                                            <small class="text-muted d-block text-truncate">
+                                                <i class="bi bi-tag me-1"></i>@(string.IsNullOrWhiteSpace(v.CategoriaStruct.Nome) ? "Geral" : v.CategoriaStruct.Nome)
+                                                <span class="ms-1.5 text-danger fw-semibold">
+                                                    <i class="bi bi-calendar-x me-1"></i>@ObterStatusVencimento(v.DataDespesa)
+                                                </span>
+                                            </small>
                                         </div>
-                                        <small class="text-muted d-block">
-                                            <i class="bi bi-tag me-1"></i>@(string.IsNullOrWhiteSpace(v.CategoriaStruct.Nome) ? "Geral" : v.CategoriaStruct.Nome)
-                                            <span class="ms-2 text-danger fw-semibold">
-                                                <i class="bi bi-calendar-x me-1"></i>@ObterStatusVencimento(v.DataDespesa)
-                                            </span>
-                                        </small>
+                                        <div class="text-end flex-shrink-0">
+                                            <span class="fw-bold text-danger d-block" style="font-size: 0.92rem;">@v.Valor.ToString("C")</span>
+                                            <button class="btn btn-sm btn-outline-danger rounded-pill py-0 px-2 mt-1 fw-semibold"
+                                                    @onclick='() => AbrirModalDetalhes("Detalhes da Conta Vencida", new List<sDespesa> { v })'
+                                                    style="font-size: 0.72rem;">
+                                                Auditar
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="text-end">
-                                        <span class="fw-bold text-danger d-block fs-6">@v.Valor.ToString("C")</span>
-                                        <button class="btn btn-sm btn-outline-danger rounded-pill py-0 px-2 mt-1 fw-semibold"
-                                                @onclick='() => AbrirModalDetalhes("Detalhes da Conta Vencida", new List<sDespesa> { v })'
-                                                style="font-size: 0.75rem;">
-                                            Auditar
-                                        </button>
+                                }
+                            </div>
+                        }
+                    }
+                    else // abaCompromissos == "avencer"
+                    {
+                        @if (DespesaAVencer == null || !DespesaAVencer.Any())
+                        {
+                            <div class="text-center py-4 px-3 text-muted">
+                                <i class="bi bi-calendar-check fs-2 text-info opacity-75"></i>
+                                <p class="mt-2 mb-0 fw-semibold">Nenhuma conta com vencimento iminente.</p>
+                                <small class="text-muted">Não há boletos ou títulos a vencer nos próximos dias.</small>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="list-group list-group-flush custom-scroll" style="max-height: 380px; overflow-y: auto;">
+                                @foreach (var a in DespesaAVencer)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center p-2.5 px-3 border-bottom">
+                                        <div class="min-w-0 me-2">
+                                            <div class="fw-bold text-truncate" style="max-width: 220px;" title="@a.Descricao">
+                                                @a.Descricao
+                                            </div>
+                                            <small class="text-muted d-block text-truncate">
+                                                <i class="bi bi-tag me-1"></i>@(string.IsNullOrWhiteSpace(a.CategoriaStruct.Nome) ? "Geral" : a.CategoriaStruct.Nome)
+                                                <span class="ms-1.5 text-warning-emphasis fw-semibold">
+                                                    <i class="bi bi-calendar-event me-1"></i>@ObterStatusVencimento(a.DataDespesa)
+                                                </span>
+                                            </small>
+                                        </div>
+                                        <div class="text-end flex-shrink-0">
+                                            <span class="fw-bold text-warning-emphasis d-block" style="font-size: 0.92rem;">@a.Valor.ToString("C")</span>
+                                            <button class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 mt-1 fw-semibold"
+                                                    @onclick='() => AbrirModalDetalhes("Detalhes da Conta a Vencer", new List<sDespesa> { a })'
+                                                    style="font-size: 0.72rem;">
+                                                Auditar
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. Painéis de Gráficos Analíticos -->
-    <div class="row g-3">
-        <!-- Gráfico de Despesas por Categoria -->
-        <div class="col-12 col-lg-6">
-            <div class="card border-0 shadow-sm h-100 dashboard-panel" data-tutorial="grafico-categorias">
-                <div class="card-header py-3 px-3 d-flex justify-content-between align-items-center border-bottom bg-transparent">
-                    <h5 class="fw-bold mb-0 fs-6">
-                        <i class="bi bi-pie-chart-fill text-indigo me-2"></i>Despesas por Categoria
-                    </h5>
-                    <span class="badge badge-subtle-neutral">Distribuição do Mês</span>
-                </div>
-                <div class="card-body p-4">
-                    @if (isLoading)
-                    {
-                        <div class="text-center py-5"><Loading /></div>
-                    }
-                    else if (datasetsGraficoPorCategoria.Any() && datasetsGraficoPorCategoria.First().Data.Any())
-                    {
-                        <Chart ChartId="despesasPorCategoriaChart"
-                               Type="ChartType.Doughnut"
-                               Labels="despesaCategoriasLabels"
-                               Datasets="datasetsGraficoPorCategoria"
-                               Title="Despesas por Categoria" />
-                    }
-                    else
-                    {
-                        <div class="text-center py-5 d-flex flex-column justify-content-center align-items-center h-100">
-                            <div class="empty-state-bubble mb-3">
-                                <i class="bi bi-pie-chart fs-2 text-muted"></i>
+                                }
                             </div>
-                            <h6 class="fw-semibold mb-1">Sem despesas categorizadas</h6>
-                            <p class="text-muted small mb-3">Não há despesas com categoria vinculada registradas para este mês.</p>
-                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" @onclick='() => NavigationManager.NavigateTo("/despesas")'>
-                                <i class="bi bi-plus-lg me-1"></i>Lançar Despesa
-                            </button>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <!-- Gráfico de Despesas por Tipo -->
-        <div class="col-12 col-lg-6">
-            <div class="card border-0 shadow-sm h-100 dashboard-panel" data-tutorial="grafico-tipos">
-                <div class="card-header py-3 px-3 d-flex justify-content-between align-items-center border-bottom bg-transparent">
-                    <h5 class="fw-bold mb-0 fs-6">
-                        <i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Despesas por Tipo
-                    </h5>
-                    <span class="badge badge-subtle-neutral">Fixas vs. Variáveis</span>
-                </div>
-                <div class="card-body p-4">
-                    @if (isLoading)
-                    {
-                        <div class="text-center py-5"><Loading /></div>
-                    }
-                    else if (datasetsGraficoPorTipo.Any() && datasetsGraficoPorTipo.First().Data.Any())
-                    {
-                        <Chart ChartId="despesasPorTipoChart"
-                               Type="ChartType.Bar"
-                               Labels="despesaTiposLabels"
-                               Datasets="datasetsGraficoPorTipo"
-                               Title="Despesas por Tipo" />
-                    }
-                    else
-                    {
-                        <div class="text-center py-5 d-flex flex-column justify-content-center align-items-center h-100">
-                            <div class="empty-state-bubble mb-3">
-                                <i class="bi bi-bar-chart-line fs-2 text-muted"></i>
-                            </div>
-                            <h6 class="fw-semibold mb-1">Sem despesas por tipo</h6>
-                            <p class="text-muted small mb-3">Não há registros de classificação de tipo de despesa para este mês.</p>
-                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" @onclick='() => NavigationManager.NavigateTo("/despesas")'>
-                                <i class="bi bi-plus-lg me-1"></i>Lançar Despesa
-                            </button>
-                        </div>
+                        }
                     }
                 </div>
             </div>
@@ -515,20 +560,19 @@
        ================================================================= */
     .dashboard-home {
         background-color: var(--bg-body, #f8fafc);
-        min-height: 100vh;
     }
 
     .header-icon-badge {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
         background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
         color: #2563eb;
         border: 1px solid #bfdbfe;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.35rem;
         flex-shrink: 0;
     }
 
@@ -538,8 +582,8 @@
     }
 
     .month-nav-btn {
-        width: 32px;
-        height: 32px;
+        width: 28px;
+        height: 28px;
         padding: 0;
         display: inline-flex;
         align-items: center;
@@ -548,9 +592,8 @@
         transition: all 0.2s ease;
     }
     .month-nav-btn:hover {
-        background-color: rgba(37, 99, 235, 0.1);
+        background-color: rgba(37, 99, 235, 0.08);
         color: #2563eb;
-        border-color: rgba(37, 99, 235, 0.2);
     }
 
     /* Cards KPI Refinados */
@@ -558,7 +601,7 @@
         background: var(--card-bg, #ffffff);
         color: var(--text-color, inherit);
         border: 1px solid var(--border-color, #e2e8f0) !important;
-        border-radius: 16px;
+        border-radius: 14px;
         box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
         transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
         position: relative;
@@ -570,30 +613,17 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
+        height: 3px;
     }
-    .kpi-accent-indigo::before {
-        background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
-    }
-    .kpi-accent-emerald::before {
-        background: linear-gradient(90deg, #059669 0%, #10b981 100%);
-    }
-    .kpi-accent-rose::before {
-        background: linear-gradient(90deg, #e11d48 0%, #f43f5e 100%);
-    }
-    .kpi-accent-sky::before {
-        background: linear-gradient(90deg, #0284c7 0%, #38bdf8 100%);
-    }
-    .kpi-accent-amber::before {
-        background: linear-gradient(90deg, #d97706 0%, #f59e0b 100%);
-    }
-    .kpi-accent-danger::before {
-        background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
-    }
+    .kpi-accent-emerald::before { background: linear-gradient(90deg, #059669 0%, #10b981 100%); }
+    .kpi-accent-rose::before    { background: linear-gradient(90deg, #e11d48 0%, #f43f5e 100%); }
+    .kpi-accent-indigo::before  { background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%); }
+    .kpi-accent-amber::before   { background: linear-gradient(90deg, #d97706 0%, #f59e0b 100%); }
+    .kpi-accent-danger::before  { background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%); }
 
     .kpi-card-refined:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
         border-color: #cbd5e1 !important;
     }
 
@@ -602,30 +632,30 @@
     }
 
     .kpi-label {
-        font-size: 0.72rem;
+        font-size: 0.68rem;
         font-weight: 700;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
         color: #64748b;
-        margin-bottom: 0.35rem;
+        margin-bottom: 0.25rem;
     }
 
     .kpi-value {
-        font-size: 1.85rem;
+        font-size: 1.45rem;
         font-weight: 800;
         line-height: 1.15;
-        letter-spacing: -0.025em;
+        letter-spacing: -0.02em;
         color: var(--text-color, #0f172a);
     }
 
     .kpi-icon-bubble {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4rem;
+        font-size: 1.25rem;
         flex-shrink: 0;
         transition: transform 0.2s ease;
     }
@@ -633,167 +663,133 @@
         transform: scale(1.08);
     }
 
-    .kpi-bubble-indigo {
-        background-color: #eef2ff;
-        color: #4f46e5;
-        border: 1px solid #e0e7ff;
-    }
-    .kpi-bubble-emerald {
-        background-color: #ecfdf5;
-        color: #059669;
-        border: 1px solid #d1fae5;
-    }
-    .kpi-bubble-rose {
-        background-color: #fff1f2;
-        color: #e11d48;
-        border: 1px solid #ffe4e6;
-    }
-    .kpi-bubble-sky {
-        background-color: #f0f9ff;
-        color: #0284c7;
-        border: 1px solid #e0f2fe;
-    }
-    .kpi-bubble-amber {
-        background-color: #fffbeb;
-        color: #d97706;
-        border: 1px solid #fef3c7;
-    }
-    .kpi-bubble-danger {
-        background-color: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fee2e2;
-    }
+    .kpi-bubble-emerald { background-color: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
+    .kpi-bubble-rose    { background-color: #fff1f2; color: #e11d48; border: 1px solid #ffe4e6; }
+    .kpi-bubble-indigo  { background-color: #eef2ff; color: #4f46e5; border: 1px solid #e0e7ff; }
+    .kpi-bubble-amber   { background-color: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
+    .kpi-bubble-danger  { background-color: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
 
-    /* Badges Sutis (Subtle Badges) */
-    .badge-subtle-primary {
-        background-color: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #bfdbfe;
-        font-weight: 600;
-        font-size: 0.72rem;
-        padding: 0.3rem 0.55rem;
-        border-radius: 6px;
-    }
-    .badge-subtle-success {
-        background-color: #ecfdf5;
-        color: #047857;
-        border: 1px solid #a7f3d0;
-        font-weight: 600;
-        font-size: 0.72rem;
-        padding: 0.3rem 0.55rem;
-        border-radius: 6px;
-    }
-    .badge-subtle-warning {
-        background-color: #fffbeb;
-        color: #b45309;
-        border: 1px solid #fde68a;
-        font-weight: 600;
-        font-size: 0.72rem;
-        padding: 0.3rem 0.55rem;
-        border-radius: 6px;
-    }
-    .badge-subtle-danger {
-        background-color: #fff1f2;
-        color: #be123c;
-        border: 1px solid #fecdd3;
-        font-weight: 600;
-        font-size: 0.72rem;
-        padding: 0.3rem 0.55rem;
-        border-radius: 6px;
-    }
-    .badge-subtle-neutral {
-        background-color: #f8fafc;
-        color: #475569;
-        border: 1px solid #e2e8f0;
-        font-weight: 500;
-        font-size: 0.72rem;
-        padding: 0.3rem 0.55rem;
-        border-radius: 6px;
-    }
-
-    /* Acessos Rápidos (Quick Cards) */
+    /* Atalhos Rápidos Operacionais */
     .quick-card {
         background: var(--card-bg, #ffffff);
-        color: var(--text-color, inherit);
         border: 1px solid var(--border-color, #e2e8f0) !important;
-        border-radius: 14px;
-        box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        border-radius: 12px;
+        transition: all 0.2s ease;
     }
     .quick-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 18px -3px rgba(15, 23, 42, 0.08) !important;
+        box-shadow: 0 8px 16px -4px rgba(15, 23, 42, 0.08);
         border-color: #cbd5e1 !important;
     }
     .quick-icon-bubble {
-        width: 50px;
-        height: 50px;
-        border-radius: 14px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        transition: transform 0.2s ease;
     }
-    .quick-card:hover .quick-icon-bubble {
-        transform: scale(1.08);
-    }
-    .quick-bubble-indigo {
-        background-color: #eef2ff;
-        color: #4f46e5;
-        border: 1px solid #e0e7ff;
-    }
-    .quick-bubble-emerald {
-        background-color: #ecfdf5;
-        color: #059669;
-        border: 1px solid #d1fae5;
-    }
-    .quick-bubble-rose {
-        background-color: #fff1f2;
-        color: #e11d48;
-        border: 1px solid #ffe4e6;
-    }
-    .quick-bubble-purple {
-        background-color: #faf5ff;
-        color: #7e22ce;
-        border: 1px solid #f3e8ff;
-    }
+    .quick-bubble-rose    { background-color: #fff1f2; color: #e11d48; }
+    .quick-bubble-emerald { background-color: #ecfdf5; color: #059669; }
+    .quick-bubble-indigo  { background-color: #eef2ff; color: #4f46e5; }
+    .quick-bubble-purple  { background-color: #faf5ff; color: #9333ea; }
 
-    /* Painéis e Tabelas */
+    /* Painéis e Abas Integradas */
     .dashboard-panel {
         background: var(--card-bg, #ffffff);
-        color: var(--text-color, inherit);
         border: 1px solid var(--border-color, #e2e8f0) !important;
-        border-radius: 16px;
+        border-radius: 14px;
         overflow: hidden;
     }
-    .table-header-custom {
-        background-color: var(--table-header-bg, #f8fafc);
-        font-size: 0.72rem;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
+
+    .nav-pills-custom {
+        background-color: var(--bg-body, #f1f5f9);
+        display: inline-flex;
+        gap: 3px;
+    }
+    .nav-tab-pill {
+        border: none;
+        background: transparent;
+        padding: 0.3rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
         color: var(--text-muted, #64748b);
-        font-weight: 700;
-        border-bottom: 1px solid var(--border-color, #e2e8f0);
+        transition: all 0.18s ease;
+        display: inline-flex;
+        align-items: center;
+    }
+    .nav-tab-pill.active {
+        background-color: var(--card-bg, #ffffff);
+        color: var(--text-color, #0f172a);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    .nav-tab-pill:hover:not(.active) {
+        color: var(--text-color, #0f172a);
     }
 
-    .empty-state-bubble {
-        width: 64px;
-        height: 64px;
-        border-radius: 20px;
-        background-color: #f1f5f9;
-        display: inline-flex;
+    /* Scrollbars Internas Personalizadas */
+    .custom-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+    .custom-scroll::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+        background-color: #94a3b8;
+    }
+
+    .chart-container-compact {
+        position: relative;
+        min-height: 280px;
+        max-height: 360px;
+        display: flex;
         align-items: center;
         justify-content: center;
     }
 
-    /* Animação de rotação para refresh */
+    .table-header-custom th {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        background-color: var(--bg-body, #f8fafc);
+        border-bottom: 1px solid var(--border-color, #e2e8f0);
+        padding: 0.65rem 0.75rem;
+    }
+
+    /* Badges Sutis */
+    .badge-subtle-success { background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .badge-subtle-danger  { background-color: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+    .badge-subtle-primary { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .badge-subtle-warning { background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .badge-subtle-neutral { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+    .empty-state-bubble {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: var(--bg-body, #f1f5f9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     .spin-animation {
         animation: spin 1s linear infinite;
-        display: inline-block;
     }
     @@keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>

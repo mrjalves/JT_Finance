@@ -21,6 +21,11 @@ namespace JT_Finance.Shared.Pages
         private DateTime mesReferencia = DateTime.Now;
         private bool isLoading = true;
 
+        // --- Abas e Controles de Visualização ---
+        private string abaPainelEsquerdo = "graficos"; // "graficos" ou "lancamentos"
+        private string subAbaGrafico = "categoria";    // "categoria" ou "tipo"
+        private string abaCompromissos = "vencidas";   // "vencidas" ou "avencer"
+
         // --- Dados para os Cards ---
         private decimal totalReceitas;
         private decimal totalDespesas;
@@ -38,6 +43,10 @@ namespace JT_Finance.Shared.Pages
         private List<sDespesa> DespesasVencidas = new();
         private List<sDespesa> DespesaAVencer = new();
         private List<sDespesa> DespesaMes = new();
+
+        private bool TemDadosCategoria => datasetsGraficoPorCategoria.Any() && datasetsGraficoPorCategoria.First().Data.Any();
+        private bool TemDadosTipo => datasetsGraficoPorTipo.Any() && datasetsGraficoPorTipo.First().Data.Any();
+        private bool TemDadosGraficos => TemDadosCategoria || TemDadosTipo;
 
         protected override async Task OnInitializedAsync()
         {
