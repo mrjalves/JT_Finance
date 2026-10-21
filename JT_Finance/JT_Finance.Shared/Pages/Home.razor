@@ -18,7 +18,7 @@
 
 <div class="container-fluid py-4 dashboard-home">
     <!-- Cabeçalho Executivo com Navegador de Mês Integrado -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 dashboard-header">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 dashboard-header" data-tutorial="dashboard-header">
         <div class="d-flex align-items-center gap-3">
             <div class="header-icon-badge shadow-sm">
                 <i class="bi bi-wallet2"></i>
@@ -65,7 +65,7 @@
     <div class="row g-3 mb-4">
         <!-- Receitas (Mês) -->
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 kpi-card-refined kpi-accent-emerald h-100 p-3 shadow-sm">
+            <div class="card border-0 kpi-card-refined kpi-accent-emerald h-100 p-3 shadow-sm" data-tutorial="kpi-receitas">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <div class="kpi-label">Receitas (Mês)</div>
@@ -86,6 +86,7 @@
         <!-- Despesas (Mês) -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="card border-0 kpi-card-refined kpi-accent-rose h-100 p-3 shadow-sm card-clickable"
+                 data-tutorial="kpi-despesas"
                  @onclick='() => AbrirModalDetalhes("Despesas do Mês", DespesaMes)'
                  title="Clique para ver a relação de despesas do mês">
                 <div class="d-flex justify-content-between align-items-start">
@@ -110,7 +111,7 @@
 
         <!-- Saldo Líquido (Mês) -->
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 kpi-card-refined kpi-accent-indigo h-100 p-3 shadow-sm">
+            <div class="card border-0 kpi-card-refined kpi-accent-indigo h-100 p-3 shadow-sm" data-tutorial="kpi-saldo">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <div class="kpi-label">Saldo Líquido (Mês)</div>
@@ -131,7 +132,7 @@
 
         <!-- Saúde Financeira / Comprometimento -->
         <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card border-0 kpi-card-refined kpi-accent-sky h-100 p-3 shadow-sm">
+            <div class="card border-0 kpi-card-refined kpi-accent-sky h-100 p-3 shadow-sm" data-tutorial="kpi-saude">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <div class="kpi-label">Comprometimento de Renda</div>
@@ -162,6 +163,7 @@
         <!-- Próximas ao Vencimento -->
         <div class="col-12 col-md-6">
             <div class="card border-0 kpi-card-refined kpi-accent-amber h-100 p-3 shadow-sm card-clickable"
+                 data-tutorial="kpi-a-vencer"
                  @onclick='() => AbrirModalDetalhes("Próximas ao Vencimento", DespesaAVencer)'
                  title="Clique para auditar as despesas que vencem em breve">
                 <div class="d-flex justify-content-between align-items-start">
@@ -189,6 +191,7 @@
         <!-- Despesas Vencidas -->
         <div class="col-12 col-md-6">
             <div class="card border-0 kpi-card-refined kpi-accent-danger h-100 p-3 shadow-sm card-clickable"
+                 data-tutorial="kpi-vencidas"
                  @onclick='() => AbrirModalDetalhes("Despesas Vencidas", DespesasVencidas)'
                  title="Clique para regularizar as despesas vencidas">
                 <div class="d-flex justify-content-between align-items-start">
@@ -216,7 +219,7 @@
     </div>
 
     <!-- 3. Acessos Rápidos Operacionais (Estilo JT_Food) -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4" data-tutorial="dashboard-atalhos">
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="card border-0 quick-card h-100 p-3 shadow-sm" @onclick='() => NavigationManager.NavigateTo("/despesas")' style="cursor: pointer;">
                 <div class="d-flex align-items-center">
@@ -278,7 +281,7 @@
     <div class="row g-3 mb-4">
         <!-- Últimas Despesas Lançadas no Mês -->
         <div class="col-12 col-xl-7">
-            <div class="card border-0 shadow-sm h-100 dashboard-panel">
+            <div class="card border-0 shadow-sm h-100 dashboard-panel" data-tutorial="dashboard-ultimas-despesas">
                 <div class="card-header py-3 px-3 d-flex justify-content-between align-items-center border-bottom bg-transparent">
                     <h5 class="fw-bold mb-0 fs-6">
                         <i class="bi bi-clock-history text-primary me-2"></i>Últimas Despesas do Mês (@DespesaMes.Count)
@@ -358,7 +361,7 @@
 
         <!-- Contas Vencidas & Alertas Prioritários -->
         <div class="col-12 col-xl-5">
-            <div class="card border-0 shadow-sm h-100 dashboard-panel">
+            <div class="card border-0 shadow-sm h-100 dashboard-panel" data-tutorial="dashboard-contas-criticas">
                 <div class="card-header py-3 px-3 d-flex justify-content-between align-items-center border-bottom bg-transparent">
                     <h5 class="fw-bold mb-0 fs-6">
                         <i class="bi bi-shield-exclamation text-danger me-2"></i>Contas Vencidas (@(DespesasVencidas?.Count ?? 0))
@@ -418,7 +421,7 @@
     <div class="row g-3">
         <!-- Gráfico de Despesas por Categoria -->
         <div class="col-12 col-lg-6">
-            <div class="card border-0 shadow-sm h-100 dashboard-panel">
+            <div class="card border-0 shadow-sm h-100 dashboard-panel" data-tutorial="grafico-categorias">
                 <div class="card-header py-3 px-3 d-flex justify-content-between align-items-center border-bottom bg-transparent">
                     <h5 class="fw-bold mb-0 fs-6">
                         <i class="bi bi-pie-chart-fill text-indigo me-2"></i>Despesas por Categoria
@@ -457,7 +460,7 @@
 
         <!-- Gráfico de Despesas por Tipo -->
         <div class="col-12 col-lg-6">
-            <div class="card border-0 shadow-sm h-100 dashboard-panel">
+            <div class="card border-0 shadow-sm h-100 dashboard-panel" data-tutorial="grafico-tipos">
                 <div class="card-header py-3 px-3 d-flex justify-content-between align-items-center border-bottom bg-transparent">
                     <h5 class="fw-bold mb-0 fs-6">
                         <i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Despesas por Tipo

@@ -121,6 +121,7 @@ namespace JT_Finance
                 builder.Services.AddScoped<IConfiguracaoTabProvider, JT_UserInterface.Shared.Services.Providers.FinanceConfigTabProvider>();
 
                 builder.Services.AddScoped<IModuloCategoriaProvider, JT_Finance.Shared.Layout.FinanceiroCategoriaProvider>();
+                builder.Services.AddScoped<JT_UserInterface.Shared.Services.Interfaces.Comum.ITutorialProvider, JT_Finance.Shared.Providers.FinanceTutorialProvider>();
 
 #if DEBUG
                 builder.Services.AddBlazorWebViewDeveloperTools();

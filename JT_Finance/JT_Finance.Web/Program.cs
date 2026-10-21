@@ -94,6 +94,7 @@ builder.Services.AddScoped<JT_Finance.Shared.Services.Dashboard.IDashboardIndica
 builder.Services.AddScoped<JT_Finance.Shared.Services.Dashboard.DashboardIndicadorRegistry>();
 
 builder.Services.AddScoped<IModuloCategoriaProvider, JT_Finance.Shared.Layout.FinanceiroCategoriaProvider>();
+builder.Services.AddScoped<JT_UserInterface.Shared.Services.Interfaces.Comum.ITutorialProvider, JT_Finance.Shared.Providers.FinanceTutorialProvider>();
 var app = builder.Build();
 
 
