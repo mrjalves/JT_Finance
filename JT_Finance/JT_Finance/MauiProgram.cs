@@ -120,6 +120,11 @@ namespace JT_Finance
                 builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
                 builder.Services.AddScoped<IConfiguracaoTabProvider, JT_UserInterface.Shared.Services.Providers.FinanceConfigTabProvider>();
 
+                // Serviços de IA e Consultor Executivo
+                builder.Services.AddScoped<JT_Finance.Shared.Services.Interfaces.IIAAnalyticsService, JT_Finance.Shared.Services.Implementations.GeminiRelatorioService>();
+                builder.Services.AddScoped<JT_Finance.Shared.Services.Implementations.GeminiRelatorioService>();
+                builder.Services.AddScoped<JT_Finance.Shared.BusinessLogic.RelatorioIALogic>();
+
                 builder.Services.AddScoped<IModuloCategoriaProvider, JT_Finance.Shared.Layout.FinanceiroCategoriaProvider>();
                 builder.Services.AddScoped<JT_UserInterface.Shared.Services.Interfaces.Comum.ITutorialProvider, JT_Finance.Shared.Providers.FinanceTutorialProvider>();
 

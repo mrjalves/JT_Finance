@@ -119,6 +119,13 @@ namespace JT_Finance.Shared.Providers
                     },
                     new TutorialPasso
                     {
+                        Titulo = "Consultor Executivo IA — JT_Finance Insights",
+                        Descricao = "Painel analítico executivo com inteligência artificial para diagnósticos 360°, sugestões práticas de economia e previsão de fluxo de caixa e vencimentos.",
+                        Seletor = "[data-tutorial='dashboard-ia']",
+                        Posicao = "top"
+                    },
+                    new TutorialPasso
+                    {
                         Titulo = "Alternar Tema Claro / Escuro",
                         Descricao = "Alterne o tema visual entre claro e escuro para melhor conforto visual em qualquer ambiente.",
                         Seletor = "header .header-actions .theme-toggle",

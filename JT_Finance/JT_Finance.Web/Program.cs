@@ -66,6 +66,7 @@ builder.Services.AddHttpClient(string.Empty, client =>
     var baseUrl = builder.Configuration["Config:FirebaseConfig:BaseApiUrl"] ?? "https://localhost:7166";
     client.BaseAddress = new Uri(baseUrl);
 });
+builder.Services.AddHttpClient("GeminiCleanClient");
 
 // 4. Serviços Específicos deste Projeto
 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();
@@ -81,6 +82,9 @@ builder.Services.AddScoped<IDespesaService, JT_Finance.Shared.Services.DespesaSe
 builder.Services.AddScoped<ICartaoCreditoService, JT_Finance.Shared.Services.CartaoCreditoService>();
 builder.Services.AddScoped<IReceitaService, JT_Finance.Shared.Services.ReceitaService>();
 builder.Services.AddScoped<IMFinanceiroConfiguracaoService, MFinanceiroConfiguracaoService>();
+builder.Services.AddScoped<JT_Finance.Shared.Services.Interfaces.IIAAnalyticsService, JT_Finance.Shared.Services.Implementations.GeminiRelatorioService>();
+builder.Services.AddScoped<JT_Finance.Shared.Services.Implementations.GeminiRelatorioService>();
+builder.Services.AddScoped<JT_Finance.Shared.BusinessLogic.RelatorioIALogic>();
 builder.Services.AddScoped<ISecureStorageService, JT_Finance.Shared.Services.WebSecureStorageService>();
 
 // Providers de indicadores de dashboard (registrados pela interface para o catálogo)
@@ -168,6 +172,52 @@ app.MapGet("/api/configuracoes-acessos/{id:int}", async (int id, JT_Servicos.Ace
 app.MapPost("/api/configuracoes-acessos", async ([FromBody] MAcessosConfiguracao entity, JT_Servicos.Acessos.MAcessosConfiguracaoService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
 app.MapPost("/api/configuracoes-acessos/ativa", async ([FromBody] MAcessosConfiguracao entity, JT_Servicos.Acessos.MAcessosConfiguracaoService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
 app.MapPut("/api/configuracoes-acessos/{id:int}", async (int id, [FromBody] MAcessosConfiguracao entity, JT_Servicos.Acessos.MAcessosConfiguracaoService svc) => await svc.Save(entity) ? Results.Ok(entity) : Results.BadRequest());
+
+// Gemini AI Proxy endpoints
+app.MapGet("/api/gemini/models", async (string? key, IHttpClientFactory factory) =>
+{
+    if (string.IsNullOrWhiteSpace(key))
+    {
+        return Results.BadRequest(new { error = new { message = "Chave de API não informada.", reason = "API_KEY_INVALID" } });
+    }
+
+    try
+    {
+        var client = factory.CreateClient("GeminiCleanClient");
+        var response = await client.GetAsync($"https://generativelanguage.googleapis.com/v1beta/models?key={Uri.EscapeDataString(key.Trim())}");
+        var content = await response.Content.ReadAsStringAsync();
+        return Results.Content(content, "application/json", statusCode: (int)response.StatusCode);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(detail: ex.Message, statusCode: 500);
+    }
+});
+
+app.MapPost("/api/gemini/generate", async (string? key, string? model, HttpContext context, IHttpClientFactory factory) =>
+{
+    if (string.IsNullOrWhiteSpace(key))
+    {
+        return Results.BadRequest(new { error = new { message = "Chave de API não informada.", reason = "API_KEY_INVALID" } });
+    }
+
+    try
+    {
+        string modelo = !string.IsNullOrWhiteSpace(model) ? model : "gemini-1.5-flash";
+        var client = factory.CreateClient("GeminiCleanClient");
+        using var reader = new StreamReader(context.Request.Body);
+        var body = await reader.ReadToEndAsync();
+        using var content = new StringContent(body, System.Text.Encoding.UTF8, "application/json");
+
+        var response = await client.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent?key={Uri.EscapeDataString(key.Trim())}", content);
+        var resContent = await response.Content.ReadAsStringAsync();
+        return Results.Content(resContent, "application/json", statusCode: (int)response.StatusCode);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(detail: ex.Message, statusCode: 500);
+    }
+});
 
 app.Run();
 
