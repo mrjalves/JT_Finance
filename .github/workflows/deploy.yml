@@ -36,9 +36,21 @@ jobs:
           # Substitui a pasta antiga dentro do projeto principal pelo código mais recente
           path: JT_ApplicationLayer
           
-          # CORREÇÃO DEFINITIVA: Apontamos explicitamente para a branch 'master', 
-          # que é onde o seu código da camada de aplicação realmente está salvo.
+          # Apontamos explicitamente para a branch 'Master'
           ref: Master
+
+      - name: Prepare JT_ApplicationLayer sibling path
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/../JT_ApplicationLayer"
+          mv "$GITHUB_WORKSPACE/JT_ApplicationLayer" "$GITHUB_WORKSPACE/../JT_ApplicationLayer"
+          # Garantir namespaces explícitos em componentes Razor modulares se ausentes
+          for f in "$GITHUB_WORKSPACE/../JT_ApplicationLayer/JT_UserInterface.Shared/Components"/*/*.razor; do
+            [ -f "$f" ] || continue
+            dir=$(basename "$(dirname "$f")")
+            if ! grep -q "@namespace" "$f"; then
+              sed -i "1s/^/@namespace JT_UserInterface.Shared.Components.$dir\n/" "$f"
+            fi
+          done
 
       # 3. Configura a versão do .NET para a compilação
       - name: Setup .NET
