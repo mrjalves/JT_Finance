@@ -1,17 +1,14 @@
 using JT_UserInterface.Shared.Components.Core;
 using JT_Classes.structs;
-
 using JT_UserInterface.Shared.Components;
 using JT_UserInterface.Shared.Components.Core.Charts;
-using JT_UserInterface.Shared.Components.Core.Charts;
-
 using Microsoft.AspNetCore.Components;
-
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace JT_Finance.Shared.Pages
 {
@@ -20,7 +17,7 @@ namespace JT_Finance.Shared.Pages
         [CascadingParameter]
         public Func<string, Task>? SetPageTitleAsync { get; set; }
 
-        // --- Estado da P�gina ---
+        // --- Estado da Página ---
         private DateTime mesReferencia = DateTime.Now;
         private bool isLoading = true;
 
@@ -29,7 +26,11 @@ namespace JT_Finance.Shared.Pages
         private decimal totalDespesas;
         private decimal saldoAtual;
 
-        // --- Dados para os Gr�ficos ---
+        // --- Indicadores Calculados ---
+        private int TaxaComprometimento => totalReceitas > 0 ? (int)Math.Min(100, Math.Round((totalDespesas / totalReceitas) * 100)) : (totalDespesas > 0 ? 100 : 0);
+        private bool IsMesAtual => mesReferencia.Month == DateTime.Now.Month && mesReferencia.Year == DateTime.Now.Year;
+
+        // --- Dados para os Gráficos e Painéis ---
         private List<string> despesaTiposLabels = new();
         private List<ChartDataset> datasetsGraficoPorTipo = new();
         private List<string> despesaCategoriasLabels = new();
@@ -37,6 +38,7 @@ namespace JT_Finance.Shared.Pages
         private List<sDespesa> DespesasVencidas = new();
         private List<sDespesa> DespesaAVencer = new();
         private List<sDespesa> DespesaMes = new();
+
         protected override async Task OnInitializedAsync()
         {
             var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -51,11 +53,7 @@ namespace JT_Finance.Shared.Pages
                 await SetPageTitleAsync.Invoke("Dashboard");
             }
 
-            if (!await LoadDashboardData())
-                return;
-
-            DespesaAVencer = await DespesaService.ObterDespesasAVencerAsync();
-            DespesasVencidas = await DespesaService.ObterDespesasVencidasAsync();
+            await RecarregarMetricasAsync();
         }
 
         private async Task<bool> LoadDashboardData()
@@ -72,7 +70,7 @@ namespace JT_Finance.Shared.Pages
 
                 DespesaMes = await DespesaService.ObterDespesasMesAsync(mesReferencia);
 
-                // --- GR�FICO DE TIPO (BARRAS) ---
+                // --- GRÁFICO DE TIPO (BARRAS) ---
                 var despesasPorTipo = await DespesaService.GetDespesaPorTipo(mesReferencia);
                 despesaTiposLabels = despesasPorTipo.Select(d => d.Tipo).ToList();
                 datasetsGraficoPorTipo = new List<ChartDataset>
@@ -84,7 +82,7 @@ namespace JT_Finance.Shared.Pages
                     }
                 };
 
-                // --- GR�FICO DE CATEGORIA (ROSCA) ---
+                // --- GRÁFICO DE CATEGORIA (ROSCA) ---
                 var despesasPorCategoria = await DespesaService.GetDespesaPorCategoria(mesReferencia);
                 despesaCategoriasLabels = despesasPorCategoria.Select(d => d.Categoria).ToList();
                 datasetsGraficoPorCategoria = new List<ChartDataset>
@@ -114,26 +112,45 @@ namespace JT_Finance.Shared.Pages
             }
         }
 
+        private async Task RecarregarMetricasAsync()
+        {
+            if (!await LoadDashboardData())
+                return;
+
+            DespesaAVencer = await DespesaService.ObterDespesasAVencerAsync();
+            DespesasVencidas = await DespesaService.ObterDespesasVencidasAsync();
+        }
+
         private async Task MudarMes(int mesesParaAdicionar)
         {
             mesReferencia = mesReferencia.AddMonths(mesesParaAdicionar);
-            await LoadDashboardData();
+            await RecarregarMetricasAsync();
         }
 
         private async Task MudarMesAnterior() => await MudarMes(-1);
         private async Task MudarMesProximo() => await MudarMes(1);
 
+        private async Task IrParaMesAtualAsync()
+        {
+            mesReferencia = DateTime.Now;
+            await RecarregarMetricasAsync();
+        }
+
+        private string ObterStatusVencimento(DateTime dataVencimento)
+        {
+            var dias = (DateTime.Today - dataVencimento.Date).Days;
+            if (dias == 0) return "Vence hoje";
+            if (dias > 0) return $"Atrasada há {dias} dia(s)";
+            return $"Vence em {Math.Abs(dias)} dia(s)";
+        }
 
         private JT_UserInterface.Shared.Components.Core.Modal modalDetalhes;
         private List<sDespesa> despesasParaExibir = new();
         private void AbrirModalDetalhes(string titulo, List<sDespesa> despesas)
         {
-            despesasParaExibir = despesas;
+            despesasParaExibir = despesas ?? new List<sDespesa>();
             modalDetalhes.Title = titulo;
             modalDetalhes.Open();
         }
     }
 }
-
-
-
