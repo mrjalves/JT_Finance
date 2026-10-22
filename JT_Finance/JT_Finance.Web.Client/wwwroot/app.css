@@ -11,10 +11,27 @@
     --surface-card: #ffffff;
     --border-color: #e2e8f0;
     --text-muted: #64748b;
+    --text-color: #1e293b;
+    --heading-color: #0f172a;
+    --card-bg: #ffffff;
+    --bg-body: #f8fafc;
     --radius-md: 0.75rem;
     --radius-lg: 1rem;
     --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
     --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+}
+
+[data-bs-theme="dark"] {
+    --surface-bg: #0f172a;
+    --surface-card: #1e293b;
+    --border-color: #334155;
+    --text-muted: #94a3b8;
+    --text-color: #f1f5f9;
+    --heading-color: #f8fafc;
+    --card-bg: #1e293b;
+    --bg-body: #0f172a;
+    --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
 }
 
 html, body {
@@ -24,34 +41,397 @@ html, body {
     padding: 0;
     font-family: var(--font-family-base);
     background-color: var(--surface-bg);
-    color: #1e293b;
+    color: var(--text-color);
 }
 
-.card-clickable {
-    cursor: pointer;
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+[data-bs-theme="dark"] body {
+    background-color: var(--surface-bg);
+    color: var(--text-color);
 }
 
-.card-clickable:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-}
-
-.text-indigo {
-    color: #4f46e5 !important;
-}
-
-/* Reduzir espaçamento excessivo no container do conteúdo */
+/* =================================================================
+   CORREÇÕES DE LAYOUT GLOBAIS (SINCRONIZADO COM JT_FOOD & JT_ESTOQUE)
+   ================================================================= */
 .content-body .container-fluid {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
 }
 
-/* Correções de Layout para evitar rolagem dupla e corte do footer */
 .app-footer {
     flex-shrink: 0 !important;
 }
 
 main.content-body {
     overflow-y: visible !important;
+}
+
+/* =================================================================
+   ESTILOS DE CARDS & INTERATIVIDADE
+   ================================================================= */
+.card-clickable {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-clickable:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover) !important;
+}
+
+.card-modern {
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-modern:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.text-indigo {
+    color: #4f46e5 !important;
+}
+
+/* =================================================================
+   KPI DASHBOARD CARDS (PADRÃO JT_ESTOQUE / JT_FOOD)
+   ================================================================= */
+.kpi-card {
+    position: relative;
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+}
+
+.kpi-card .kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.kpi-card.kpi-primary .kpi-icon {
+    background: rgba(79, 70, 229, 0.1);
+    color: #4f46e5;
+}
+
+.kpi-card.kpi-success .kpi-icon {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.kpi-card.kpi-warning .kpi-icon {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.kpi-card.kpi-danger .kpi-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.kpi-value {
+    font-size: 1.85rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.kpi-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* KPI Refined (Estilo do Dashboard Executivo Financeiro) */
+.kpi-card-refined {
+    background: var(--card-bg, #ffffff) !important;
+    border: 1px solid var(--border-color, #e2e8f0) !important;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card-refined:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+
+.kpi-icon-bubble {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.kpi-card-refined:hover .kpi-icon-bubble {
+    transform: scale(1.08);
+}
+
+.kpi-bubble-emerald { background-color: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
+.kpi-bubble-rose    { background-color: #fff1f2; color: #e11d48; border: 1px solid #ffe4e6; }
+.kpi-bubble-indigo  { background-color: #eef2ff; color: #4f46e5; border: 1px solid #e0e7ff; }
+.kpi-bubble-amber   { background-color: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
+.kpi-bubble-danger  { background-color: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+
+/* Atalhos Rápidos Operacionais */
+.quick-card {
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0) !important;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.quick-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    border-color: #cbd5e1 !important;
+}
+
+.quick-icon-bubble {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.quick-bubble-rose    { background-color: #fff1f2; color: #e11d48; }
+.quick-bubble-emerald { background-color: #ecfdf5; color: #059669; }
+.quick-bubble-indigo  { background-color: #eef2ff; color: #4f46e5; }
+.quick-bubble-purple  { background-color: #faf5ff; color: #9333ea; }
+
+/* Painéis de Dashboard */
+.dashboard-panel {
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0) !important;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+}
+
+/* =================================================================
+   BADGES & STATUS PILLS (SINCRONIZADO COM ESTOQUE & FOOD)
+   ================================================================= */
+.badge-status {
+    padding: 0.35em 0.75em;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.badge-subtle-success { background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.badge-subtle-danger  { background-color: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+.badge-subtle-primary { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-subtle-warning { background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.badge-subtle-neutral { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+/* =================================================================
+   ADAPTAÇÕES TEMA ESCURO PARA COMPONENTES, TABELAS E FORMULÁRIOS
+   ================================================================= */
+[data-bs-theme="dark"] .card,
+[data-bs-theme="dark"] .card-modern,
+[data-bs-theme="dark"] .kpi-card,
+[data-bs-theme="dark"] .kpi-card-refined,
+[data-bs-theme="dark"] .quick-card,
+[data-bs-theme="dark"] .dashboard-panel {
+    background-color: var(--surface-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color);
+}
+
+[data-bs-theme="dark"] .card-header,
+[data-bs-theme="dark"] .card-footer,
+[data-bs-theme="dark"] .dashboard-panel .card-header {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #f1f5f9;
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.04);
+    border-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .table > :not(caption) > * > * {
+    background-color: transparent;
+    color: inherit;
+    border-bottom-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .table thead th,
+[data-bs-theme="dark"] .table-header-custom {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: var(--text-muted) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select,
+[data-bs-theme="dark"] .input-group-text {
+    background-color: #0f172a;
+    border-color: var(--border-color);
+    color: #f1f5f9;
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+    background-color: #0f172a;
+    border-color: #6366f1;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
+}
+
+[data-bs-theme="dark"] .bg-body-secondary,
+[data-bs-theme="dark"] .bg-body-tertiary {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+[data-bs-theme="dark"] .modal-content {
+    background-color: var(--surface-card);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-bs-theme="dark"] .modal-header,
+[data-bs-theme="dark"] .modal-footer {
+    border-color: var(--border-color);
+}
+
+/* Modo escuro: bolhas de ícones translúcidas */
+[data-bs-theme="dark"] .kpi-bubble-indigo,
+[data-bs-theme="dark"] .quick-bubble-indigo {
+    background-color: rgba(99, 102, 241, 0.18) !important;
+    color: #818cf8 !important;
+    border-color: rgba(99, 102, 241, 0.35) !important;
+}
+
+[data-bs-theme="dark"] .kpi-bubble-emerald,
+[data-bs-theme="dark"] .quick-bubble-emerald {
+    background-color: rgba(16, 185, 129, 0.18) !important;
+    color: #34d399 !important;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+[data-bs-theme="dark"] .kpi-bubble-amber {
+    background-color: rgba(245, 158, 11, 0.18) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+[data-bs-theme="dark"] .kpi-bubble-rose,
+[data-bs-theme="dark"] .quick-bubble-rose {
+    background-color: rgba(225, 29, 72, 0.18) !important;
+    color: #fb7185 !important;
+    border-color: rgba(225, 29, 72, 0.35) !important;
+}
+
+[data-bs-theme="dark"] .badge-subtle-primary {
+    background-color: rgba(99, 102, 241, 0.2) !important;
+    color: #a5b4fc !important;
+    border-color: rgba(99, 102, 241, 0.4) !important;
+}
+
+[data-bs-theme="dark"] .badge-subtle-success {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: #6ee7b7 !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+[data-bs-theme="dark"] .badge-subtle-warning {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    color: #fcd34d !important;
+    border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+[data-bs-theme="dark"] .badge-subtle-danger {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    color: #fca5a5 !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+[data-bs-theme="dark"] .badge-subtle-neutral {
+    background-color: rgba(148, 163, 184, 0.15) !important;
+    color: #e2e8f0 !important;
+    border-color: rgba(148, 163, 184, 0.3) !important;
+}
+
+/* =================================================================
+   SCROLLBARS E COMPONENTES BLAZOR
+   ================================================================= */
+.custom-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.custom-scroll::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .custom-scroll {
+    scrollbar-color: #334155 transparent;
+}
+
+[data-bs-theme="dark"] .custom-scroll::-webkit-scrollbar-thumb {
+    background-color: #334155;
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
+
+.invalid {
+    outline: 1px solid #e50000;
+}
+
+.validation-message {
+    color: #e50000;
+}
+
+.blazor-error-boundary {
+    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+}
+
+.blazor-error-boundary::after {
+    content: "Ocorreu um erro.";
 }
