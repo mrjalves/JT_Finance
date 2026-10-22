@@ -23,7 +23,7 @@ namespace JT_Finance.Shared.Layout
                     Modulo     = eModuloSistema.Financeiro,
                     Itens      = new List<SItemMenu>
                     {
-                        new SItemMenu { Url = "home",                  Texto = "Home",         Icone = "bi-house-door-fill",  MatchAll = true, Titulo = "Home" },
+                        new SItemMenu { Url = "",                      Texto = "Home",         Icone = "bi-house-door-fill",  MatchAll = true, Titulo = "Home" },
                         new SItemMenu { Url = "dashboards",            Texto = "Dashboards",   Icone = "bi-speedometer2",     Titulo = "Dashboards" },
                         new SItemMenu { Url = "historico",         Texto = "Histórico",    Icone = "bi-calendar-fill",    MatchAll = true, Titulo = "Histórico" },
                         new SItemMenu { Url = "receitas",          Texto = "Receitas",     Icone = "bi-graph-up-arrow",   Titulo = "Receitas" },
