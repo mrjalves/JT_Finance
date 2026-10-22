@@ -59,7 +59,10 @@ if (dadosFConfig != null)
     builder.Services.AddSingleton(FirebaseConfig.Instancia);
 }
 
-JT_Aplicacao.Config.Config.Instancia.ClientId = "JT_Finance";
+if (JT_Aplicacao.Config.Config.Instancia != null)
+{
+    JT_Aplicacao.Config.Config.Instancia.ClientId = "JT_Finance";
+}
 
 // =========================================================================
 // 3. REGISTO DE SERVIÇOS (Injeção de Dependência)

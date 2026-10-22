@@ -103,6 +103,7 @@ namespace JT_Finance
 
                 // 3. Serviços Singleton
                 JT_UserInterface.Shared.DependencyInjection.AddJTUserInterface(builder.Services);
+                builder.Services.AddScoped<ISecureStorageService, JT_Finance.Shared.Services.WebSecureStorageService>();
                 
                 // 4. Serviços Específicos deste Projeto
                 builder.Services.AddScoped<IMenuProvider, FinanceMenuProvider>();

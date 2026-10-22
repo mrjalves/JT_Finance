@@ -18,9 +18,24 @@ using JT_Aplicacao.Config;
 using JT_Classes.Acessos;
 using JT_Classes.IA;
 using JT_UserInterface.Shared.Layout;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
+
+// Configura a cultura padrão pt-BR (moeda R$, datas, etc.)
+var culturaPtBr = new CultureInfo("pt-BR");
+CultureInfo.DefaultThreadCurrentCulture = culturaPtBr;
+CultureInfo.DefaultThreadCurrentUICulture = culturaPtBr;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configuração de cabeçalhos de proxy reverso (Nginx / Linux)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // 1. Configuração dos Componentes Blazor
 builder.Services.AddRazorComponents()
@@ -57,7 +72,10 @@ if (dadosFConfig != null)
 
 // 3. Serviços Globais (Via Método de Extensão da Shared)
 builder.Services.AddJTUserInterface();
-Config.Instancia.ClientId = "JT_Finance";
+if (Config.Instancia != null)
+{
+    Config.Instancia.ClientId = "JT_Finance";
+}
 
 // Configura o cliente nomeado já registrado pela camada compartilhada.
 // O JwtAuthorizationHandler injeta o JWT e o tenant somente nas chamadas da API.
@@ -101,6 +119,7 @@ builder.Services.AddScoped<IModuloCategoriaProvider, JT_Finance.Shared.Layout.Fi
 builder.Services.AddScoped<JT_UserInterface.Shared.Services.Interfaces.Comum.ITutorialProvider, JT_Finance.Shared.Providers.FinanceTutorialProvider>();
 var app = builder.Build();
 
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
